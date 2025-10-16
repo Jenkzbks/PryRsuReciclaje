@@ -132,38 +132,39 @@
                 $('#modal .modal-title').html('Editar Tipo de Vehículo');
                 $('#modal').modal('show');
 
-                $('#modal form').on('submit', function(e) {
-                    e.preventDefault();
-                    var form = $(this);
-                    var formData = new FormData(this);
+                // Para el formulario de CREATE (Nuevo registro)
+$('#modal form').on('submit', function(e) {
+    e.preventDefault();
+    var form = $(this);
+    var formData = new FormData(this);
 
-                    $.ajax({
-                        url: form.attr('action'),
-                        type: form.attr('method'),
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        success: function(response) {
-                            $('#modal').modal('hide');
-                            refreshTable();
-                            Swal.fire({
-                                title: "Proceso Exitoso!",
-                                text: response.message,
-                                icon: "success",
-                                draggable: true
-                            });
-                        },
-                        error: function(response) {
-                            var error = response.responseJSON;
-                            Swal.fire({
-                                title: "Error!",
-                                text: error.message,
-                                icon: "error",
-                                draggable: true
-                            });
-                        }
-                    });
-                });
+    $.ajax({
+        url: form.attr('action'),
+        type: form.attr('method'),
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            $('#modal').modal('hide');
+            refreshTable(); // ← AÑADIR ESTA LÍNEA
+            Swal.fire({
+                title: "Proceso Exitoso!",
+                text: response.message,
+                icon: "success",
+                draggable: true
+            });
+        },
+        error: function(response) {
+            var error = response.responseJSON;
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error",
+                draggable: true
+            });
+        }
+    });
+});
             }
         });
     });
