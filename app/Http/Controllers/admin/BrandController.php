@@ -45,11 +45,6 @@ class BrandController extends Controller
      */
     public function create()
 {
-    
-    
-    // Para debug, retorna algo simple
-   
-    
     return view('admin.brands.create');
 }
     /**
