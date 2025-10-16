@@ -3,6 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\admin\AdminController;
 use App\Http\Controllers\admin\BrandController;
+use App\Http\Controllers\admin\BrandModelController;
+use App\Http\Controllers\admin\VehicleTypeController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -32,3 +35,7 @@ Route::middleware([
 Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
 
 Route::resource('brands', BrandController::class)->names('admin.brands');
+
+Route::resource('brandmodels', BrandModelController::class)->names('admin.brandmodels');
+
+Route::resource('vehicletypes', VehicleTypeController::class)->names('admin.vehicletypes');

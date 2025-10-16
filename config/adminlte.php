@@ -397,7 +397,16 @@ return [
             'url'  => 'brands',
             'icon' => 'fas fa-box'
         ],
-        
+        [
+            'text' => 'Modelos',
+            'url'  => 'brandmodels',
+            'icon' => 'fas fa-cubes'
+        ],
+        [
+            'text' => 'Tipos de Vehículos',
+            'url'  => 'vehicletypes',
+            'icon' => 'fas fa-car'
+        ],   
     ],
 
     /*
