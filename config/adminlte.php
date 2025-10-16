@@ -368,6 +368,12 @@ return [
             'url' => '#',
             'icon' => 'fas fa-fw fa-user-cog',
         ],
+         [
+            'text' => 'Marcas',
+            'url'  => 'brands',
+            'icon' => 'fas fa-box'
+        ],
+        
     ],
 
     /*
