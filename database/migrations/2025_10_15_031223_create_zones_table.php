@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('name', 100);
             $table->double('area')->nullable();
             $table->text('description')->nullable();
+            $table->json('polygon_coordinates')->nullable();
             $table->unsignedBigInteger('district_id');
             $table->foreign('district_id')->references('id')->on('districts');
             $table->timestamps();

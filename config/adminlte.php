@@ -315,82 +315,58 @@ return [
             'type' => 'sidebar-menu-search',
             'text' => 'search',
         ],
+        
+        ['header' => 'DASHBOARD'],
         [
-            'text' => 'blog',
-            'url' => 'admin/blog',
-            'can' => 'manage-blog',
+            'text' => 'Dashboard',
+            'route' => 'admin.index',
+            'icon' => 'fas fa-fw fa-tachometer-alt',
+        ],
+        
+        ['header' => 'GESTIÓN DE RESIDUOS'],
+        [
+            'text' => 'Gestión de Zonas',
+            'route' => 'admin.zones.index',
+            'icon' => 'fas fa-fw fa-map-marked-alt',
         ],
         [
-            'text' => 'pages',
-            'url' => 'admin/pages',
-            'icon' => 'far fa-fw fa-file',
-            'label' => 4,
-            'label_color' => 'success',
-        ],
-        ['header' => 'account_settings'],
-        [
-            'text' => 'profile',
-            'url' => 'admin/settings',
-            'icon' => 'fas fa-fw fa-user',
-        ],
-        [
-            'text' => 'change_password',
-            'url' => 'admin/settings',
-            'icon' => 'fas fa-fw fa-lock',
-        ],
-        [
-            'text' => 'multilevel',
-            'icon' => 'fas fa-fw fa-share',
-            'submenu' => [
-                [
-                    'text' => 'level_one',
-                    'url' => '#',
-                ],
-                [
-                    'text' => 'level_one',
-                    'url' => '#',
-                    'submenu' => [
-                        [
-                            'text' => 'level_two',
-                            'url' => '#',
-                        ],
-                        [
-                            'text' => 'level_two',
-                            'url' => '#',
-                            'submenu' => [
-                                [
-                                    'text' => 'level_three',
-                                    'url' => '#',
-                                ],
-                                [
-                                    'text' => 'level_three',
-                                    'url' => '#',
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-                [
-                    'text' => 'level_one',
-                    'url' => '#',
-                ],
-            ],
-        ],
-        ['header' => 'labels'],
-        [
-            'text' => 'important',
-            'icon_color' => 'red',
+            'text' => 'Rutas de Recolección',
             'url' => '#',
+            'icon' => 'fas fa-fw fa-route',
         ],
         [
-            'text' => 'warning',
-            'icon_color' => 'yellow',
+            'text' => 'Vehículos',
             'url' => '#',
+            'icon' => 'fas fa-fw fa-truck',
         ],
         [
-            'text' => 'information',
-            'icon_color' => 'cyan',
+            'text' => 'Personal',
             'url' => '#',
+            'icon' => 'fas fa-fw fa-users',
+        ],
+        
+        ['header' => 'REPORTES'],
+        [
+            'text' => 'Reportes de Recolección',
+            'url' => '#',
+            'icon' => 'fas fa-fw fa-chart-line',
+        ],
+        [
+            'text' => 'Estadísticas',
+            'url' => '#',
+            'icon' => 'fas fa-fw fa-chart-pie',
+        ],
+        
+        ['header' => 'CONFIGURACIÓN'],
+        [
+            'text' => 'Configuración',
+            'url' => '#',
+            'icon' => 'fas fa-fw fa-cog',
+        ],
+        [
+            'text' => 'Usuarios',
+            'url' => '#',
+            'icon' => 'fas fa-fw fa-user-cog',
         ],
     ],
 

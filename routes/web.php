@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\admin\AdminController;
+use App\Http\Controllers\admin\ZoneController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -29,3 +30,13 @@ Route::middleware([
 
 
 Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
+
+// Rutas para gestión de zonas
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('zones', ZoneController::class);
+    
+    // API routes para selects dependientes
+    Route::get('api/provinces/{department_id}', [ZoneController::class, 'getProvinces'])->name('api.provinces');
+    Route::get('api/districts/{province_id}', [ZoneController::class, 'getDistricts'])->name('api.districts');
+    Route::get('api/department-coordinates/{department_id}', [ZoneController::class, 'getDepartmentCoordinates'])->name('api.department.coordinates');
+});
