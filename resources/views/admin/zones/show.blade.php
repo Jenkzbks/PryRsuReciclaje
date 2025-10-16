@@ -54,7 +54,7 @@
                             <strong>Departamento:</strong>
                         </div>
                         <div class="col-8">
-                            {{ $zone->district->department->name }}
+                            {{ $zone->department ? $zone->department->name : 'No asignado' }}
                         </div>
                     </div>
 
@@ -63,7 +63,13 @@
                             <strong>Provincia:</strong>
                         </div>
                         <div class="col-8">
-                            {{ $zone->district->province->name }}
+                            @if($zone->district)
+                                {{ $zone->district->province->name }}
+                            @elseif($zone->province)
+                                {{ $zone->province->name }}
+                            @else
+                                No asignado
+                            @endif
                         </div>
                     </div>
 
@@ -72,7 +78,11 @@
                             <strong>Distrito:</strong>
                         </div>
                         <div class="col-8">
-                            {{ $zone->district->name }}
+                            @if($zone->district)
+                                {{ $zone->district->name }}
+                            @else
+                                <span class="text-muted">Toda la provincia</span>
+                            @endif
                         </div>
                     </div>
 

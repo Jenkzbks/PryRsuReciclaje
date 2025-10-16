@@ -112,12 +112,16 @@ class ZoneController extends Controller
 
     public function show(Zone $zone)
     {
-        $zone->load(['district.department', 'district.province']);
+        // Cargar relaciones dinámicamente según el tipo de zona
+        $zone->load(['district.department', 'district.province', 'province.department']);
         return view('admin.zones.show', compact('zone'));
     }
 
     public function edit(Zone $zone)
     {
+        // Cargar relaciones necesarias
+        $zone->load(['district.department', 'district.province', 'province.department']);
+        
         $departments = Department::all();
         
         // Obtener el departamento usando la relación actualizada

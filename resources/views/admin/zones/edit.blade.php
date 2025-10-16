@@ -44,8 +44,18 @@
                                     required>
                                 <option value="">Seleccione un departamento</option>
                                 @foreach($departments as $department)
+                                    @php 
+                                        $selectedDepartmentId = old('department_id');
+                                        if (!$selectedDepartmentId) {
+                                            if ($zone->district) {
+                                                $selectedDepartmentId = $zone->district->department_id;
+                                            } elseif ($zone->province) {
+                                                $selectedDepartmentId = $zone->province->department_id;
+                                            }
+                                        }
+                                    @endphp
                                     <option value="{{ $department->id }}" 
-                                            {{ old('department_id', $zone->district->department_id) == $department->id ? 'selected' : '' }}>
+                                            {{ $selectedDepartmentId == $department->id ? 'selected' : '' }}>
                                         {{ $department->name }}
                                     </option>
                                 @endforeach
@@ -390,8 +400,9 @@
 
                     // Cargar provincias
                     $.get(`/admin/api/provinces/${departmentId}`, function(provinces) {
+                        const selectedProvinceId = {{ old('province_id', $zone->district ? $zone->district->province_id : ($zone->province_id ?? 'null')) }};
                         provinces.forEach(function(province) {
-                            const selected = province.id == {{ old('province_id', $zone->district->province_id) }} ? 'selected' : '';
+                            const selected = province.id == selectedProvinceId ? 'selected' : '';
                             $('#province_id').append(
                                 `<option value="${province.id}" ${selected}>${province.name}</option>`
                             );
