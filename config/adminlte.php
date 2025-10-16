@@ -392,6 +392,12 @@ return [
             'icon_color' => 'cyan',
             'url' => '#',
         ],
+         [
+            'text' => 'Marcas',
+            'url'  => 'brands',
+            'icon' => 'fas fa-box'
+        ],
+        
     ],
 
     /*
