@@ -348,6 +348,21 @@ return [
                     'route'  => 'admin.colors.index',
                     'icon' => 'fas fa-fw fa-palette',
                 ],
+                [
+                    'text' => 'Marcas',
+                    'url'  => 'brands',
+                    'icon' => 'fas fa-box'
+                ],
+                [
+                    'text' => 'Modelos',
+                    'url'  => 'brandmodels',
+                    'icon' => 'fas fa-cubes'
+                ],
+                [
+                    'text' => 'Tipos de Vehículos',
+                    'url'  => 'vehicletypes',
+                    'icon' => 'fas fa-car'
+                ],
             ],
         ],
         [
@@ -379,21 +394,7 @@ return [
             'url' => '#',
             'icon' => 'fas fa-fw fa-user-cog',
         ],
-         [
-            'text' => 'Marcas',
-            'url'  => 'brands',
-            'icon' => 'fas fa-box'
-        ],
-        [
-            'text' => 'Modelos',
-            'url'  => 'brandmodels',
-            'icon' => 'fas fa-cubes'
-        ],
-        [
-            'text' => 'Tipos de Vehículos',
-            'url'  => 'vehicletypes',
-            'icon' => 'fas fa-car'
-        ],
+
     ],
 
     /*

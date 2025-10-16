@@ -8,94 +8,104 @@
             <h1 class="h3 mb-1 font-weight-bold">Gestión de Vehículos</h1>
             <p class="text-muted mb-0">Registro y gestión de vehiculos de recolección.</p>
         </div>
-            <button type="button" class="btn btn-dark ms-auto" id="btnNuevoVehiculo">
-                <i class="fas fa-plus"></i> Agregar Vehículo
-            </button>
-        </div>
+        <button type="button" class="btn btn-dark ms-auto" id="btnNuevoVehiculo">
+            <i class="fas fa-plus"></i> Agregar Vehículo
+        </button>
+    </div>
 @stop
 @section('content')
 
 
-        <div class="card-body">
-            {{-- Sección de filtros --}}
-            <div class="filters mb-4 p-3 border rounded">
-                <div class="row">
-                    <div class="col-12 col-md-3 mb-2">
-                        <label for="searchPlaca" class="form-label">Placa:</label>
-                        <input type="text" class="form-control" id="searchPlaca" placeholder="Buscar...">
-                    </div>
-                    <div class="col-12 col-md-2 mb-2">
-                        <label for="selectMarca" class="form-label">Marca:</label>
-                        <select class="form-control" id="selectMarca">
-                            <option selected>Select option</option>
-                            {{-- Las opciones se pueden cargar dinámicamente --}}
-                        </select>
-                    </div>
-                    <div class="col-12 col-md-2 mb-2">
-                        <label for="selectModelo" class="form-label">Modelo:</label>
-                        <select class="form-control" id="selectModelo">
-                            <option selected>Select option</option>
-                        </select>
-                    </div>
-                    <div class="col-12 col-md-2 mb-2">
-                        <label for="selectTipo" class="form-label">Tipo:</label>
-                        <select class="form-control" id="selectTipo">
-                            <option selected>Select option</option>
-                        </select>
-                    </div>
-                    <div class="col-12 col-md-2 mb-2">
-                        <label for="selectEstado" class="form-label">Estado:</label>
-                        <select class="form-control" id="selectEstado">
-                            <option selected>Select option</option>
-                        </select>
-                    </div>
+    <div class="card-body">
+        {{-- Sección de filtros --}}
+        <div class="filters mb-4 p-3 border rounded">
+            <div class="row">
+                <div class="col-12 col-md-3 mb-2">
+                    <label for="searchPlaca" class="form-label">Placa:</label>
+                    <input type="text" class="form-control" id="searchPlaca" placeholder="Buscar...">
+                </div>
+                <div class="col-12 col-md-2 mb-2">
+                    <label for="selectMarca" class="form-label">Marca:</label>
+                    <select class="form-control" id="selectMarca">
+                        <option value="">Seleccione</option>
+                        @foreach($brands as $brand)
+                            <option value="{{ $brand->id }}">{{ $brand->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-12 col-md-2 mb-2">
+                    <label for="selectModelo" class="form-label">Modelo:</label>
+                    <select class="form-control" id="selectModelo">
+                        <option value="">Seleccione</option>
+                        @foreach($models as $model)
+                            <option value="{{ $model->id }}">{{ $model->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-12 col-md-2 mb-2">
+                    <label for="selectTipo" class="form-label">Tipo:</label>
+                    <select class="form-control" id="selectTipo">
+                        <option value="">Seleccione</option>
+                        @foreach($types as $type)
+                            <option value="{{ $type->id }}">{{ $type->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-12 col-md-2 mb-2">
+                    <label for="selectEstado" class="form-label">Estado:</label>
+                    <select class="form-control" id="selectEstado">
+                        <option value="">Seleccione</option>
+                        <option value="1">Activo</option>
+                        <option value="0">Inactivo</option>
+                    </select>
                 </div>
             </div>
+        </div>
 
-            {{-- Contenedor de la cuadrícula de vehículos --}}
-            <div id="vehicle-grid-container">
-                {{-- La cuadrícula se generará aquí. Uso de clases de Bootstrap para un diseño responsivo --}}
-                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
-                    @foreach ($vehicles as $vehicle)
-                        <div class="col">
-                            <div class="card h-100 shadow-sm">
-                                <div class="position-relative">
-                                    <img src="{{ $vehicle->image ?? asset('path/to/default-vehicle-image.jpg') }}" class="card-img-top" alt="Imagen del vehículo">
-                                    <span class="badge bg-dark position-absolute top-0 end-0 m-2">{{ $vehicle->plate }}</span>
-                                </div>
-                                <div class="card-body">
-                                    <h6 class="card-title font-weight-bold">{{ $vehicle->model->brand->name ?? 'Marca' }} {{ $vehicle->model->name ?? 'Modelo' }}</h6>
-                                    <div class="d-flex justify-content-between align-items-center my-2">
-                                        <span class="badge bg-secondary">{{ $vehicle->type ?? 'SUV' }}</span>
-                                        @if ($vehicle->status == 'Activo')
-                                            <span class="badge bg-success">Activo</span>
-                                        @else
-                                            <span class="badge bg-danger">Inactivo</span>
-                                        @endif
-                                        <span>{{ $vehicle->year ?? '2024' }}</span>
-                                    </div>
-                                </div>
-                                <div class="card-footer bg-white border-0 d-flex justify-content-end gap-2">
-                                    <form action="{{ route('admin.vehicles.destroy', $vehicle) }}" method="POST" class="frmDelete d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
-                                    </form>
-                                    <button class="btn btn-sm btn-dark btnEditar" id="{{ $vehicle->id }}">Editar</button>
+        {{-- Contenedor de la cuadrícula de vehículos --}}
+        <div id="vehicle-grid-container">
+            {{-- La cuadrícula se generará aquí. Uso de clases de Bootstrap para un diseño responsivo --}}
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
+                @foreach ($vehicles as $vehicle)
+                    <div class="col">
+                        <div class="card h-100 shadow-sm">
+                            <div class="position-relative">
+                                <img src="{{ $vehicle->images->isNotEmpty() ? asset('storage/' . $vehicle->images->first()->image) : 'https://via.placeholder.com/400x250/cccccc/000000?text=No+Image' }}" class="card-img-top" alt="Imagen del vehículo">
+                                <span class="badge bg-dark position-absolute top-0 end-0 m-2">{{ $vehicle->plate }}</span>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="card-title font-weight-bold">{{ $vehicle->model->brand->name ?? 'Marca' }} {{ $vehicle->model->name ?? 'Modelo' }}</h6>
+                                <div class="d-flex justify-content-between align-items-center my-2">
+                                    <span class="badge bg-secondary">{{ $vehicle->type->name ?? 'SUV' }}</span>
+                                    @if ($vehicle->status == 1)
+                                        <span class="badge bg-success">Activo</span>
+                                    @else
+                                        <span class="badge bg-danger">Inactivo</span>
+                                    @endif
+                                    <span>{{ $vehicle->year ?? '2024' }}</span>
                                 </div>
                             </div>
+                            <div class="card-footer bg-white border-0 d-flex justify-content-end gap-2">
+                                <form action="{{ route('admin.vehicles.destroy', $vehicle) }}" method="POST" class="frmDelete d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
+                                </form>
+                                <button class="btn btn-sm btn-dark btnEditar" id="{{ $vehicle->id }}">Editar</button>
+                            </div>
                         </div>
-                    @endforeach
-                </div>
+                    </div>
+                @endforeach
             </div>
         </div>
+    </div>
 
-        <div class="card-footer">
-            Mostrando {{ $vehicles->firstItem() }} a {{ $vehicles->lastItem() }} de {{ $vehicles->total() }} entradas
-            <div class="float-right">
-                {{ $vehicles->links() }}
-            </div>
+    <div class="card-footer">
+        Mostrando {{ $vehicles->firstItem() }} a {{ $vehicles->lastItem() }} de {{ $vehicles->total() }} entradas
+        <div class="float-right">
+            {{ $vehicles->links() }}
         </div>
+    </div>
     </div>
 
     <div class="modal fade" id="vehicleModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
@@ -228,22 +238,62 @@
                 });
             });
 
+            // --- Filtros funcionales ---
+            $('#searchPlaca, #selectMarca, #selectModelo, #selectTipo, #selectEstado').on('change keyup', function() {
+                var params = {
+                    plate: $('#searchPlaca').val(),
+                    brand_id: $('#selectMarca').val(),
+                    model_id: $('#selectModelo').val(),
+                    type_id: $('#selectTipo').val(),
+                    status: $('#selectEstado').val()
+                };
+
+
+            });
+
         });
     </script>
 @stop
 
 @section('css')
-    {{-- Estilos personalizados si son necesarios --}}
-    <style>
-        .card-img-top {
-            aspect-ratio: 16 / 10;
-            object-fit: cover;
-        }
-        .filters .form-label {
-            font-weight: 500;
-        }
-        .gap-2 {
-            gap: 0.5rem;
-        }
-    </style>
+<style>
+    .card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: none;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    .card-img-top {
+        height: 200px;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    .card:hover .card-img-top {
+        transform: scale(1.05);
+    }
+    .card-title {
+        font-size: 1.1rem;
+        color: #333;
+    }
+    .card-body {
+        padding: 1rem;
+    }
+    .card-footer {
+        padding: 0.75rem 1rem;
+        background-color: #f8f9fa;
+    }
+    .badge {
+        font-size: 0.75rem;
+    }
+    .filters .form-label {
+        font-weight: 500;
+    }
+    .gap-2 {
+        gap: 0.5rem;
+    }
+</style>
 @stop

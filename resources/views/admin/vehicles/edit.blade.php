@@ -1,8 +1,5 @@
-{{-- resources/views/admin/vehicles/edit.blade.php --}}
-
-<form action="{{ route('admin.vehicles.update', $vehicle) }}" method="POST" enctype="multipart/form-data">
-    @csrf
-    @method('PUT')
-    {{-- Incluimos el formulario parcial. La variable $vehicle estará disponible aquí --}}
-    @include('admin.vehicles.form')
-</form>
+{!! Form::model($vehicle, ['route' => ['admin.vehicles.update', $vehicle->id], 'method' => 'PUT', 'files' => true, 'id' => 'vehicleForm']) !!}
+@include('admin.vehicles.template.form')
+<button type="submit" class="btn btn-primary far fa-save"> Actualizar</button>
+<button type="button" class="btn btn-danger" data-dismiss="modal"> <i class="fas fa-window-close"></i> Cancelar</button>
+{!! Form::close() !!}

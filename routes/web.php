@@ -56,3 +56,4 @@ Route::resource('brandmodels', BrandModelController::class)->names('admin.brandm
 
 Route::resource('vehicletypes', VehicleTypeController::class)->names('admin.vehicletypes');
 
+

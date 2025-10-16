@@ -1,7 +1,5 @@
-{{-- resources/views/admin/vehicles/create.blade.php --}}
-
-<form action="{{ route('admin.vehicles.store') }}" method="POST" enctype="multipart/form-data">
-    @csrf
-    {{-- Incluimos el formulario parcial --}}
-    @include('admin.vehicles.form')
-</form>
+{!! Form::open(['route' => 'admin.vehicles.store', 'files' => true, 'id' => 'vehicleForm']) !!}
+@include('admin.vehicles.template.form')
+<button type="submit" class="btn btn-success"><i class='fas fa-save'></i> Registrar</button>
+<button type="button" class="btn btn-danger" data-dismiss="modal"> <i class="fas fa-window-close"></i> Cancelar</button>
+{!! Form::close() !!}

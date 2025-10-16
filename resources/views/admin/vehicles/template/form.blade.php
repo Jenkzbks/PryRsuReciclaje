@@ -1,5 +1,3 @@
-{{-- resources/views/admin/vehicles/_form.blade.php --}}
-
 <div class="row">
     {{-- Columna Izquierda: Imágenes del Vehículo --}}
     <div class="col-md-5">
@@ -7,15 +5,15 @@
         <div class="mb-3">
             <label for="main_image" class="form-label">Imagen Principal</label>
             {{-- Vista previa de la imagen principal si ya existe (en modo edición) --}}
-            @if (isset($vehicle) && $vehicle->image)
-                <img src="{{ asset($vehicle->image) }}" alt="Imagen principal" class="img-fluid rounded mb-2" id="image_preview">
+            @if (isset($vehicle) && $vehicle->images->isNotEmpty())
+                <img src="{{ asset('storage/' . $vehicle->images->first()->image) }}" alt="Imagen principal" class="img-fluid rounded mb-2" id="image_preview">
             @else
                 <img src="https://via.placeholder.com/400x250.png?text=Imagen+Principal" alt="Imagen principal" class="img-fluid rounded mb-2" id="image_preview">
             @endif
             <input class="form-control" type="file" id="main_image" name="image" accept="image/*">
             <small class="text-muted">Sube la foto principal del vehículo.</small>
         </div>
-        
+
         {{-- Aquí iría la lógica para imágenes secundarias/galería si la implementas --}}
         <hr>
         <h6>Galería (Opcional)</h6>
@@ -44,7 +42,7 @@
         </ul>
 
         <div class="tab-content p-3 border border-top-0 rounded-bottom" id="vehicleTabContent">
-            
+
             {{-- Pestaña 1: Información General --}}
             <div class="tab-pane fade show active" id="general-info" role="tabpanel" aria-labelledby="general-info-tab">
                 <div class="row">
@@ -133,15 +131,7 @@
     </div>
 </div>
 
-<hr>
 
-{{-- Botones de acción --}}
-<div class="d-flex justify-content-end">
-    <button type="button" class="btn btn-secondary mr-2" data-dismiss="modal">Cancelar</button>
-    <button type="submit" class="btn btn-primary">
-        <i class="fas fa-save"></i> {{ isset($vehicle) ? 'Actualizar' : 'Guardar' }}
-    </button>
-</div>
 
 <script>
 // Pequeño script para previsualizar la imagen principal antes de subirla
@@ -153,5 +143,31 @@ document.getElementById('main_image').addEventListener('change', function(event)
         };
         reader.readAsDataURL(event.target.files[0]);
     }
+});
+
+// Script para enviar el formulario vía AJAX
+$('#vehicleForm').submit(function(e) {
+    e.preventDefault();
+    var formData = new FormData(this);
+    $.ajax({
+        url: $(this).attr('action'),
+        type: $(this).attr('method'),
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            Swal.fire("Éxito", response.message, "success");
+            $('#vehicleModal').modal('hide');
+            location.reload(); // Recarga la página para actualizar la lista
+        },
+        error: function(xhr) {
+            var errors = xhr.responseJSON.errors;
+            var errorMessage = "Errores en el formulario:\n";
+            for (var field in errors) {
+                errorMessage += errors[field][0] + "\n";
+            }
+            Swal.fire("Error", errorMessage, "error");
+        }
+    });
 });
 </script>

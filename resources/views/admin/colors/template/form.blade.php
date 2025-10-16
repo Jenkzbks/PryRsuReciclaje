@@ -7,8 +7,7 @@
     <label for="code">Código de Color</label>
     <div class="input-group">
         <div class="input-group-prepend">
-            <input type="color" id="color_picker" value="#ff0000" style="height: 38px;">
-        </div>
+            <input type="color" id="color_picker" value="{{ old('code', $color->code ?? '#ff0000') }}" style="height: 38px;">        </div>
         <input type="text" class="form-control" id="code" name="code" placeholder="Ej: #FF0000" required>
     </div>
 </div>
