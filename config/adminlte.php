@@ -315,14 +315,14 @@ return [
             'type' => 'sidebar-menu-search',
             'text' => 'search',
         ],
-        
+
         ['header' => 'DASHBOARD'],
         [
             'text' => 'Dashboard',
             'route' => 'admin.index',
             'icon' => 'fas fa-fw fa-tachometer-alt',
         ],
-        
+
         ['header' => 'GESTIÓN DE RESIDUOS'],
         [
             'text' => 'Gestión de Zonas',
@@ -335,16 +335,27 @@ return [
             'icon' => 'fas fa-fw fa-route',
         ],
         [
-            'text' => 'Vehículos',
-            'url' => '#',
-            'icon' => 'fas fa-fw fa-truck',
+            'text'    => 'Vehículos',
+            'icon'    => 'fas fa-fw fa-truck',
+            'submenu' => [
+                [
+                    'text' => 'Listado',
+                    'route'  => 'admin.vehicles.index',
+                    'icon' => 'fas fa-fw fa-list-ul',
+                ],
+                [
+                    'text' => 'Colores',
+                    'route'  => 'admin.colors.index',
+                    'icon' => 'fas fa-fw fa-palette',
+                ],
+            ],
         ],
         [
             'text' => 'Personal',
             'url' => '#',
             'icon' => 'fas fa-fw fa-users',
         ],
-        
+
         ['header' => 'REPORTES'],
         [
             'text' => 'Reportes de Recolección',
@@ -356,7 +367,7 @@ return [
             'url' => '#',
             'icon' => 'fas fa-fw fa-chart-pie',
         ],
-        
+
         ['header' => 'CONFIGURACIÓN'],
         [
             'text' => 'Configuración',
@@ -373,7 +384,7 @@ return [
             'url'  => 'brands',
             'icon' => 'fas fa-box'
         ],
-        
+
     ],
 
     /*

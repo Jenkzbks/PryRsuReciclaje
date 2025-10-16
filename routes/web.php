@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\admin\ColorController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\admin\AdminController;
 use App\Http\Controllers\admin\ZoneController;
 use App\Http\Controllers\admin\RouteController;
+use App\Http\Controllers\admin\VehicleController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -36,6 +38,8 @@ Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('zones', ZoneController::class);
     Route::resource('routes', RouteController::class);
+    Route::resource('vehicles', VehicleController::class);
+    Route::resource('colors', ColorController::class);
     // API routes para selects dependientes
     Route::get('api/provinces/{department_id}', [ZoneController::class, 'getProvinces'])->name('api.provinces');
     Route::get('api/districts/{province_id}', [ZoneController::class, 'getDistricts'])->name('api.districts');
