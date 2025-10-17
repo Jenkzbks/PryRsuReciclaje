@@ -48,6 +48,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('api/provinces/{department_id}', [ZoneController::class, 'getProvinces'])->name('api.provinces');
     Route::get('api/districts/{province_id}', [ZoneController::class, 'getDistricts'])->name('api.districts');
     Route::get('api/department-coordinates/{department_id}', [ZoneController::class, 'getDepartmentCoordinates'])->name('api.department.coordinates');
+    // API para obtener modelos por marca (select dependiente)
+    Route::get('api/models/{brand_id}', [VehicleController::class, 'modelsByBrand'])->name('api.models');
 });
 
 Route::resource('brands', BrandController::class)->names('admin.brands');
@@ -55,5 +57,3 @@ Route::resource('brands', BrandController::class)->names('admin.brands');
 Route::resource('brandmodels', BrandModelController::class)->names('admin.brandmodels');
 
 Route::resource('vehicletypes', VehicleTypeController::class)->names('admin.vehicletypes');
-
-
