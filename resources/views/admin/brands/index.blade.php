@@ -72,85 +72,61 @@
 
 
 @section('js')
-
-    <script>
-        $(document).on('click', '.frmDelete', function(e) {
-            e.preventDefault();
-            var form = $(this);
-            Swal.fire({
-                title: "¿Estás seguro de eliminar?",
-                text: "Esto no se puede deshacer!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Si, eliminar",
-                cancelButtonText: "Cancelar"
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: form.attr('action'),
-                        type: form.attr('method'),
-                        data: form.serialize(),
-                        success: function(response) {
-                            refreshTable(); // Recargar la tabla para ver los cambios
-                            Swal.fire({
-                                title: "Proceso Exitoso!",
-                                text: response.message,
-                                icon: "success",
-                                draggable: true
-                            });
-                        },
-                        error: function(response) {
-                            var error = response.responseJSON;
-                            Swal.fire({
-                                title: "Error!",
-                                text: error.message,
-                                icon: "error",
-                                draggable: true
-                            });
-                        }
-                    });
+<script>
+    $(document).ready(function() {
+        // Inicializar DataTables
+        $('#brands-table').DataTable({
+            'ajax': '{{ route('admin.brands.index') }}',
+            'columns': [
+                { 
+                    "data": "logo",
+                    "orderable": false,
+                    "searchable": false
+                }, 
+                { 
+                    "data": "name" 
+                }, 
+                { 
+                    "data": "description" 
+                }, 
+                { 
+                    "data": "created_at" 
+                }, 
+                { 
+                    "data": "updated_at" 
+                }, 
+                { 
+                    "data": "edit",
+                    "orderable": false,
+                    "searchable": false
+                },
+                { 
+                    "data": "delete",
+                    "orderable": false,
+                    "searchable": false
                 }
-            });
+            ],
+            'language': {
+                "url": "https://cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json"
+            }
         });
 
-       $('#btnRegistrar').click(function() {
-    $.ajax({
-        url: "{{ route('admin.brands.create') }}",
-        type: 'GET',
-        success: function(response) {
-            $('#modal .modal-body').html(response);
-            $('#modal .modal-title').html('Nueva Marca');
-            
-            // Fuerza el show del modal
-            $('#modal').modal({
-                backdrop: 'static',
-                keyboard: false
-            }).modal('show');
-            
-            // Debug: verifica si el modal tiene la clase 'show'
-            setTimeout(function() {
-                console.log('Modal tiene clase show:', $('#modal').hasClass('show'));
-                console.log('Modal está visible:', $('#modal').is(':visible'));
-            }, 500);
-        }
-    });
-});
-        $(document).on('click', '.btnEditar', function() {
-            var id = $(this).attr('id');
+        // Botón Registrar - CON REFRESH TABLE
+        $('#btnRegistrar').click(function() {
             $.ajax({
-                url: "{{ route('admin.brands.edit', 'id') }}".replace('id', id),
+                url: "{{ route('admin.brands.create') }}",
                 type: 'GET',
                 success: function(response) {
                     $('#modal .modal-body').html(response);
-                    $('#modal .modal-title').html('Editar Marca');
-                    $('#modal').modal('show');
+                    $('#modal .modal-title').html('Nueva Marca');
+                    $('#modal').modal({
+                        backdrop: 'static',
+                        keyboard: false
+                    }).modal('show');
 
-                    // Manejar envío del formulario del modal
-                    $('#modal form').on('submit', function(e) {
+                    // Configurar el envío del formulario de CREATE
+                    $('#modal form').off('submit').on('submit', function(e) {
                         e.preventDefault();
-
                         var form = $(this);
                         var formData = new FormData(this);
 
@@ -162,7 +138,55 @@
                             contentType: false,
                             success: function(response) {
                                 $('#modal').modal('hide');
-                                refreshTable(); // Recargar la página para ver los cambios
+                                refreshTable(); // ← RECARGAR TABLA
+                                Swal.fire({
+                                    title: "Proceso Exitoso!",
+                                    text: response.message,
+                                    icon: "success",
+                                    draggable: true
+                                });
+                            },
+                            error: function(response) {
+                                var error = response.responseJSON;
+                                Swal.fire({
+                                    title: "Error!",
+                                    text: error.message,
+                                    icon: "error",
+                                    draggable: true
+                                });
+                            }
+                        });
+                    });
+                }
+            });
+        });
+
+        // Botón Editar - CON REFRESH TABLE
+        $(document).on('click', '.btnEditar', function() {
+            var id = $(this).attr('id');
+            $.ajax({
+                url: "{{ route('admin.brands.edit', 'id') }}".replace('id', id),
+                type: 'GET',
+                success: function(response) {
+                    $('#modal .modal-body').html(response);
+                    $('#modal .modal-title').html('Editar Marca');
+                    $('#modal').modal('show');
+
+                    // Configurar el envío del formulario de UPDATE
+                    $('#modal form').off('submit').on('submit', function(e) {
+                        e.preventDefault();
+                        var form = $(this);
+                        var formData = new FormData(this);
+
+                        $.ajax({
+                            url: form.attr('action'),
+                            type: form.attr('method'),
+                            data: formData,
+                            processData: false,
+                            contentType: false,
+                            success: function(response) {
+                                $('#modal').modal('hide');
+                                refreshTable(); // ← RECARGAR TABLA
                                 Swal.fire({
                                     title: "Proceso Exitoso!",
                                     text: response.message,
@@ -188,45 +212,55 @@
             });
         });
 
-        $(document).ready(function() {
-            $('#brands-table').DataTable({
-                'ajax': '{{ route('admin.brands.index') }}',
-                'columns': [{
-                        "data": "logo",
-                        "orderable": false,
-                        "searchable": false
-                    }, {
-                        "data": "name",
-                    }, {
-                        "data": "description",
-                    }, {
-                        "data": "created_at",
-                    }, {
-                        "data": "updated_at",
-                    }, {
-                        "data": "edit",
-                        "orderable": false,
-                        "searchable": false
-                    },
-                    {
-                        "data": "delete",
-                        "orderable": false,
-                        "searchable": false
-                    },
-                ],
-                'language': {
-                    "url": "https://cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json"
+        // Eliminar - CON REFRESH TABLE
+        $(document).on('click', '.frmDelete', function(e) {
+            e.preventDefault();
+            var form = $(this);
+            Swal.fire({
+                title: "¿Estás seguro de eliminar?",
+                text: "Esto no se puede deshacer!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Si, eliminar",
+                cancelButtonText: "Cancelar"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: form.attr('action'),
+                        type: form.attr('method'),
+                        data: form.serialize(),
+                        success: function(response) {
+                            refreshTable(); // ← RECARGAR TABLA
+                            Swal.fire({
+                                title: "Proceso Exitoso!",
+                                text: response.message,
+                                icon: "success",
+                                draggable: true
+                            });
+                        },
+                        error: function(response) {
+                            var error = response.responseJSON;
+                            Swal.fire({
+                                title: "Error!",
+                                text: error.message,
+                                icon: "error",
+                                draggable: true
+                            });
+                        }
+                    });
                 }
             });
         });
+    });
 
-
-        function refreshTable() {
-            var table = $("#brands-table").DataTable();
-            table.ajax.reload(null, false);
-        }
-    </script>
-
+    // Función para refrescar la tabla
+    function refreshTable() {
+        var table = $("#brands-table").DataTable();
+        table.ajax.reload(null, false); // false = mantiene la paginación actual
+    }
+</script>
 @endsection
 
 @section('css')
