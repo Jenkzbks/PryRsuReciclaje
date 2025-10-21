@@ -155,6 +155,9 @@
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5 class="card-title mb-0">Asignar Perímetro</h5>
                             <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-sm btn-info" id="expandMap" title="Expandir mapa">
+                                    <i class="fas fa-expand"></i>
+                                </button>
                                 <button type="button" class="btn btn-sm btn-success" id="drawPolygon">
                                     <i class="fas fa-draw-polygon"></i> Dibujar Zona
                                 </button>
@@ -187,6 +190,34 @@
             </div>
         </div>
     </form>
+
+    <!-- Modal para mapa expandido -->
+    <div class="modal fade" id="mapModal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-fullscreen">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="mapModalLabel">Mapa Expandido - Editar Perímetro</h5>
+                    <div class="btn-group mr-3" role="group">
+                        <button type="button" class="btn btn-sm btn-success" id="drawPolygonModal">
+                            <i class="fas fa-draw-polygon"></i> Dibujar Zona
+                        </button>
+                        <button type="button" class="btn btn-sm btn-warning" id="clearPolygonModal">
+                            <i class="fas fa-eraser"></i> Borrar
+                        </button>
+                        <button type="button" class="btn btn-sm btn-secondary" id="resetMapModal">
+                            <i class="fas fa-undo"></i> Restablecer
+                        </button>
+                    </div>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-0">
+                    <div id="mapExpanded" style="height: calc(100vh - 120px);"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 @stop
 
 @section('css')
@@ -222,6 +253,41 @@
             0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
             70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
             100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+        
+        /* Estilos para modal expandido */
+        .modal-fullscreen {
+            width: 100vw !important;
+            max-width: none !important;
+            height: 100vh !important;
+            margin: 0 !important;
+        }
+        .modal-fullscreen .modal-dialog {
+            width: 100vw !important;
+            max-width: none !important;
+            height: 100vh !important;
+            margin: 0 !important;
+        }
+        .modal-fullscreen .modal-content {
+            width: 100vw !important;
+            height: 100vh !important;
+            border: none;
+            border-radius: 0;
+        }
+        .modal-fullscreen .modal-header {
+            border-bottom: 1px solid #dee2e6;
+            padding: 15px 20px;
+            flex-shrink: 0;
+        }
+        .modal-fullscreen .modal-body {
+            flex: 1;
+            padding: 0;
+            overflow: hidden;
+            height: calc(100vh - 80px) !important;
+        }
+        #mapExpanded {
+            width: 100% !important;
+            height: 100% !important;
         }
     </style>
 @stop
@@ -277,8 +343,8 @@
         });
 
         function initializeMap() {
-            // Inicializar mapa
-            map = L.map('map').setView([-12.0464, -77.0428], 10);
+            // Inicializar mapa centrado en José Leonardo Ortiz, Chiclayo, Perú
+            map = L.map('map').setView([-6.7706, -79.8406], 14);
 
             // Agregar tile layer
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -334,6 +400,48 @@
             map.on('draw:deleted', function(e) {
                 currentPolygon = null;
                 updatePolygonData();
+            });
+
+            // Cargar zonas existentes
+            loadExistingZones();
+        }
+
+        function loadExistingZones() {
+            const currentZoneId = {{ $zone->id }};
+            
+            $.get('/admin/api/zones-polygons', function(zones) {
+                zones.forEach(function(zone) {
+                    // No mostrar la zona actual que se está editando
+                    if (zone.id === currentZoneId) return;
+                    
+                    if (zone.polygon_coordinates && zone.polygon_coordinates.length > 0) {
+                        // Convertir coordenadas para Leaflet
+                        const coordinates = zone.polygon_coordinates.map(coord => [coord.lat, coord.lng]);
+                        
+                        // Crear polígono de zona existente
+                        const existingPolygon = L.polygon(coordinates, {
+                            color: '#28a745',
+                            weight: 2,
+                            fillOpacity: 0.1,
+                            dashArray: '5, 5'
+                        });
+                        
+                        // Agregar popup con información de la zona
+                        existingPolygon.bindPopup(`
+                            <div style="min-width: 200px;">
+                                <h6 class="mb-2"><strong>${zone.name}</strong></h6>
+                                <p class="mb-1"><small><i class="fas fa-map-marker-alt"></i> ${zone.location}</small></p>
+                                ${zone.area ? `<p class="mb-1"><small><i class="fas fa-ruler-combined"></i> ${parseFloat(zone.area).toFixed(2)} km²</small></p>` : ''}
+                                ${zone.description ? `<p class="mb-0"><small>${zone.description}</small></p>` : ''}
+                            </div>
+                        `);
+                        
+                        // Agregar al mapa
+                        existingPolygon.addTo(map);
+                    }
+                });
+            }).fail(function(xhr, status, error) {
+                console.log('Error al cargar zonas existentes:', error);
             });
         }
 
@@ -528,6 +636,208 @@
                 loadExistingPolygon(); // Recargar polígono original
                 stopDrawing();
                 toastr.info('Mapa restablecido a estado original');
+            });
+
+            // Funcionalidad para expandir mapa
+            let expandedMap = null;
+            let expandedDrawnItems = null;
+            let expandedCurrentPolygon = null;
+            
+            $('#expandMap').click(function() {
+                // Mostrar modal
+                $('#mapModal').modal('show');
+                
+                // Crear mapa expandido después de mostrar el modal
+                setTimeout(function() {
+                    initializeExpandedMap();
+                }, 300);
+            });
+
+            function initializeExpandedMap() {
+                // Crear nuevo mapa en el modal
+                expandedMap = L.map('mapExpanded').setView([-6.7706, -79.8406], 14);
+
+                // Agregar tile layer
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(expandedMap);
+
+                // Crear layer para elementos dibujados
+                expandedDrawnItems = new L.FeatureGroup();
+                expandedMap.addLayer(expandedDrawnItems);
+
+                // Si existe un polígono en el mapa principal, copiarlo al expandido
+                if (currentPolygon) {
+                    const latlngs = currentPolygon.getLatLngs()[0];
+                    expandedCurrentPolygon = L.polygon(latlngs, {
+                        color: '#007bff',
+                        fillOpacity: 0.3
+                    });
+                    expandedDrawnItems.addLayer(expandedCurrentPolygon);
+                    expandedMap.fitBounds(expandedCurrentPolygon.getBounds(), { padding: [20, 20] });
+                }
+
+                // Cargar zonas existentes en el mapa expandido (excluyendo la zona actual)
+                loadExistingZonesInExpanded();
+
+                // Configurar controles de dibujo para el mapa expandido
+                setupExpandedMapControls();
+            }
+
+            function loadExistingZonesInExpanded() {
+                if (!expandedMap) return;
+                
+                const currentZoneId = {{ $zone->id }};
+                
+                $.get('/admin/api/zones-polygons', function(zones) {
+                    zones.forEach(function(zone) {
+                        // No mostrar la zona actual que se está editando
+                        if (zone.id === currentZoneId) return;
+                        
+                        if (zone.polygon_coordinates && zone.polygon_coordinates.length > 0) {
+                            const coordinates = zone.polygon_coordinates.map(coord => [coord.lat, coord.lng]);
+                            
+                            const existingPolygon = L.polygon(coordinates, {
+                                color: '#28a745',
+                                weight: 2,
+                                fillOpacity: 0.1,
+                                dashArray: '5, 5'
+                            });
+                            
+                            existingPolygon.bindPopup(`
+                                <div style="min-width: 200px;">
+                                    <h6 class="mb-2"><strong>${zone.name}</strong></h6>
+                                    <p class="mb-1"><small><i class="fas fa-map-marker-alt"></i> ${zone.location}</small></p>
+                                    ${zone.area ? `<p class="mb-1"><small><i class="fas fa-ruler-combined"></i> ${parseFloat(zone.area).toFixed(2)} km²</small></p>` : ''}
+                                    ${zone.description ? `<p class="mb-0"><small>${zone.description}</small></p>` : ''}
+                                </div>
+                            `);
+                            
+                            existingPolygon.addTo(expandedMap);
+                        }
+                    });
+                });
+            }
+
+            function setupExpandedMapControls() {
+                let isDrawingExpanded = false;
+                let polygonDrawerExpanded = null;
+
+                // Eventos del mapa expandido
+                expandedMap.on('draw:created', function(e) {
+                    if (expandedCurrentPolygon) {
+                        expandedDrawnItems.removeLayer(expandedCurrentPolygon);
+                    }
+                    
+                    expandedCurrentPolygon = e.layer;
+                    expandedDrawnItems.addLayer(expandedCurrentPolygon);
+                    
+                    // Sincronizar con el mapa principal
+                    syncPolygonToMainMap();
+                });
+
+                function syncPolygonToMainMap() {
+                    if (expandedCurrentPolygon) {
+                        const latlngs = expandedCurrentPolygon.getLatLngs()[0];
+                        
+                        // Actualizar el mapa principal
+                        if (currentPolygon) {
+                            drawnItems.removeLayer(currentPolygon);
+                        }
+                        
+                        currentPolygon = L.polygon(latlngs, {
+                            color: '#007bff',
+                            fillOpacity: 0.3
+                        });
+                        drawnItems.addLayer(currentPolygon);
+                        
+                        // Actualizar los datos del polígono
+                        updatePolygonData();
+                    }
+                }
+
+                // Botones del modal
+                $('#drawPolygonModal').off('click').on('click', function() {
+                    if (!isDrawingExpanded) {
+                        isDrawingExpanded = true;
+                        $(this).removeClass('btn-success').addClass('btn-danger');
+                        $(this).html('<i class="fas fa-stop"></i> Detener Dibujo');
+                        
+                        polygonDrawerExpanded = new L.Draw.Polygon(expandedMap, {
+                            allowIntersection: false,
+                            shapeOptions: {
+                                color: '#007bff',
+                                fillColor: '#007bff',
+                                fillOpacity: 0.3,
+                                weight: 2
+                            }
+                        });
+                        
+                        polygonDrawerExpanded.enable();
+                        toastr.info('Haga clic en el mapa para comenzar a dibujar el polígono. Doble clic para terminar.');
+                        
+                    } else {
+                        stopDrawingExpanded();
+                    }
+                });
+
+                function stopDrawingExpanded() {
+                    isDrawingExpanded = false;
+                    if (polygonDrawerExpanded) {
+                        polygonDrawerExpanded.disable();
+                        polygonDrawerExpanded = null;
+                    }
+                    $('#drawPolygonModal').removeClass('btn-danger').addClass('btn-success');
+                    $('#drawPolygonModal').html('<i class="fas fa-draw-polygon"></i> Dibujar Zona');
+                }
+
+                $('#clearPolygonModal').off('click').on('click', function() {
+                    if (expandedCurrentPolygon) {
+                        expandedDrawnItems.removeLayer(expandedCurrentPolygon);
+                        expandedCurrentPolygon = null;
+                        
+                        // Limpiar también el mapa principal
+                        if (currentPolygon) {
+                            drawnItems.removeLayer(currentPolygon);
+                            currentPolygon = null;
+                            updatePolygonData();
+                        }
+                        
+                        toastr.success('Polígono eliminado');
+                    }
+                    stopDrawingExpanded();
+                });
+
+                $('#resetMapModal').off('click').on('click', function() {
+                    if (expandedCurrentPolygon) {
+                        expandedDrawnItems.removeLayer(expandedCurrentPolygon);
+                        expandedCurrentPolygon = null;
+                    }
+                    expandedMap.setView([-6.7706, -79.8406], 14);
+                    
+                    // Resetear también el mapa principal pero cargar el polígono original
+                    if (currentPolygon) {
+                        drawnItems.removeLayer(currentPolygon);
+                        currentPolygon = null;
+                    }
+                    loadExistingPolygon(); // Recargar polígono original
+                    
+                    stopDrawingExpanded();
+                    toastr.info('Mapa restablecido a estado original');
+                });
+            }
+
+            // Cuando se cierre el modal, limpiar el mapa expandido
+            $('#mapModal').on('hidden.bs.modal', function() {
+                if (expandedMap) {
+                    expandedMap.remove();
+                    expandedMap = null;
+                    expandedDrawnItems = null;
+                    expandedCurrentPolygon = null;
+                    
+                    // Limpiar el contenedor
+                    $('#mapExpanded').empty();
+                }
             });
         }
 

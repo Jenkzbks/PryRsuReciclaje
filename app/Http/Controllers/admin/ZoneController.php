@@ -4,6 +4,7 @@ namespace App\Http\Controllers\admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Zone;
+use App\Models\Zonecoord;
 use App\Models\Department;
 use App\Models\Province;
 use App\Models\District;
@@ -16,18 +17,15 @@ class ZoneController extends Controller
     {
         $query = Zone::with(['district.department', 'district.province', 'province.department']);
 
-        // Filtros
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
         if ($request->filled('department_id')) {
             $query->where(function($q) use ($request) {
-                // Zonas con distrito en el departamento
                 $q->whereHas('district.department', function($subQ) use ($request) {
                     $subQ->where('id', $request->department_id);
                 })
-                // O zonas con provincia en el departamento (sin distrito)
                 ->orWhereHas('province.department', function($subQ) use ($request) {
                     $subQ->where('id', $request->department_id);
                 });
@@ -36,11 +34,9 @@ class ZoneController extends Controller
 
         if ($request->filled('province_id')) {
             $query->where(function($q) use ($request) {
-                // Zonas con distrito en la provincia
                 $q->whereHas('district.province', function($subQ) use ($request) {
                     $subQ->where('id', $request->province_id);
                 })
-                // O zonas directamente de la provincia
                 ->orWhere('province_id', $request->province_id);
             });
         }
@@ -98,33 +94,48 @@ class ZoneController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
+        $polygonCoords = $request->polygon_coordinates ? json_decode($request->polygon_coordinates, true) : null;
+        
         $zone = Zone::create([
             'name' => $request->name,
             'province_id' => $request->province_id,
             'district_id' => $request->district_id,
             'description' => $request->description,
-            'polygon_coordinates' => $request->polygon_coordinates ? json_decode($request->polygon_coordinates, true) : null,
+            'polygon_coordinates' => $polygonCoords,
             'area' => $request->area,
         ]);
+
+        if ($polygonCoords && is_array($polygonCoords)) {
+            foreach ($polygonCoords as $coord) {
+                if (isset($coord['lat']) && isset($coord['lng'])) {
+                    $zone->zonecoords()->create([
+                        'latitude' => $coord['lat'],
+                        'longitude' => $coord['lng'],
+                    ]);
+                } elseif (isset($coord[0]) && isset($coord[1])) {
+                    $zone->zonecoords()->create([
+                        'latitude' => $coord[0],
+                        'longitude' => $coord[1],
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('admin.zones.index')->with('success', 'Zona creada exitosamente.');
     }
 
     public function show(Zone $zone)
     {
-        // Cargar relaciones dinámicamente según el tipo de zona
         $zone->load(['district.department', 'district.province', 'province.department']);
         return view('admin.zones.show', compact('zone'));
     }
 
     public function edit(Zone $zone)
     {
-        // Cargar relaciones necesarias
         $zone->load(['district.department', 'district.province', 'province.department']);
         
         $departments = Department::all();
         
-        // Obtener el departamento usando la relación actualizada
         $departmentId = null;
         if ($zone->district) {
             $departmentId = $zone->district->department_id;
@@ -166,20 +177,48 @@ class ZoneController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
+        $polygonCoords = $request->polygon_coordinates ? json_decode($request->polygon_coordinates, true) : null;
+        
         $zone->update([
             'name' => $request->name,
             'province_id' => $request->province_id,
             'district_id' => $request->district_id,
             'description' => $request->description,
-            'polygon_coordinates' => $request->polygon_coordinates ? json_decode($request->polygon_coordinates, true) : null,
+            'polygon_coordinates' => $polygonCoords,
             'area' => $request->area,
         ]);
+
+        // Actualizar coordenadas individuales en zonecoords
+        // Eliminar coordenadas existentes
+        $zone->zonecoords()->delete();
+        
+        // Crear nuevas coordenadas
+        if ($polygonCoords && is_array($polygonCoords)) {
+            foreach ($polygonCoords as $coord) {
+                if (isset($coord['lat']) && isset($coord['lng'])) {
+                    $zone->zonecoords()->create([
+                        'latitude' => $coord['lat'],
+                        'longitude' => $coord['lng'],
+                    ]);
+                } elseif (isset($coord[0]) && isset($coord[1])) {
+                    // Formato alternativo [lat, lng]
+                    $zone->zonecoords()->create([
+                        'latitude' => $coord[0],
+                        'longitude' => $coord[1],
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('admin.zones.index')->with('success', 'Zona actualizada exitosamente.');
     }
 
     public function destroy(Zone $zone)
     {
+        // Eliminar coordenadas relacionadas
+        $zone->zonecoords()->delete();
+        
+        // Eliminar la zona
         $zone->delete();
         return redirect()->route('admin.zones.index')->with('success', 'Zona eliminada exitosamente.');
     }
@@ -211,5 +250,34 @@ class ZoneController extends Controller
         }
         
         return response()->json(['error' => 'Coordinates not found'], 404);
+    }
+
+    public function getZonesPolygons()
+    {
+        $zones = Zone::with(['district.province.department', 'province.department'])
+            ->whereNotNull('polygon_coordinates')
+            ->get()
+            ->map(function ($zone) {
+                $locationName = '';
+                if ($zone->district) {
+                    $locationName = $zone->district->name . ', ' . 
+                                  $zone->district->province->name . ', ' . 
+                                  $zone->district->province->department->name;
+                } elseif ($zone->province) {
+                    $locationName = $zone->province->name . ', ' . 
+                                  $zone->province->department->name;
+                }
+
+                return [
+                    'id' => $zone->id,
+                    'name' => $zone->name,
+                    'location' => $locationName,
+                    'polygon_coordinates' => $zone->polygon_coordinates,
+                    'area' => $zone->area,
+                    'description' => $zone->description
+                ];
+            });
+
+        return response()->json($zones);
     }
 }
