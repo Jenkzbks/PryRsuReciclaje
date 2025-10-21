@@ -8,24 +8,23 @@
             @if (isset($vehicle) && $vehicle->images->isNotEmpty())
                 <img src="{{ asset('storage/' . $vehicle->images->first()->image) }}" alt="Imagen principal" class="img-fluid rounded mb-2" id="image_preview">
             @else
-                <img src="https://via.placeholder.com/400x250.png?text=Imagen+Principal" alt="Imagen principal" class="img-fluid rounded mb-2" id="image_preview">
+                <img src="{{ asset('storage/vehicles/noimage.jpg') }}" alt="Imagen principal" class="img-fluid rounded mb-2" id="image_preview">
             @endif
             <input class="form-control" type="file" id="main_image" name="image" accept="image/*">
             <small class="text-muted">Sube la foto principal del vehículo.</small>
         </div>
 
-        {{-- Aquí iría la lógica para imágenes secundarias/galería si la implementas --}}
         <hr>
         <h6>Galería (Opcional)</h6>
         <div class="row">
             <div class="col-4">
-                 <img src="https://via.placeholder.com/150x100.png?text=Img+2" class="img-fluid rounded">
+                <img src="{{ asset('storage/vehicles/noimage.jpg') }}" class="img-fluid rounded" alt="Imagen de galería 2">
             </div>
             <div class="col-4">
-                 <img src="https://via.placeholder.com/150x100.png?text=Img+3" class="img-fluid rounded">
+                <img src="{{ asset('storage/vehicles/noimage.jpg') }}" class="img-fluid rounded" alt="Imagen de galería 3">
             </div>
             <div class="col-4">
-                 <img src="https://via.placeholder.com/150x100.png?text=Img+4" class="img-fluid rounded">
+                <img src="{{ asset('storage/vehicles/noimage.jpg') }}" class="img-fluid rounded" alt="Imagen de galería 4">
             </div>
         </div>
     </div>
@@ -64,7 +63,7 @@
                     <div class="col-md-6 form-group">
                         <label for="plate">Placa</label>
                         <input type="text" name="plate" id="plate" class="form-control" value="{{ old('plate', $vehicle->plate ?? '') }}" placeholder="Ej: ABC-123">
-                         <small class="text-muted">Ingresa la placa del vehículo.</small>
+                        <small class="text-muted">Ingresa la placa del vehículo.</small>
                     </div>
                     <div class="col-md-6 form-group">
                         <label for="status">Estado</label>
@@ -84,7 +83,7 @@
 
             {{-- Pestaña 2: Especificaciones --}}
             <div class="tab-pane fade" id="specs" role="tabpanel" aria-labelledby="specs-tab">
-                 <div class="row">
+                <div class="row">
                     <div class="col-md-6 form-group">
                         <label for="brand_id">Marca</label>
                         <select name="brand_id" id="brand_id" class="form-control">
@@ -94,10 +93,10 @@
                             @endforeach
                         </select>
                     </div>
-                     <div class="col-md-6 form-group">
+                    <div class="col-md-6 form-group">
                         <label for="model_id">Modelo</label>
                         <select name="model_id" id="model_id" class="form-control">
-                             <option value="">Seleccione un modelo</option>
+                            <option value="">Seleccione un modelo</option>
                             @foreach ($models as $model)
                                 <option value="{{ $model->id }}" {{ old('model_id', $vehicle->model_id ?? '') == $model->id ? 'selected' : '' }}>{{ $model->name }}</option>
                             @endforeach
@@ -106,8 +105,8 @@
                     <div class="col-md-6 form-group">
                         <label for="type_id">Tipo</label>
                         <select name="type_id" id="type_id" class="form-control">
-                             <option value="">Seleccione un tipo</option>
-                             @foreach ($types as $type)
+                            <option value="">Seleccione un tipo</option>
+                            @foreach ($types as $type)
                                 <option value="{{ $type->id }}" {{ old('type_id', $vehicle->type_id ?? '') == $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
                             @endforeach
                         </select>
@@ -115,7 +114,7 @@
                     <div class="col-md-6 form-group">
                         <label for="color_id">Color</label>
                         <select name="color_id" id="color_id" class="form-control">
-                             <option value="">Seleccione un color</option>
+                            <option value="">Seleccione un color</option>
                             @foreach ($colors as $color)
                                 <option value="{{ $color->id }}" {{ old('color_id', $vehicle->color_id ?? '') == $color->id ? 'selected' : '' }}>{{ $color->name }}</option>
                             @endforeach
@@ -125,49 +124,84 @@
                         <label for="load_capacity">Capacidad de Carga (Kg)</label>
                         <input type="number" step="0.01" name="load_capacity" id="load_capacity" class="form-control" value="{{ old('load_capacity', $vehicle->load_capacity ?? '') }}" placeholder="Ej: 1500.50">
                     </div>
-                 </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-
-
 <script>
-// Pequeño script para previsualizar la imagen principal antes de subirla
-document.getElementById('main_image').addEventListener('change', function(event) {
-    if (event.target.files && event.target.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            document.getElementById('image_preview').setAttribute('src', e.target.result);
-        };
-        reader.readAsDataURL(event.target.files[0]);
-    }
-});
-
-// Script para enviar el formulario vía AJAX
-$('#vehicleForm').submit(function(e) {
-    e.preventDefault();
-    var formData = new FormData(this);
-    $.ajax({
-        url: $(this).attr('action'),
-        type: $(this).attr('method'),
-        data: formData,
-        processData: false,
-        contentType: false,
-        success: function(response) {
-            Swal.fire("Éxito", response.message, "success");
-            $('#vehicleModal').modal('hide');
-            location.reload(); // Recarga la página para actualizar la lista
-        },
-        error: function(xhr) {
-            var errors = xhr.responseJSON.errors;
-            var errorMessage = "Errores en el formulario:\n";
-            for (var field in errors) {
-                errorMessage += errors[field][0] + "\n";
-            }
-            Swal.fire("Error", errorMessage, "error");
+    document.getElementById('main_image').addEventListener('change', function(event) {
+        if (event.target.files && event.target.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('image_preview').setAttribute('src', e.target.result);
+            };
+            reader.readAsDataURL(event.target.files[0]);
         }
     });
-});
+
+
+</script>
+<script>
+    (function() {
+        // Valor inicial (puede venir de old() o del vehículo en edición)
+        var initialModel = @json(old('model_id', $vehicle->model_id ?? null));
+
+        function fillModels(models, selectedId) {
+            var modelSelect = document.getElementById('model_id');
+            if (!modelSelect) return;
+            // Limpiar opciones
+            modelSelect.innerHTML = '';
+            // Opción por defecto
+            var defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Seleccione un modelo';
+            modelSelect.appendChild(defaultOption);
+
+            models.forEach(function(m) {
+                var opt = document.createElement('option');
+                opt.value = m.id;
+                opt.textContent = m.name;
+                if (selectedId && (String(selectedId) === String(m.id))) {
+                    opt.selected = true;
+                }
+                modelSelect.appendChild(opt);
+            });
+        }
+
+        async function loadModelsByBrand(brandId, selectedId) {
+            if (!brandId) {
+                fillModels([], null);
+                return;
+            }
+            try {
+                var res = await fetch('/admin/api/models/' + brandId, { headers: { 'Accept': 'application/json' } });
+                if (!res.ok) { console.error('Error al obtener modelos'); return; }
+                var data = await res.json();
+                fillModels(data, selectedId);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // Escuchar cambios en la marca
+        var brandSelect = document.getElementById('brand_id');
+        if (brandSelect) {
+            brandSelect.addEventListener('change', function(e) {
+                loadModelsByBrand(e.target.value, null);
+            });
+        }
+
+        // Carga inicial: si la marca ya está seleccionada (edición o old), cargar modelos y seleccionar el actual
+        document.addEventListener('DOMContentLoaded', function() {
+            var initialBrand = document.getElementById('brand_id') ? document.getElementById('brand_id').value : null;
+            if (initialBrand) {
+                loadModelsByBrand(initialBrand, initialModel);
+            } else {
+                // Si no hay marca seleccionada, pero sí hay modelo (raro), limpiamos el select
+                fillModels([], null);
+            }
+        });
+    })();
 </script>

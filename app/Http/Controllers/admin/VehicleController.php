@@ -36,7 +36,8 @@ class VehicleController extends Controller
         $request->validate([
             'name' => 'required|string|max:100',
             'code' => 'required|string|max:100',
-            'plate' => 'required|string|max:20',
+            // la placa debe ser única
+            'plate' => 'required|string|max:20|unique:vehicles,plate',
             'year' => 'nullable|integer',
             'load_capacity' => 'nullable|numeric',
             'description' => 'nullable|string',
@@ -83,6 +84,13 @@ class VehicleController extends Controller
         return view('admin.vehicles.partials.grid', compact('vehicles'))->render();
     }
 
+
+    public function modelsByBrand($brand_id)
+    {
+        $models = BrandModel::where('brand_id', $brand_id)->get(['id', 'name']);
+        return response()->json($models);
+    }
+
     public function edit($id)
     {
         $vehicle = Vehicle::with('images')->findOrFail($id);
@@ -98,7 +106,8 @@ class VehicleController extends Controller
         $request->validate([
             'name' => 'required|string|max:100',
             'code' => 'required|string|max:100',
-            'plate' => 'required|string|max:20',
+            // permitir la misma placa para el vehículo que se edita (ignore por id)
+            'plate' => 'required|string|max:20|unique:vehicles,plate,' . $id,
             'year' => 'nullable|integer',
             'load_capacity' => 'nullable|numeric',
             'description' => 'nullable|string',
