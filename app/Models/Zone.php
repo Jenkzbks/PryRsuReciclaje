@@ -33,6 +33,11 @@ class Zone extends Model
         return $this->belongsTo(Province::class);
     }
 
+    public function zonecoords()
+    {
+        return $this->hasMany(Zonecoord::class);
+    }
+
     // Relaciones dinámicas que manejan cuando hay o no distrito
     public function getDepartmentAttribute()
     {

@@ -39,4 +39,5 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('api/provinces/{department_id}', [ZoneController::class, 'getProvinces'])->name('api.provinces');
     Route::get('api/districts/{province_id}', [ZoneController::class, 'getDistricts'])->name('api.districts');
     Route::get('api/department-coordinates/{department_id}', [ZoneController::class, 'getDepartmentCoordinates'])->name('api.department.coordinates');
+    Route::get('api/zones-polygons', [ZoneController::class, 'getZonesPolygons'])->name('api.zones.polygons');
 });
