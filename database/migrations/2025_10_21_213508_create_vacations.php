@@ -13,6 +13,13 @@ return new class extends Migration
     {
         Schema::create('vacations', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('employee_id');
+            $table->foreign('employee_id')->references('id')->on('employee');
+            $table->date('request_date');
+            $table->integer('requested_days',11);
+            $table->date('end_date');
+            $table->enum('status', ['Pending', 'Approved', 'Rejected', 'Cancelled','Completed']);
+            $table->string('notes');
             $table->timestamps();
         });
     }
