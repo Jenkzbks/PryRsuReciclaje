@@ -116,7 +116,7 @@ class ContractController extends Controller
         $contract = Contract::create($data);
 
         return redirect()
-            ->route('contracts.index')
+            ->route('personnel.contracts.index')
             ->with('success', 'Contrato creado exitosamente.');
     }
 
@@ -162,7 +162,7 @@ class ContractController extends Controller
         $contract->update($data);
 
         return redirect()
-            ->route('contracts.index')
+            ->route('personnel.contracts.index')
             ->with('success', 'Contrato actualizado exitosamente.');
     }
 
@@ -174,14 +174,14 @@ class ContractController extends Controller
         // No permitir eliminar contratos activos
         if ($contract->status === 'active') {
             return redirect()
-                ->route('contracts.index')
+                ->route('personnel.contracts.index')
                 ->with('error', 'No se puede eliminar un contrato activo.');
         }
 
         $contract->delete();
 
         return redirect()
-            ->route('contracts.index')
+            ->route('personnel.contracts.index')
             ->with('success', 'Contrato eliminado exitosamente.');
     }
 
