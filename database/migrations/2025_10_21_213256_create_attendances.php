@@ -16,8 +16,8 @@ return new class extends Migration
             $table->unsignedBigInteger('employee_id');
             $table->foreign('employee_id')->references('id')->on('employee');
             $table->date('attendance_date');
-            $table->integer('period',11);
-            $table->integer('status',11);
+            $table->integer('period');
+            $table->integer('status');
             $table->string('notes');
             $table->timestamps();
         });

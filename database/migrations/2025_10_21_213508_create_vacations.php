@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('employee_id');
             $table->foreign('employee_id')->references('id')->on('employee');
             $table->date('request_date');
-            $table->integer('requested_days',11);
+            $table->integer('requested_days');
             $table->date('end_date');
             $table->enum('status', ['Pending', 'Approved', 'Rejected', 'Cancelled','Completed']);
             $table->string('notes');

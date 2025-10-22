@@ -21,7 +21,7 @@ return new class extends Migration
             $table->foreign('shift_id')->references('id')->on('shift');
             $table->foreign('vehicle_id')->references('id')->on('vehicles');
             $table->string('days', 255);
-            $table->integer('status', 11);
+            $table->integer('status');
             $table->timestamps();
         });
     }

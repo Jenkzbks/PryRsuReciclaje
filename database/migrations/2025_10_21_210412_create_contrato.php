@@ -23,9 +23,9 @@ return new class extends Migration
             $table->foreign('position_id')->references('id')->on('employeetype');
             $table->unsignedBigInteger('departament_id');
             $table->foreign('departament_id')->references('id')->on('departments');
-            $table->integer('vacations_days_per_year',11);
-            $table->integer('probation_period_months',11);
-            $table->tinyInteger('is_active',1);
+            $table->integer('vacations_days_per_year');
+            $table->integer('probation_period_months');
+            $table->tinyInteger('is_active');
             $table->string('termination_reason');
             $table->timestamps();
         });

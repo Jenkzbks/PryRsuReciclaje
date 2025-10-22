@@ -23,7 +23,7 @@ return new class extends Migration
             $table->foreign('zone_id')->references('id')->on('zones');
             $table->date('date');
             $table->string('notes', 120);
-            $table->integer('status', 11);
+            $table->integer('status');
             $table->timestamps();
         });
     }

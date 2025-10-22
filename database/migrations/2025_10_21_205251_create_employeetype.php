@@ -13,8 +13,15 @@ return new class extends Migration
     {
         Schema::create('employeetype', function (Blueprint $table) {
             $table->id();
-            $table->string('name',100);
-            $table->string('descripcion');
+            $table->string('name', 100);
+            $table->string('code', 10)->nullable();
+            $table->text('description')->nullable();
+            $table->integer('level')->nullable();
+            $table->integer('sort_order')->default(0);
+            $table->boolean('active')->default(true);
+            $table->boolean('protected')->default(false);
+            $table->string('color', 7)->default('#007bff');
+            $table->string('icon', 50)->default('fas fa-user');
             $table->timestamps();
         });
     }

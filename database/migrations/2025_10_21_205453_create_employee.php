@@ -13,18 +13,18 @@ return new class extends Migration
     {
         Schema::create('employee', function (Blueprint $table) {
             $table->id();
-            $table->string('dni',10);
-            $table->string('lastnames',200);
-            $table->string('names',100);
-            $table->date('birthay');
-            $table->string('license',20);
-            $table->string('address',200);
-            $table->string('email',100);
-            $table->string('photo',100);
-            $table->string('phone',20);
-            $table->tinyInteger('status',1);
-            $table->string('password',255);
-             $table->unsignedBigInteger('type_id');
+            $table->string('dni', 10)->unique();
+            $table->string('names', 100);
+            $table->string('lastnames', 200);
+            $table->date('birthday');
+            $table->string('license', 20)->nullable();
+            $table->text('address')->nullable();
+            $table->string('email', 100)->nullable();
+            $table->string('photo', 255)->nullable();
+            $table->string('phone', 20)->nullable();
+            $table->tinyInteger('status')->default(1);
+            $table->string('password', 255)->nullable();
+            $table->unsignedBigInteger('type_id');
             $table->foreign('type_id')->references('id')->on('employeetype');
             $table->timestamps();
         });

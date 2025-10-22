@@ -366,9 +366,51 @@ return [
             ],
         ],
         [
-            'text' => 'Personal',
-            'url' => '#',
-            'icon' => 'fas fa-fw fa-users',
+            'text'    => 'Personal',
+            'icon'    => 'fas fa-fw fa-users',
+            'submenu' => [
+                [
+                    'text' => 'Dashboard Personal',
+                    'route'  => 'admin.personnel.dashboard',
+                    'icon' => 'fas fa-fw fa-tachometer-alt',
+                ],
+                [
+                    'text' => 'Empleados',
+                    'route'  => 'admin.personnel.employees.index',
+                    'icon' => 'fas fa-fw fa-user-tie',
+                ],
+                [
+                    'text' => 'Tipos de Empleado',
+                    'route'  => 'admin.personnel.employee-types.index',
+                    'icon' => 'fas fa-fw fa-tags',
+                ],
+                [
+                    'text' => 'Contratos',
+                    'route'  => 'admin.personnel.contracts.index',
+                    'icon' => 'fas fa-fw fa-file-contract',
+                ],
+                [
+                    'text' => 'Vacaciones',
+                    'route'  => 'admin.personnel.vacations.index',
+                    'icon' => 'fas fa-fw fa-calendar-alt',
+                ],
+                [
+                    'text' => 'Asistencias',
+                    'route'  => 'admin.personnel.attendances.index',
+                    'icon' => 'fas fa-fw fa-clock',
+                ],
+                [
+                    'text' => 'Dashboard Asistencias',
+                    'route'  => 'admin.personnel.attendances.dashboard',
+                    'icon' => 'fas fa-fw fa-chart-line',
+                ],
+                [
+                    'text' => 'Kiosco de Asistencias',
+                    'route'  => 'attendance-kiosk.index',
+                    'icon' => 'fas fa-fw fa-desktop',
+                    'target' => '_blank',
+                ],
+            ],
         ],
 
         ['header' => 'REPORTES'],
