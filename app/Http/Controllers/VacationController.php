@@ -22,8 +22,8 @@ class VacationController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->whereHas('employee', function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('lastname', 'like', "%{$search}%")
+                $q->where('names', 'like', "%{$search}%")
+                  ->orWhere('lastnames', 'like', "%{$search}%")
                   ->orWhere('dni', 'like', "%{$search}%");
             });
         }
@@ -74,8 +74,8 @@ class VacationController extends Controller
         $vacations = $query->paginate(15)->withQueryString();
 
         // Para la vista
-        $employees = Employee::where('status', 'active')
-            ->orderBy('name')
+        $employees = Employee::where('status', 1)
+            ->orderBy('names')
             ->get();
 
         $years = Vacation::selectRaw('YEAR(start_date) as year')
@@ -91,8 +91,8 @@ class VacationController extends Controller
      */
     public function create(Request $request)
     {
-        $employees = Employee::where('status', 'active')
-            ->orderBy('name')
+        $employees = Employee::where('status', 1)
+            ->orderBy('names')
             ->get();
 
         $selectedEmployee = null;
@@ -113,15 +113,28 @@ class VacationController extends Controller
         // Calcular días automáticamente
         $startDate = Carbon::parse($data['start_date']);
         $endDate = Carbon::parse($data['end_date']);
-        $data['days'] = $startDate->diffInDays($endDate) + 1;
+        $data['days_taken'] = $startDate->diffInDays($endDate) + 1;
+        $data['requested_days'] = $data['days_taken']; // Para compatibilidad
 
-        // Estado inicial: pendiente
-        $data['status'] = Vacation::STATUS_PENDING;
+        // Estado inicial: pendiente si no se especifica
+        if (!isset($data['status'])) {
+            $data['status'] = Vacation::STATUS_PENDING;
+        }
+
+        // Establecer fecha de solicitud
+        if (!isset($data['request_date'])) {
+            $data['request_date'] = now();
+        }
+
+        // Si el estado es aprobado, establecer fecha de aprobación
+        if ($data['status'] === Vacation::STATUS_APPROVED && isset($data['approved_by'])) {
+            $data['approved_at'] = now();
+        }
 
         $vacation = Vacation::create($data);
 
         return redirect()
-            ->route('vacations.index')
+            ->route('admin.personnel.vacations.index')
             ->with('success', 'Solicitud de vacaciones creada exitosamente.');
     }
 
@@ -130,7 +143,7 @@ class VacationController extends Controller
      */
     public function show(Vacation $vacation)
     {
-        $vacation->load(['employee']);
+        $vacation->load(['employee', 'replacementEmployee', 'approver']);
 
         return view('vacations.show', compact('vacation'));
     }
@@ -140,15 +153,8 @@ class VacationController extends Controller
      */
     public function edit(Vacation $vacation)
     {
-        // Solo se pueden editar vacaciones pendientes
-        if ($vacation->status !== Vacation::STATUS_PENDING) {
-            return redirect()
-                ->route('vacations.index')
-                ->with('error', 'Solo se pueden editar vacaciones pendientes.');
-        }
-
-        $employees = Employee::where('status', 'active')
-            ->orderBy('name')
+        $employees = Employee::where('status', 1)
+            ->orderBy('names')
             ->get();
 
         return view('vacations.edit', compact('vacation', 'employees'));
@@ -159,24 +165,28 @@ class VacationController extends Controller
      */
     public function update(UpdateVacationRequest $request, Vacation $vacation)
     {
-        // Solo se pueden editar vacaciones pendientes
-        if ($vacation->status !== Vacation::STATUS_PENDING) {
-            return redirect()
-                ->route('vacations.index')
-                ->with('error', 'Solo se pueden editar vacaciones pendientes.');
-        }
-
         $data = $request->validated();
         
         // Recalcular días
         $startDate = Carbon::parse($data['start_date']);
         $endDate = Carbon::parse($data['end_date']);
-        $data['days'] = $startDate->diffInDays($endDate) + 1;
+        $data['days_taken'] = $startDate->diffInDays($endDate) + 1;
+        $data['requested_days'] = $data['days_taken']; // Para compatibilidad
+
+        // Si el estado cambia a aprobado y no tenía fecha de aprobación, establecerla
+        if ($data['status'] === Vacation::STATUS_APPROVED && !$vacation->approved_at) {
+            $data['approved_at'] = now();
+        }
+
+        // Si el estado cambia de aprobado a otro, limpiar datos de aprobación
+        if ($data['status'] !== Vacation::STATUS_APPROVED) {
+            $data['approved_at'] = null;
+        }
 
         $vacation->update($data);
 
         return redirect()
-            ->route('vacations.index')
+            ->route('admin.personnel.vacations.show', $vacation)
             ->with('success', 'Solicitud de vacaciones actualizada exitosamente.');
     }
 
@@ -185,17 +195,10 @@ class VacationController extends Controller
      */
     public function destroy(Vacation $vacation)
     {
-        // Solo se pueden eliminar vacaciones pendientes o rechazadas
-        if (!in_array($vacation->status, [Vacation::STATUS_PENDING, Vacation::STATUS_REJECTED])) {
-            return redirect()
-                ->route('vacations.index')
-                ->with('error', 'Solo se pueden eliminar vacaciones pendientes o rechazadas.');
-        }
-
         $vacation->delete();
 
         return redirect()
-            ->route('vacations.index')
+            ->route('admin.personnel.vacations.index')
             ->with('success', 'Solicitud de vacaciones eliminada exitosamente.');
     }
 
@@ -392,7 +395,7 @@ class VacationController extends Controller
         $vacations = $query->get()->map(function($vacation) {
             return [
                 'id' => $vacation->id,
-                'title' => $vacation->employee->name . ' ' . $vacation->employee->lastname,
+                'title' => $vacation->employee->names . ' ' . $vacation->employee->lastnames,
                 'start' => $vacation->start_date->format('Y-m-d'),
                 'end' => $vacation->end_date->addDay()->format('Y-m-d'), // FullCalendar end es exclusivo
                 'backgroundColor' => $vacation->status === Vacation::STATUS_APPROVED ? '#28a745' : '#6c757d',
@@ -443,7 +446,7 @@ class VacationController extends Controller
             })->map->count(),
             'by_employee' => $vacations->groupBy('employee_id')->map(function($group) {
                 return [
-                    'employee' => $group->first()->employee->name . ' ' . $group->first()->employee->lastname,
+                    'employee' => $group->first()->employee->names . ' ' . $group->first()->employee->lastnames,
                     'total_days' => $group->sum('days'),
                     'vacations_count' => $group->count()
                 ];

@@ -216,12 +216,40 @@
                 this.value = this.value.replace(/[^0-9]/g, '');
             });
 
-            // Auto-submit cuando DNI tiene 8 dígitos y hay contraseña
-            $('#dni, #password').on('input', function() {
-                if ($('#dni').val().length === 8 && $('#password').val().length > 0) {
-                    setTimeout(() => $('#loginForm').submit(), 500);
+            // Prevenir envío automático con Enter hasta que la contraseña esté completa
+            $('#dni, #password').on('keypress', function(e) {
+                if (e.which === 13) { // Enter key
+                    e.preventDefault();
+                    
+                    const dni = $('#dni').val();
+                    const password = $('#password').val();
+                    
+                    console.log('Enter pressed:', {
+                        dni: dni,
+                        password: password.substring(0, 3) + '***',
+                        dniLength: dni.length,
+                        passwordLength: password.length
+                    });
+                    
+                    // Solo procesar si ambos campos están completos
+                    if (dni.length === 8 && password.length >= 6) {
+                        $('#loginForm').submit();
+                    } else {
+                        if (dni.length !== 8) {
+                            showMessage('Complete el DNI (8 dígitos)', 'error');
+                        } else if (password.length < 6) {
+                            showMessage('La contraseña debe tener al menos 6 caracteres', 'error');
+                        }
+                    }
                 }
             });
+
+            // Auto-submit desactivado - ahora requiere hacer clic en el botón
+            // $('#dni, #password').on('input', function() {
+            //     if ($('#dni').val().length === 8 && $('#password').val().length > 0) {
+            //         setTimeout(() => $('#loginForm').submit(), 500);
+            //     }
+            // });
 
             // Form submission
             $('#loginForm').on('submit', function(e) {
@@ -229,9 +257,22 @@
                 processLogin();
             });
 
-            // Limpiar mensajes después de 5 segundos
-            $(document).on('DOMNodeInserted', '#statusMessage', function() {
-                setTimeout(() => $('#statusMessage').fadeOut(), 5000);
+            // Observar cambios en el DOM para mensajes de status (reemplaza DOMNodeInserted)
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'childList') {
+                        mutation.addedNodes.forEach(function(node) {
+                            if (node.id === 'statusMessage') {
+                                setTimeout(() => $('#statusMessage').fadeOut(), 5000);
+                            }
+                        });
+                    }
+                });
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
             });
         });
 
@@ -253,6 +294,14 @@
             const dni = $('#dni').val();
             const password = $('#password').val();
 
+            // Debug para ver qué está pasando
+            console.log('processLogin called:', {
+                dni: dni,
+                password: password,
+                dniLength: dni.length,
+                passwordLength: password.length
+            });
+
             if (dni.length !== 8) {
                 showMessage('El DNI debe tener 8 dígitos', 'error');
                 return;
@@ -262,6 +311,12 @@
                 showMessage('Ingrese su contraseña', 'error');
                 return;
             }
+
+            // Debug adicional antes del envío
+            console.log('Sending login request with:', {
+                dni: dni,
+                password: password.substring(0, 3) + '***' // Solo mostrar primeros 3 caracteres por seguridad
+            });
 
             // Deshabilitar el formulario
             $('input, button').prop('disabled', true);

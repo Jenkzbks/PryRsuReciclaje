@@ -227,6 +227,45 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Credenciales de Acceso -->
+                        <h5 class="mb-3 text-primary">
+                            <i class="fas fa-key"></i> Credenciales de Acceso al Kiosco
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="password">Contraseña para Kiosco de Asistencias</label>
+                                    <input type="password" 
+                                           class="form-control @error('password') is-invalid @enderror" 
+                                           id="password" 
+                                           name="password" 
+                                           value="{{ old('password') }}"
+                                           placeholder="Contraseña para acceder al kiosco">
+                                    @error('password')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="password_confirmation">Confirmar Contraseña</label>
+                                    <input type="password" 
+                                           class="form-control @error('password_confirmation') is-invalid @enderror" 
+                                           id="password_confirmation" 
+                                           name="password_confirmation" 
+                                           placeholder="Confirmar contraseña">
+                                    @error('password_confirmation')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle"></i> Si no se especifica, se usará el DNI como contraseña por defecto
+                                </small>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

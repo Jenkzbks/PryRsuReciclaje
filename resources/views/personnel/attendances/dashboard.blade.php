@@ -99,13 +99,13 @@
                                 @forelse($entriesToday as $entry)
                                     <tr>
                                         <td>
-                                            <strong>{{ $entry->employee->name }} {{ $entry->employee->lastname }}</strong>
+                                            <strong>{{ $entry->employee->names }} {{ $entry->employee->lastnames }}</strong>
                                             <br>
                                             <small class="text-muted">{{ $entry->employee->dni }}</small>
                                         </td>
                                         <td>
                                             <span class="badge badge-success">
-                                                {{ $entry->datetime->format('H:i') }}
+                                                {{ $entry->check_in ? \Carbon\Carbon::parse($entry->check_in)->format('H:i') : 'N/A' }}
                                             </span>
                                         </td>
                                         <td>
@@ -158,17 +158,20 @@
                                 @forelse($exitsToday as $exit)
                                     @php
                                         $entry = $entriesToday->where('employee_id', $exit->employee_id)->first();
-                                        $duration = $entry ? $entry->datetime->diffInHours($exit->datetime) : 0;
+                                        $duration = 0;
+                                        if ($entry && $entry->check_in && $exit->check_out) {
+                                            $duration = \Carbon\Carbon::parse($entry->check_in)->diffInHours(\Carbon\Carbon::parse($exit->check_out));
+                                        }
                                     @endphp
                                     <tr>
                                         <td>
-                                            <strong>{{ $exit->employee->name }} {{ $exit->employee->lastname }}</strong>
+                                            <strong>{{ $exit->employee->names }} {{ $exit->employee->lastnames }}</strong>
                                             <br>
                                             <small class="text-muted">{{ $exit->employee->dni }}</small>
                                         </td>
                                         <td>
                                             <span class="badge badge-warning">
-                                                {{ $exit->datetime->format('H:i') }}
+                                                {{ $exit->check_out ? \Carbon\Carbon::parse($exit->check_out)->format('H:i') : 'N/A' }}
                                             </span>
                                         </td>
                                         <td>
@@ -215,7 +218,7 @@
                                         <div class="card-body p-2">
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div>
-                                                    <strong>{{ $employee->name }} {{ $employee->lastname }}</strong>
+                                                    <strong>{{ $employee->names }} {{ $employee->lastnames }}</strong>
                                                     <br>
                                                     <small class="text-muted">{{ $employee->dni }}</small>
                                                 </div>
@@ -256,7 +259,7 @@
                                 <option value="">Seleccionar...</option>
                                 @foreach($employeesWithoutEntry as $employee)
                                     <option value="{{ $employee->id }}">
-                                        {{ $employee->name }} {{ $employee->lastname }} - {{ $employee->dni }}
+                                        {{ $employee->names }} {{ $employee->lastnames }} - {{ $employee->dni }}
                                     </option>
                                 @endforeach
                             </select>
@@ -291,8 +294,8 @@
                                 <option value="">Seleccionar...</option>
                                 @foreach($employeesWithoutExit as $entry)
                                     <option value="{{ $entry->employee_id }}">
-                                        {{ $entry->employee->name }} {{ $entry->employee->lastname }} - {{ $entry->employee->dni }}
-                                        (Entrada: {{ $entry->datetime->format('H:i') }})
+                                        {{ $entry->employee->names }} {{ $entry->employee->lastnames }} - {{ $entry->employee->dni }}
+                                        (Entrada: {{ $entry->check_in ? \Carbon\Carbon::parse($entry->check_in)->format('H:i') : 'N/A' }})
                                     </option>
                                 @endforeach
                             </select>

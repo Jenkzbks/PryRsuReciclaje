@@ -9,6 +9,7 @@ use App\Http\Requests\StoreEmployeeRequest;
 use App\Http\Requests\UpdateEmployeeRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class EmployeeController extends Controller
@@ -91,6 +92,14 @@ class EmployeeController extends Controller
     {
         $data = $request->validated();
 
+        // Manejar contraseña
+        if (!empty($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        } else {
+            // Si no se proporciona contraseña, usar el DNI
+            $data['password'] = Hash::make($data['dni']);
+        }
+
         // Manejar upload de foto
         if ($request->hasFile('photo')) {
             $data['photo'] = $this->uploadPhoto($request->file('photo'));
@@ -140,6 +149,14 @@ class EmployeeController extends Controller
     public function update(UpdateEmployeeRequest $request, Employee $employee)
     {
         $data = $request->validated();
+
+        // Manejar contraseña (solo si se proporciona una nueva)
+        if (!empty($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        } else {
+            // Si no se proporciona nueva contraseña, no cambiar la actual
+            unset($data['password']);
+        }
 
         // Manejar upload de nueva foto
         if ($request->hasFile('photo')) {
@@ -258,7 +275,7 @@ class EmployeeController extends Controller
      */
     public function getActiveEmployees(Request $request)
     {
-        $query = Employee::where('status', 'active')
+        $query = Employee::where('status', 1)
             ->select('id', 'name', 'lastname', 'dni');
 
         if ($request->filled('search')) {
@@ -270,15 +287,15 @@ class EmployeeController extends Controller
             });
         }
 
-        $employees = $query->orderBy('name')
+        $employees = $query->orderBy('names')
             ->limit(20)
             ->get()
             ->map(function($employee) {
                 return [
                     'id' => $employee->id,
-                    'text' => "{$employee->name} {$employee->lastname} - {$employee->dni}",
-                    'name' => $employee->name,
-                    'lastname' => $employee->lastname,
+                    'text' => "{$employee->names} {$employee->lastnames} - {$employee->dni}",
+                    'name' => $employee->names,
+                    'lastname' => $employee->lastnames,
                     'dni' => $employee->dni
                 ];
             });

@@ -12,51 +12,44 @@ class Attendance extends Model
 
     protected $fillable = [
         'employee_id',
-        'attendance_datetime',
-        'type',
-        'period',
+        'date',
+        'check_in',
+        'check_out',
         'status',
+        'hours_worked',
         'notes'
     ];
 
     protected $casts = [
-        'attendance_datetime' => 'datetime',
-        'period' => 'integer',
-        'status' => 'integer',
+        'date' => 'date',
+        'check_in' => 'datetime',
+        'check_out' => 'datetime',
+        'hours_worked' => 'decimal:2',
     ];
 
-    // Constantes para tipos
-    const TYPE_ENTRADA = 'Entrada';
-    const TYPE_SALIDA = 'Salida';
-
     // Constantes para estados
-    const STATUS_PRESENTE = 1;
-    const STATUS_AUSENTE = 0;
-    const STATUS_TARDE = 2;
-
-    public static function getTypes()
-    {
-        return [
-            self::TYPE_ENTRADA => 'Entrada',
-            self::TYPE_SALIDA => 'Salida'
-        ];
-    }
+    const STATUS_PRESENT = 'present';
+    const STATUS_LATE = 'late';
+    const STATUS_ABSENT = 'absent';
+    const STATUS_HALF_DAY = 'half_day';
 
     public static function getStatuses()
     {
         return [
-            self::STATUS_PRESENTE => 'Presente',
-            self::STATUS_AUSENTE => 'Ausente',
-            self::STATUS_TARDE => 'Tarde'
+            self::STATUS_PRESENT => 'Presente',
+            self::STATUS_LATE => 'Tarde',
+            self::STATUS_ABSENT => 'Ausente',
+            self::STATUS_HALF_DAY => 'Medio Día'
         ];
     }
 
     public static function getStatusColors()
     {
         return [
-            self::STATUS_PRESENTE => 'success',
-            self::STATUS_AUSENTE => 'danger',
-            self::STATUS_TARDE => 'warning'
+            self::STATUS_PRESENT => 'success',
+            self::STATUS_LATE => 'warning',
+            self::STATUS_ABSENT => 'danger',
+            self::STATUS_HALF_DAY => 'info'
         ];
     }
 
@@ -81,12 +74,17 @@ class Attendance extends Model
 
     public function getAttendanceDateAttribute()
     {
-        return $this->attendance_datetime->format('Y-m-d');
+        return $this->date ? $this->date->format('Y-m-d') : null;
     }
 
-    public function getAttendanceTimeAttribute()
+    public function getCheckInTimeAttribute()
     {
-        return $this->attendance_datetime->format('H:i:s');
+        return $this->check_in ? $this->check_in->format('H:i:s') : null;
+    }
+
+    public function getCheckOutTimeAttribute()
+    {
+        return $this->check_out ? $this->check_out->format('H:i:s') : null;
     }
 
     // Scopes
@@ -97,12 +95,12 @@ class Attendance extends Model
 
     public function scopeByDate($query, $date)
     {
-        return $query->whereDate('attendance_datetime', $date);
+        return $query->whereDate('date', $date);
     }
 
     public function scopeDateRange($query, $startDate, $endDate)
     {
-        return $query->whereBetween('attendance_datetime', [$startDate, $endDate]);
+        return $query->whereBetween('date', [$startDate, $endDate]);
     }
 
     public function scopeByStatus($query, $status)
@@ -112,12 +110,12 @@ class Attendance extends Model
 
     public function scopePresent($query)
     {
-        return $query->where('status', self::STATUS_PRESENTE);
+        return $query->where('status', self::STATUS_PRESENT);
     }
 
     public function scopeToday($query)
     {
-        return $query->whereDate('attendance_datetime', today());
+        return $query->whereDate('date', today());
     }
 
     // Métodos estáticos de utilidad
@@ -151,10 +149,9 @@ class Attendance extends Model
         // Crear nueva asistencia
         $attendance = self::create([
             'employee_id' => $employee->id,
-            'attendance_datetime' => now(),
-            'type' => self::TYPE_ENTRADA,
-            'status' => self::STATUS_PRESENTE,
-            'period' => 1, // Turno por defecto
+            'date' => now()->toDateString(),
+            'check_in' => now(),
+            'status' => self::STATUS_PRESENT,
             'notes' => 'Marcación automática'
         ]);
 
@@ -173,7 +170,7 @@ class Attendance extends Model
         
         return self::byEmployee($employeeId)
             ->byDate($date)
-            ->where('status', self::STATUS_PRESENTE)
+            ->where('status', self::STATUS_PRESENT)
             ->exists();
     }
 

@@ -103,7 +103,17 @@ class Employee extends Authenticatable
     // Mutator para encriptar contraseña
     public function setPasswordAttribute($password)
     {
-        $this->attributes['password'] = Hash::make($password);
+        // Solo hashear si la contraseña no está ya hasheada
+        if (!empty($password)) {
+            // Verificar si ya es un hash válido de bcrypt (empieza con $2y$)
+            if (preg_match('/^\$2y\$/', $password)) {
+                // Ya es un hash, guardarlo directamente
+                $this->attributes['password'] = $password;
+            } else {
+                // Es texto plano, hashearlo
+                $this->attributes['password'] = Hash::make($password);
+            }
+        }
     }
 
     // Verificar si es mayor de edad

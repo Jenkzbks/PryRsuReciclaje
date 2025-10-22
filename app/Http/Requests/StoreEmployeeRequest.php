@@ -39,7 +39,7 @@ class StoreEmployeeRequest extends FormRequest
             ],
             'photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'address' => 'required|string|max:200',
-            'password' => 'nullable|string|min:8',  // Opcional para crear empleados
+            'password' => 'nullable|string|min:6|confirmed',  // Opcional para crear empleados
             'status' => 'nullable|string|in:active,inactive,suspended,terminated',
             'type_id' => 'required|exists:employeetype,id'
         ];

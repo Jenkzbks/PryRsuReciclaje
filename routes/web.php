@@ -131,22 +131,33 @@ Route::prefix('admin')->name('admin.')->group(function () {
     });
 
     // ===== ASISTENCIAS =====
-    Route::resource('personnel/attendances', AttendanceController::class, [
-        'as' => 'personnel'
-    ]);
-    
-    // Rutas especiales para asistencias
+    // Rutas especiales ANTES del resource para evitar conflictos
     Route::prefix('personnel/attendances')->name('personnel.attendances.')->group(function () {
         Route::get('dashboard', [AttendanceController::class, 'dashboard'])->name('dashboard');
-        Route::patch('{attendance}/approve', [AttendanceController::class, 'approve'])->name('approve');
-        Route::patch('{attendance}/reject', [AttendanceController::class, 'reject'])->name('reject');
         Route::post('bulk-import', [AttendanceController::class, 'bulkImport'])->name('bulk-import');
+        Route::post('clock-in', [AttendanceController::class, 'clockIn'])->name('clock-in');
+        Route::post('clock-out', [AttendanceController::class, 'clockOut'])->name('clock-out');
         
         // API endpoints para reportes
         Route::get('api/daily/{date}', [AttendanceController::class, 'getDailyAttendance'])->name('api.daily');
         Route::get('api/employee/{employee}/month/{month}', [AttendanceController::class, 'getMonthlyByEmployee'])->name('api.monthly');
         Route::get('api/reports/summary', [AttendanceController::class, 'getSummaryReport'])->name('api.summary');
         Route::get('api/late-arrivals', [AttendanceController::class, 'getLateArrivals'])->name('api.late-arrivals');
+        Route::get('api/current-status', [AttendanceController::class, 'getCurrentStatus'])->name('api.current-status');
+        Route::get('api/employee/{employee}/report', [AttendanceController::class, 'employeeReport'])->name('api.employee-report');
+        Route::get('api/general-report', [AttendanceController::class, 'generalReport'])->name('api.general-report');
+    });
+    
+    // Resource DESPUÉS de las rutas específicas
+    Route::resource('personnel/attendances', AttendanceController::class, [
+        'as' => 'personnel'
+    ]);
+    
+    // Rutas especiales adicionales para asistencias (que requieren {attendance})
+    Route::prefix('personnel/attendances')->name('personnel.attendances.')->group(function () {
+        Route::patch('{attendance}/approve', [AttendanceController::class, 'approve'])->name('approve');
+        Route::patch('{attendance}/reject', [AttendanceController::class, 'reject'])->name('reject');
+        Route::patch('{attendance}/correct', [AttendanceController::class, 'correct'])->name('correct');
     });
 });
 

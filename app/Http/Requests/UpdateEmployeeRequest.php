@@ -37,7 +37,7 @@ class UpdateEmployeeRequest extends FormRequest
                 'email:rfc',
                 Rule::unique('employee', 'email')->ignore($employeeId)->whereNotNull('email')
             ],
-            'password' => 'nullable|string|min:8|confirmed',
+            'password' => 'nullable|string|min:6|confirmed',
             'photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'address' => 'required|string|max:200',
             'license' => 'nullable|string|max:20',

@@ -12,11 +12,17 @@ class Vacation extends Model
 
     protected $fillable = [
         'employee_id',
+        'vacation_type',
+        'replacement_employee_id',
+        'reason',
         'request_date',
         'start_date',
         'end_date',
         'requested_days',
+        'days_taken',
         'status',
+        'approved_by',
+        'approved_at',
         'notes'
     ];
 
@@ -25,14 +31,16 @@ class Vacation extends Model
         'start_date' => 'date',
         'end_date' => 'date',
         'requested_days' => 'integer',
+        'days_taken' => 'integer',
+        'approved_at' => 'datetime',
     ];
 
     // Constantes para estados
-    const STATUS_PENDING = 'Pending';
-    const STATUS_APPROVED = 'Approved';
-    const STATUS_REJECTED = 'Rejected';
-    const STATUS_CANCELLED = 'Cancelled';
-    const STATUS_COMPLETED = 'Completed';
+    const STATUS_PENDING = 'pending';
+    const STATUS_APPROVED = 'approved';
+    const STATUS_REJECTED = 'rejected';
+    const STATUS_CANCELLED = 'cancelled';
+    const STATUS_COMPLETED = 'completed';
 
     public static function getStatuses()
     {
@@ -60,6 +68,16 @@ class Vacation extends Model
     public function employee()
     {
         return $this->belongsTo(Employee::class, 'employee_id');
+    }
+
+    public function replacementEmployee()
+    {
+        return $this->belongsTo(Employee::class, 'replacement_employee_id');
+    }
+
+    public function approver()
+    {
+        return $this->belongsTo(Employee::class, 'approved_by');
     }
 
     // Accessors

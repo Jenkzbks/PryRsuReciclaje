@@ -22,8 +22,8 @@ class AttendanceController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->whereHas('employee', function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('lastname', 'like', "%{$search}%")
+                $q->where('names', 'like', "%{$search}%")
+                  ->orWhere('lastnames', 'like', "%{$search}%")
                   ->orWhere('dni', 'like', "%{$search}%");
             });
         }
@@ -33,48 +33,155 @@ class AttendanceController extends Controller
             $query->where('employee_id', $request->employee_id);
         }
 
-        // Filtro por tipo (entrada/salida)
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
+        // Filtro por estado
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
         }
 
         // Filtro por fecha
         if ($request->filled('date')) {
-            $query->whereDate('datetime', $request->date);
+            $query->whereDate('date', $request->date);
         }
 
         // Filtro por rango de fechas
         if ($request->filled('date_from')) {
-            $query->whereDate('datetime', '>=', $request->date_from);
+            $query->whereDate('date', '>=', $request->date_from);
         }
         if ($request->filled('date_to')) {
-            $query->whereDate('datetime', '<=', $request->date_to);
+            $query->whereDate('date', '<=', $request->date_to);
         }
 
         // Filtro por mes y año
         if ($request->filled('month') && $request->filled('year')) {
-            $query->whereMonth('datetime', $request->month)
-                  ->whereYear('datetime', $request->year);
+            $query->whereMonth('date', $request->month)
+                  ->whereYear('date', $request->year);
         }
 
         // Ordenamiento
-        $sortField = $request->get('sort', 'datetime');
+        $sortField = $request->get('sort', 'date');
         $sortDirection = $request->get('direction', 'desc');
         
-        if (in_array($sortField, ['datetime', 'type', 'created_at'])) {
+        if (in_array($sortField, ['date', 'check_in', 'check_out', 'status', 'created_at'])) {
             $query->orderBy($sortField, $sortDirection);
         } else {
-            $query->orderBy('datetime', 'desc');
+            $query->orderBy('date', 'desc');
         }
 
         $attendances = $query->paginate(20)->withQueryString();
 
         // Para la vista
-        $employees = Employee::where('status', 'active')
-            ->orderBy('name')
+        $employees = Employee::where('status', 1)
+            ->orderBy('names')
             ->get();
 
         return view('attendances.index', compact('attendances', 'employees'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        $employees = Employee::where('status', 1)
+            ->orderBy('names')
+            ->get();
+
+        return view('attendances.create', compact('employees'));
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'employee_id' => 'required|exists:employee,id',
+            'date' => 'required|date',
+            'check_in' => 'nullable|date_format:H:i',
+            'check_out' => 'nullable|date_format:H:i|after:check_in',
+            'status' => 'required|in:present,late,absent,half_day',
+            'hours_worked' => 'nullable|numeric|min:0|max:24',
+            'notes' => 'nullable|string|max:500'
+        ]);
+
+        // Crear el registro de asistencia
+        $attendance = new Attendance();
+        $attendance->employee_id = $request->employee_id;
+        $attendance->date = $request->date;
+        $attendance->check_in = $request->check_in ? Carbon::createFromFormat('Y-m-d H:i', $request->date . ' ' . $request->check_in) : null;
+        $attendance->check_out = $request->check_out ? Carbon::createFromFormat('Y-m-d H:i', $request->date . ' ' . $request->check_out) : null;
+        $attendance->status = $request->status;
+        $attendance->notes = $request->notes;
+
+        // Calcular horas trabajadas si no se proporcionó
+        if (!$request->hours_worked && $attendance->check_in && $attendance->check_out) {
+            $attendance->hours_worked = $attendance->check_in->diffInHours($attendance->check_out);
+        } else {
+            $attendance->hours_worked = $request->hours_worked ?? 0;
+        }
+
+        $attendance->save();
+
+        return redirect()->route('admin.personnel.attendances.index')
+            ->with('success', 'Asistencia registrada exitosamente.');
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Attendance $attendance)
+    {
+        $attendance->load('employee');
+        return view('attendances.show', compact('attendance'));
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Attendance $attendance)
+    {
+        $employees = Employee::where('status', 1)
+            ->orderBy('names')
+            ->get();
+
+        $attendance->load('employee');
+        return view('attendances.edit', compact('attendance', 'employees'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Attendance $attendance)
+    {
+        $request->validate([
+            'employee_id' => 'required|exists:employee,id',
+            'date' => 'required|date',
+            'check_in' => 'nullable|date_format:H:i',
+            'check_out' => 'nullable|date_format:H:i|after:check_in',
+            'status' => 'required|in:present,late,absent,half_day',
+            'hours_worked' => 'nullable|numeric|min:0|max:24',
+            'notes' => 'nullable|string|max:500'
+        ]);
+
+        // Actualizar el registro de asistencia
+        $attendance->employee_id = $request->employee_id;
+        $attendance->date = $request->date;
+        $attendance->check_in = $request->check_in ? Carbon::createFromFormat('Y-m-d H:i', $request->date . ' ' . $request->check_in) : null;
+        $attendance->check_out = $request->check_out ? Carbon::createFromFormat('Y-m-d H:i', $request->date . ' ' . $request->check_out) : null;
+        $attendance->status = $request->status;
+        $attendance->notes = $request->notes;
+
+        // Calcular horas trabajadas si no se proporcionó
+        if (!$request->hours_worked && $attendance->check_in && $attendance->check_out) {
+            $attendance->hours_worked = $attendance->check_in->diffInHours($attendance->check_out);
+        } else {
+            $attendance->hours_worked = $request->hours_worked ?? 0;
+        }
+
+        $attendance->save();
+
+        return redirect()->route('admin.personnel.attendances.index')
+            ->with('success', 'Asistencia actualizada exitosamente.');
     }
 
     /**
@@ -90,22 +197,64 @@ class AttendanceController extends Controller
      */
     public function processLogin(AttendanceLoginRequest $request)
     {
-        $data = $request->validated();
+        try {
+            // Log temporal para debug
+            \Log::info('Kiosco login attempt', [
+                'dni' => $request->get('dni'),
+                'password_provided' => !empty($request->get('password')),
+                'password_length' => strlen($request->get('password', '')),
+                'all_data' => $request->all(),
+                'request_method' => $request->method(),
+                'request_url' => $request->url()
+            ]);
+
+            $data = $request->validated();
+            \Log::info('Validation passed', ['validated_data' => $data]);
         
         // Buscar empleado por DNI
         $employee = Employee::where('dni', $data['dni'])
-            ->where('status', 'active')
+            ->where('status', 1)
             ->first();
 
         if (!$employee) {
+            \Log::warning('Employee not found', ['dni' => $data['dni']]);
             return response()->json([
                 'success' => false,
                 'message' => 'DNI no encontrado o empleado inactivo.'
             ], 422);
         }
 
-        // Verificar contraseña (simple, usando DNI como contraseña por defecto)
-        if (!Hash::check($data['password'], $employee->password ?? Hash::make($employee->dni))) {
+        \Log::info('Employee found', [
+            'employee_id' => $employee->id,
+            'employee_dni' => $employee->dni,
+            'has_password_in_db' => !empty($employee->password)
+        ]);
+
+        // Verificar contraseña
+        $isValidPassword = false;
+        
+        if ($employee->password) {
+            // Si tiene contraseña configurada, verificarla
+            $isValidPassword = Hash::check($data['password'], $employee->password);
+            \Log::info('Hash check result', ['valid' => $isValidPassword]);
+        } else {
+            // Si no tiene contraseña, usar el DNI como contraseña por defecto
+            $isValidPassword = ($data['password'] === $employee->dni);
+            \Log::info('DNI password check', [
+                'input_password' => $data['password'],
+                'employee_dni' => $employee->dni,
+                'valid' => $isValidPassword
+            ]);
+            
+            // Si la contraseña es correcta, guardarla en la base de datos
+            if ($isValidPassword) {
+                $employee->update(['password' => Hash::make($employee->dni)]);
+                \Log::info('Password saved to database');
+            }
+        }
+        
+        if (!$isValidPassword) {
+            \Log::warning('Invalid password');
             return response()->json([
                 'success' => false,
                 'message' => 'Contraseña incorrecta.'
@@ -114,47 +263,68 @@ class AttendanceController extends Controller
 
         // Determinar tipo de registro (entrada o salida)
         $today = Carbon::today();
-        $lastEntry = Attendance::where('employee_id', $employee->id)
-            ->whereDate('datetime', $today)
-            ->where('type', Attendance::TYPE_ENTRY)
+        $lastAttendance = Attendance::where('employee_id', $employee->id)
+            ->whereDate('date', $today)
             ->first();
 
-        $lastExit = Attendance::where('employee_id', $employee->id)
-            ->whereDate('datetime', $today)
-            ->where('type', Attendance::TYPE_EXIT)
-            ->first();
+        \Log::info('Attendance check', [
+            'employee_id' => $employee->id,
+            'today' => $today->format('Y-m-d'),
+            'has_attendance_today' => !!$lastAttendance,
+            'has_check_out' => $lastAttendance ? !!$lastAttendance->check_out : false
+        ]);
+
+        $isEntry = false; // Variable para determinar si es entrada o salida
 
         // Lógica de entrada/salida
-        if (!$lastEntry) {
-            // No hay entrada, registrar entrada
-            $type = Attendance::TYPE_ENTRY;
+        if (!$lastAttendance) {
+            // No hay registro del día, crear entrada
+            $attendance = Attendance::create([
+                'employee_id' => $employee->id,
+                'date' => $today,
+                'check_in' => now(),
+                'status' => 'present'
+            ]);
             $message = 'Entrada registrada exitosamente.';
-        } elseif (!$lastExit) {
+            $isEntry = true;
+            \Log::info('Entry created', ['attendance_id' => $attendance->id]);
+        } elseif ($lastAttendance && !$lastAttendance->check_out) {
             // Hay entrada pero no salida, registrar salida
-            $type = Attendance::TYPE_EXIT;
+            $lastAttendance->update([
+                'check_out' => now(),
+                'hours_worked' => Carbon::parse($lastAttendance->check_in)->diffInHours(now())
+            ]);
             $message = 'Salida registrada exitosamente.';
+            $isEntry = false;
+            \Log::info('Exit registered', ['attendance_id' => $lastAttendance->id]);
         } else {
             // Ya hay entrada y salida del día
+            \Log::warning('Already has complete attendance', ['attendance_id' => $lastAttendance->id]);
             return response()->json([
                 'success' => false,
                 'message' => 'Ya se registró entrada y salida para el día de hoy.'
             ], 422);
         }
 
-        // Crear registro de asistencia
-        $attendance = Attendance::create([
-            'employee_id' => $employee->id,
-            'datetime' => now(),
-            'type' => $type
-        ]);
-
         return response()->json([
             'success' => true,
             'message' => $message,
-            'employee' => $employee->name . ' ' . $employee->lastname,
-            'type' => $type,
-            'datetime' => $attendance->datetime->format('d/m/Y H:i:s')
+            'employee' => $employee->names . ' ' . $employee->lastnames,
+            'type' => $isEntry ? 'entry' : 'exit',
+            'datetime' => now()->format('d/m/Y H:i:s')
         ]);
+        
+        } catch (\Exception $e) {
+            \Log::error('Kiosco login error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno del servidor.'
+            ], 500);
+        }
     }
 
     /**
@@ -172,21 +342,21 @@ class AttendanceController extends Controller
 
         // Verificar que no tenga entrada del mismo día
         $existingEntry = Attendance::where('employee_id', $employee->id)
-            ->whereDate('datetime', $datetime->toDateString())
-            ->where('type', Attendance::TYPE_ENTRY)
+            ->whereDate('date', $datetime->toDateString())
             ->first();
 
         if ($existingEntry) {
             return response()->json([
                 'success' => false,
-                'message' => 'El empleado ya tiene una entrada registrada para este día.'
+                'message' => 'El empleado ya tiene una asistencia registrada para este día.'
             ], 422);
         }
 
         $attendance = Attendance::create([
             'employee_id' => $employee->id,
-            'datetime' => $datetime,
-            'type' => Attendance::TYPE_ENTRY
+            'date' => $datetime->toDateString(),
+            'check_in' => $datetime,
+            'status' => 'present'
         ]);
 
         return response()->json([
@@ -202,7 +372,7 @@ class AttendanceController extends Controller
     public function clockOut(Request $request)
     {
         $request->validate([
-            'employee_id' => 'required|exists:employee,id',
+            'employee_id' => 'required|exists:employees,id',
             'datetime' => 'nullable|date'
         ]);
 
@@ -306,49 +476,74 @@ class AttendanceController extends Controller
      */
     public function dashboard()
     {
-        $today = Carbon::today();
-        
-        // Empleados que marcaron entrada hoy
-        $entriesToday = Attendance::with(['employee'])
-            ->whereDate('datetime', $today)
-            ->where('type', Attendance::TYPE_ENTRY)
-            ->orderBy('datetime')
-            ->get();
+        try {
+            $today = Carbon::today();
+            
+            // Obtener todas las asistencias de hoy para el dashboard
+            $attendances = Attendance::with(['employee'])
+                ->whereDate('date', $today)
+                ->get();
 
-        // Empleados que marcaron salida hoy
-        $exitsToday = Attendance::with(['employee'])
-            ->whereDate('datetime', $today)
-            ->where('type', Attendance::TYPE_EXIT)
-            ->orderBy('datetime')
-            ->get();
+            // También obtener asistencias de la semana para gráficos
+            $weekAgo = $today->copy()->subDays(7);
+            $weeklyAttendances = Attendance::with(['employee'])
+                ->whereDate('date', '>=', $weekAgo)
+                ->whereDate('date', '<=', $today)
+                ->get();
 
-        // Empleados activos sin entrada
-        $employeesWithoutEntry = Employee::where('status', 'active')
-            ->whereNotIn('id', $entriesToday->pluck('employee_id'))
-            ->orderBy('name')
-            ->get();
+            // Empleados activos
+            $employees = Employee::where('status', 1)->get();
+            
+            // Variables que espera la vista
+            $entriesToday = $attendances->whereNotNull('check_in');
+            $exitsToday = $attendances->whereNotNull('check_out');
+            
+            // Empleados que han registrado entrada hoy
+            $employeesWithEntry = $attendances->pluck('employee_id')->unique();
+            
+            // Empleados sin entrada hoy
+            $employeesWithoutEntry = $employees->whereNotIn('id', $employeesWithEntry);
+            
+            // Empleados sin salida (que tienen entrada pero no salida)
+            $employeesWithoutExit = $attendances->whereNull('check_out');
+            
+            // Estadísticas para el dashboard
+            $statistics = [
+                'entries_today' => $entriesToday->count(),
+                'exits_today' => $exitsToday->count(),
+                'without_entry' => $employeesWithoutEntry->count(),
+                'attendance_rate' => $employees->count() > 0 
+                    ? round(($attendances->count() / $employees->count()) * 100, 2)
+                    : 0,
+                'total_active_employees' => $employees->count(),
+                'punctuality_rate' => $attendances->count() > 0
+                    ? round(($attendances->where('status', 'present')->count() / $attendances->count()) * 100, 2)
+                    : 0
+            ];
+            
+            // Estadísticas del día
+            $todayStats = [
+                'present' => $attendances->where('status', 'present')->count(),
+                'on_time' => $attendances->where('status', 'present')->count(),
+                'late' => $attendances->where('status', 'late')->count(),
+                'absent' => $attendances->where('status', 'absent')->count(),
+                'half_day' => $attendances->where('status', 'half_day')->count(),
+            ];
 
-        // Empleados con entrada pero sin salida
-        $employeesWithoutExit = $entriesToday->whereNotIn('employee_id', $exitsToday->pluck('employee_id'));
-
-        $statistics = [
-            'total_active_employees' => Employee::where('status', 'active')->count(),
-            'entries_today' => $entriesToday->count(),
-            'exits_today' => $exitsToday->count(),
-            'without_entry' => $employeesWithoutEntry->count(),
-            'without_exit' => $employeesWithoutExit->count(),
-            'attendance_rate' => Employee::where('status', 'active')->count() > 0 
-                ? round(($entriesToday->count() / Employee::where('status', 'active')->count()) * 100, 2)
-                : 0
-        ];
-
-        return view('attendances.dashboard', compact(
-            'entriesToday',
-            'exitsToday', 
-            'employeesWithoutEntry',
-            'employeesWithoutExit',
-            'statistics'
-        ));
+            return view('personnel.attendances.dashboard', compact(
+                'attendances', 
+                'todayStats', 
+                'statistics', 
+                'employees', 
+                'weeklyAttendances',
+                'employeesWithoutEntry',
+                'employeesWithoutExit',
+                'entriesToday',
+                'exitsToday'
+            ));
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -423,7 +618,7 @@ class AttendanceController extends Controller
         $dateFrom = $request->get('date_from', Carbon::now()->startOfMonth());
         $dateTo = $request->get('date_to', Carbon::now()->endOfMonth());
 
-        $query = Employee::where('status', 'active');
+        $query = Employee::where('status', 1);
 
         if ($request->filled('department_id')) {
             $query->where('departament_id', $request->department_id);
@@ -491,7 +686,7 @@ class AttendanceController extends Controller
     {
         $today = Carbon::today();
         
-        $status = Employee::where('status', 'active')
+        $status = Employee::where('status', 1)
             ->with(['attendances' => function($query) use ($today) {
                 $query->whereDate('datetime', $today);
             }])
