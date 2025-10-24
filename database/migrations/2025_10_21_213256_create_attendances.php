@@ -15,10 +15,13 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('employee_id');
             $table->foreign('employee_id')->references('id')->on('employee');
-            $table->date('attendance_date');
+            $table->date('date');
             $table->integer('period');
-            $table->integer('status');
+            $table->String('status',20);
             $table->string('notes');
+            $table->dateTime('check_in');
+            $table->dateTime('check_out');
+            $table->decimal('hours_worked', 4, 2);
             $table->timestamps();
         });
     }

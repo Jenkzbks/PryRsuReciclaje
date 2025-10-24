@@ -108,6 +108,7 @@ class AttendanceController extends Controller
         $attendance = new Attendance();
         $attendance->employee_id = $request->employee_id;
         $attendance->date = $request->date;
+        $attendance->period = 1;
         $attendance->check_in = $request->check_in ? Carbon::createFromFormat('Y-m-d H:i', $request->date . ' ' . $request->check_in) : null;
         $attendance->check_out = $request->check_out ? Carbon::createFromFormat('Y-m-d H:i', $request->date . ' ' . $request->check_out) : null;
         $attendance->status = $request->status;

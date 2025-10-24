@@ -77,7 +77,7 @@ class EmployeeTypeController extends Controller
     public function show(EmployeeType $employeeType)
     {
         $employeeType->load(['employees' => function($query) {
-            $query->orderBy('name')->take(10);
+            $query->orderBy('names')->take(10);
         }]);
 
         return view('personnel.employee-types.show', compact('employeeType'));
