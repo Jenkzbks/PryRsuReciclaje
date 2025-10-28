@@ -15,8 +15,8 @@ return new class extends Migration
             // Primero eliminar la foreign key existente
             $table->dropForeign(['employee_id']);
             
-            // Crear la foreign key correcta que referencia a la tabla 'employees'
-            $table->foreign('employee_id')->references('id')->on('employees');
+            // Crear la foreign key correcta que referencia a la tabla 'employee' (nombre singular en este proyecto)
+            $table->foreign('employee_id')->references('id')->on('employee');
         });
     }
 
