@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('configgroups', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('emplooyeegroup_id');
-            $table->foreign('emplooyeegroup_id')->references('id')->on('employeegroups'); 
-            $table->unsignedBigInteger('emplooyee_id');
-            $table->foreign('emplooyee_id')->references('id')->on('employee'); 
+            $table->unsignedBigInteger('employeegroup_id');
+            $table->foreign('employeegroup_id')->references('id')->on('employeegroups'); 
+            $table->unsignedBigInteger('employee_id');
+            $table->foreign('employee_id')->references('id')->on('employee'); 
                 
             $table->timestamps();
         });

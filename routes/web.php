@@ -10,6 +10,7 @@ use App\Http\Controllers\admin\BrandModelController;
 use App\Http\Controllers\admin\ShiftController;
 use App\Http\Controllers\admin\VehicleTypeController;
 use App\Http\Controllers\admin\VehicleController;
+use App\Http\Controllers\admin\EmployeegroupController;
 
 // Controladores del módulo de personal
 use App\Http\Controllers\EmployeeController;
@@ -73,6 +74,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('personnel/employees', EmployeeController::class, [
         'as' => 'personnel'
     ]);
+
+    // ===== GRUPOS DE PERSONAL =====
+    Route::resource('personnel/employeegroups', EmployeegroupController::class, [
+        'as' => 'personnel'
+    ]);
     
     // Rutas especiales para empleados
     Route::prefix('personnel/employees')->name('personnel.employees.')->group(function () {
@@ -88,6 +94,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('personnel/employee-types', EmployeeTypeController::class, [
         'as' => 'personnel'
     ]);
+
+    
     
     // Rutas especiales para tipos de empleado
     Route::prefix('personnel/employee-types')->name('personnel.employee-types.')->group(function () {

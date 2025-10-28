@@ -406,7 +406,7 @@ return [
                 ],
                 [
                     'text' => 'Grupo de Personal',
-                    'route' => 'admin.routes.index',
+                    'route' => 'admin.personnel.employeegroups.index',
                     'icon' => 'fas fa-fw fa-users',
                 ],
                 [
