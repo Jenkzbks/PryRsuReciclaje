@@ -63,7 +63,7 @@ return [
     |
     */
 
-    'logo' => '<b>Admin</b>LTE',
+    'logo' => '<b>Proyecto</b>RSU',
     'logo_img' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
     'logo_img_class' => 'brand-image img-circle elevation-3',
     'logo_img_xl' => null,
@@ -257,7 +257,7 @@ return [
     */
 
     'use_route_url' => false,
-    'dashboard_url' => 'home',
+    'dashboard_url' => 'admin',
     'logout_url' => 'logout',
     'login_url' => 'login',
     'register_url' => 'register',
@@ -323,66 +323,50 @@ return [
             'icon' => 'fas fa-fw fa-tachometer-alt',
         ],
 
-        ['header' => 'GESTIÓN DE RESIDUOS'],
         [
-            'text' => 'Gestión de Zonas',
-            'route' => 'admin.zones.index',
-            'icon' => 'fas fa-fw fa-map-marked-alt',
-        ],
-        [
-            'text' => 'Rutas de Recolección',
-            'route' => 'admin.routes.index',
-            'icon' => 'fas fa-fw fa-route',
-        ],
-        [
-            'text'    => 'Vehículos',
-            'icon'    => 'fas fa-fw fa-truck',
+            'text' => 'Gestión de Vehículos',
+            'icon' => 'fas fa-car',
             'submenu' => [
-                [
-                    'text' => 'Listado',
-                    'route'  => 'admin.vehicles.index',
-                    'icon' => 'fas fa-fw fa-list-ul',
-                ],
-                [
-                    'text' => 'Colores',
+                 [
+                    'text' => 'Color',
                     'route'  => 'admin.colors.index',
                     'icon' => 'fas fa-fw fa-palette',
                 ],
                 [
                     'text' => 'Marcas',
                     'url'  => 'brands',
-                    'icon' => 'fas fa-box'
+                    'icon' => 'fas fa-fw fa-tags'
                 ],
                 [
                     'text' => 'Modelos',
                     'url'  => 'brandmodels',
-                    'icon' => 'fas fa-cubes'
+                    'icon' => 'fas fa-fw fa-wrench'
                 ],
                 [
-                    'text' => 'Tipos de Vehículos',
+                    'text' => 'Tipo de Vehículo',
                     'url'  => 'vehicletypes',
                     'icon' => 'fas fa-car'
+                ],
+                [
+                    'text' => 'Vehículo',
+                    'route'  => 'admin.vehicles.index',
+                    'icon' => 'fas fa-car-side',
                 ],
             ],
         ],
         [
-            'text'    => 'Personal',
-            'icon'    => 'fas fa-fw fa-users',
+            'text'    => 'Gestión de Empleados',
+            'icon'    => 'fas fa-users',
             'submenu' => [
                 [
-                    'text' => 'Dashboard Personal',
-                    'route'  => 'admin.personnel.dashboard',
-                    'icon' => 'fas fa-fw fa-tachometer-alt',
+                    'text' => 'Tipo de Empleados',
+                    'route'  => 'admin.personnel.employee-types.index',
+                    'icon' => 'fas fa-fw fa-user-tie',
                 ],
                 [
                     'text' => 'Empleados',
                     'route'  => 'admin.personnel.employees.index',
-                    'icon' => 'fas fa-fw fa-user-tie',
-                ],
-                [
-                    'text' => 'Tipos de Empleado',
-                    'route'  => 'admin.personnel.employee-types.index',
-                    'icon' => 'fas fa-fw fa-tags',
+                    'icon' => 'fas fa-fw fa-user',
                 ],
                 [
                     'text' => 'Contratos',
@@ -390,14 +374,75 @@ return [
                     'icon' => 'fas fa-fw fa-file-contract',
                 ],
                 [
+                    'text' => 'Asistencias',
+                    'route'  => 'admin.personnel.attendances.index',
+                    'icon' => 'fas fa-fw fa-clock',
+                ],
+                [
                     'text' => 'Vacaciones',
                     'route'  => 'admin.personnel.vacations.index',
                     'icon' => 'fas fa-fw fa-calendar-alt',
                 ],
+            ],
+        ],
+        [
+            'text'    => 'Programación',
+            'icon'    => 'fas fa-fw fa-calendar-alt',
+            'submenu' => [
                 [
-                    'text' => 'Asistencias',
-                    'route'  => 'admin.personnel.attendances.index',
+                    'text' => 'Turnos',
+                    'route'  => 'admin.shifts.index',
                     'icon' => 'fas fa-fw fa-clock',
+                ],
+                [
+                    'text' => 'Zonas',
+                    'route' => 'admin.zones.index',
+                    'icon' => 'fas fa-fw fa-map-marked-alt',
+                ],
+                [
+                    'text' => 'Rutas de Recolección',
+                    'route' => 'admin.routes.index',
+                    'icon' => 'fas fa-fw fa-route',
+                ],
+                [
+                    'text' => 'Grupo de Personal',
+                    'route' => 'admin.routes.index',
+                    'icon' => 'fas fa-fw fa-users',
+                ],
+                [
+                    'text' => 'Programación',
+                    'route' => 'admin.routes.index',
+                    'icon' => 'fas fa-fw fa-clock',
+                ],
+                
+            ],
+        ],
+        
+        [
+            'text'    => 'Gestión de Cambios',
+            'icon'    => 'fas fa-exchange-alt',
+            'submenu' => [
+                [
+                    'text' => 'Motivos',
+                    'route'  => 'admin.personnel.dashboard',
+                    'icon' => 'fas fa-fw fa-clipboard-list',
+                ],
+                [
+                    'text' => 'Cambios',
+                    'route'  => 'admin.personnel.attendances.dashboard',
+                    'icon' => 'fas fa-fw fa-retweet',
+                ],
+            ],
+        ],
+
+        [
+            'text'    => 'Otros',
+            'icon'    => 'fa fa-bug',
+            'submenu' => [
+                [
+                    'text' => 'Dashboard Personal',
+                    'route'  => 'admin.personnel.dashboard',
+                    'icon' => 'fas fa-fw fa-tachometer-alt',
                 ],
                 [
                     'text' => 'Dashboard Asistencias',
@@ -412,6 +457,7 @@ return [
                 ],
             ],
         ],
+
 
         ['header' => 'REPORTES'],
         [

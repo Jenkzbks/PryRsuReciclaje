@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('zoneshift', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('shiftid');
-            $table->unsignedBigInteger('zoneid');
-            $table->foreign('zoneid')->references('id')->on('zones');
-            $table->foreign('shiftid')->references('id')->on('shift');
+            $table->unsignedBigInteger('shift_id');
+            $table->unsignedBigInteger('zone_id');
+            $table->foreign('zone_id')->references('id')->on('zones');
+            $table->foreign('shift_id')->references('id')->on('shifts');
             $table->timestamps();
         });
     }

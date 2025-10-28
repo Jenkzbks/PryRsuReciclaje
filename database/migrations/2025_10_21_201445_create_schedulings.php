@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('vehicle_id');
             $table->unsignedBigInteger('zone_id');
             $table->foreign('group_id')->references('id')->on('employeegroups');
-            $table->foreign('shift_id')->references('id')->on('shift');
+            $table->foreign('shift_id')->references('id')->on('shifts');
             $table->foreign('vehicle_id')->references('id')->on('vehicles');
             $table->foreign('zone_id')->references('id')->on('zones');
             $table->date('date');

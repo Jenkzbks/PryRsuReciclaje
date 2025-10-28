@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-         Schema::create('shift', function (Blueprint $table) {
+         Schema::create('shifts', function (Blueprint $table) {
             $table->id();
             $table->string('name', 120);
-            $table->string('descripcion', 120);
+            $table->text('description')->nullable();
             $table->string('hora_in', 255);
             $table->string('hora_out', 255);
             $table->timestamps();
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('shift');
+        Schema::dropIfExists('shifts');
     }
 };
