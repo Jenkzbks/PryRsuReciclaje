@@ -56,34 +56,42 @@
         <p class="text-muted">Estos datos son para pre configuración no son obligatorios</p>
 
         <div class="form-group">
-            <label for="conductor">Conductor</label>
-            <select name="conductor" id="conductor" class="form-control">
-                <option value="">-- Seleccione --</option>
-                @foreach($employees as $emp)
-                    <option value="{{ $emp->id }}" {{ (isset($members) && in_array($emp->id, $members) && isset($group) && $group->employees->contains($emp->id)) ? 'selected' : '' }}>{{ $emp->lastnames }} {{ $emp->names }}</option>
-                @endforeach
-            </select>
-        </div>
+    <label for="conductor">Conductor</label>
+    <select name="conductor" id="conductor" class="form-control">
+        <option value="">-- Seleccione --</option>
+        @foreach($employees->where('type_id', 1) as $emp)
+            <option value="{{ $emp->id }}" {{ (isset($conductor) && $conductor == $emp->id) ? 'selected' : '' }}>
+                {{ $emp->lastnames }} {{ $emp->names }}
+            </option>
+        @endforeach
+    </select>
+</div>
 
-        <div class="form-row">
-            <div class="form-group col-md-6">
-                <label for="assistant1">Ayudante 1</label>
-                <select name="assistant1" id="assistant1" class="form-control">
-                    <option value="">-- Seleccione --</option>
-                    @foreach($employees as $emp)
-                        <option value="{{ $emp->id }}" {{ (isset($members) && in_array($emp->id, $members) && isset($group) && $group->employees->contains($emp->id)) ? 'selected' : '' }}>{{ $emp->lastnames }} {{ $emp->names }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="form-group col-md-6">
-                <label for="assistant2">Ayudante 2</label>
-                <select name="assistant2" id="assistant2" class="form-control">
-                    <option value="">-- Seleccione --</option>
-                    @foreach($employees as $emp)
-                        <option value="{{ $emp->id }}" {{ (isset($members) && in_array($emp->id, $members) && isset($group) && $group->employees->contains($emp->id)) ? 'selected' : '' }}>{{ $emp->lastnames }} {{ $emp->names }}</option>
-                    @endforeach
-                </select>
-            </div>
-        </div>
+<div class="form-row">
+    <div class="form-group col-md-6">
+        <label for="assistant1">Ayudante 1</label>
+        <select name="assistant1" id="assistant1" class="form-control">
+            <option value="">-- Seleccione --</option>
+            @foreach($employees->where('type_id', 2) as $emp)
+                <option value="{{ $emp->id }}" {{ (isset($assistant1) && $assistant1 == $emp->id) ? 'selected' : '' }}>
+                    {{ $emp->lastnames }} {{ $emp->names }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+
+    <div class="form-group col-md-6">
+        <label for="assistant2">Ayudante 2</label>
+        <select name="assistant2" id="assistant2" class="form-control">
+            <option value="">-- Seleccione --</option>
+            @foreach($employees->where('type_id', 2) as $emp)
+                <option value="{{ $emp->id }}" {{ (isset($assistant2) && $assistant2 == $emp->id) ? 'selected' : '' }}>
+                    {{ $emp->lastnames }} {{ $emp->names }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+</div>
+
     </div>
 </div>

@@ -61,37 +61,43 @@ class EmployeegroupController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-    {
-        try {
-            $request->validate([
-                'name' => 'required|unique:employeegroups,name'
-            ]);
+{
+    try {
+        $request->validate([
+            'name' => 'required|unique:employeegroups,name',
+            'zone_id' => 'required',
+            'shift_id' => 'required',
+            'vehicle_id' => 'required',
+        ]);
 
-            $days = is_array($request->days) ? implode(',', $request->days) : ($request->days ?? '');
+        $days = is_array($request->days) ? implode(',', $request->days) : ($request->days ?? '');
 
-            $group = Employeegroup::create([
-                'name' => $request->name,
-                'zone_id' => $request->zone_id,
-                'shift_id' => $request->shift_id,
-                'vehicle_id' => $request->vehicle_id,
-                'days' => $days,
-                'status' => $request->status ?? 1,
-            ]);
+        $group = Employeegroup::create([
+            'name'       => $request->name,
+            'zone_id'    => $request->zone_id,
+            'shift_id'   => $request->shift_id,
+            'vehicle_id' => $request->vehicle_id,
+            'days'       => $days,
+            'status'     => $request->status ?? 1,
+        ]);
 
-            // Sync employees (conductor + assistants)
-            $members = [];
-            if ($request->conductor) $members[] = $request->conductor;
-            if ($request->assistant1) $members[] = $request->assistant1;
-            if ($request->assistant2) $members[] = $request->assistant2;
-            if (!empty($members)) {
-                $group->employees()->sync(array_unique($members));
-            }
+        // Guardar conductor y ayudantes
+        $members = [];
+        if ($request->conductor)  $members[] = $request->conductor;
+        if ($request->assistant1) $members[] = $request->assistant1;
+        if ($request->assistant2) $members[] = $request->assistant2;
 
-            return response()->json(['message' => 'Grupo registrado correctamente'], 200);
-        } catch (\Throwable $th) {
-            return response()->json(['message' => 'Error al registrar el grupo: ' . $th->getMessage()], 500);
+        if (!empty($members)) {
+            // Adjunta los tres empleados
+            $group->employees()->syncWithoutDetaching(array_unique($members));
         }
+
+        return response()->json(['message' => 'Grupo registrado correctamente'], 200);
+    } catch (\Throwable $th) {
+        return response()->json(['message' => 'Error al registrar el grupo: ' . $th->getMessage()], 500);
     }
+}
+
 
     /**
      * Display the specified resource.
@@ -105,53 +111,76 @@ class EmployeegroupController extends Controller
      * Show the form for editing the specified resource.
      */
     public function edit(string $id)
-    {
-        $group = Employeegroup::find($id);
-        $zones = Zone::all();
-        $shifts = Shift::all();
-        $vehicles = Vehicle::all();
-        $employees = Employee::where('status', 1)->get();
+{
+    $group = Employeegroup::with('employees')->findOrFail($id);
+    $zones = Zone::all();
+    $shifts = Shift::all();
+    $vehicles = Vehicle::all();
+    $employees = Employee::where('status', 1)->get();
 
-        // selected members
-        $members = $group->employees()->pluck('employee.id')->toArray();
+    // obtenemos los empleados que pertenecen al grupo
+    $groupEmployees = $group->employees;
 
-        return view('personnel.employeegroup.edit', compact('group', 'zones', 'shifts', 'vehicles', 'employees', 'members'));
-    }
+    // determinamos conductor y ayudantes
+    $conductor = $groupEmployees->firstWhere('type_id', 1)?->id;
+
+    // filtramos solo ayudantes (type_id = 2)
+    $ayudantes = $groupEmployees->where('type_id', 2)->pluck('id')->values();
+
+    // según el orden de registro (posición 0, 1)
+    $assistant1 = $ayudantes->get(0);
+    $assistant2 = $ayudantes->get(1);
+
+    return view('personnel.employeegroup.edit', compact(
+        'group',
+        'zones',
+        'shifts',
+        'vehicles',
+        'employees',
+        'conductor',
+        'assistant1',
+        'assistant2'
+    ));
+}
+
 
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
-    {
-        try {
-            $group = Employeegroup::find($id);
+{
+    try {
+        $group = Employeegroup::findOrFail($id);
 
-            $request->validate([
-                'name' => 'required|unique:employeegroups,name,' . $id,
-            ]);
+        $request->validate([
+            'name' => 'required|unique:employeegroups,name,' . $id,
+        ]);
 
-            $days = is_array($request->days) ? implode(',', $request->days) : ($request->days ?? '');
+        $days = is_array($request->days) ? implode(',', $request->days) : ($request->days ?? '');
 
-            $group->update([
-                'name' => $request->name,
-                'zone_id' => $request->zone_id,
-                'shift_id' => $request->shift_id,
-                'vehicle_id' => $request->vehicle_id,
-                'days' => $days,
-                'status' => $request->status ?? $group->status,
-            ]);
+        $group->update([
+            'name'       => $request->name,
+            'zone_id'    => $request->zone_id,
+            'shift_id'   => $request->shift_id,
+            'vehicle_id' => $request->vehicle_id,
+            'days'       => $days,
+            'status'     => $request->status ?? $group->status,
+        ]);
 
-            $members = [];
-            if ($request->conductor) $members[] = $request->conductor;
-            if ($request->assistant1) $members[] = $request->assistant1;
-            if ($request->assistant2) $members[] = $request->assistant2;
-            $group->employees()->sync(array_unique($members));
+        // Reasignar miembros
+        $members = [];
+        if ($request->conductor)  $members[] = $request->conductor;
+        if ($request->assistant1) $members[] = $request->assistant1;
+        if ($request->assistant2) $members[] = $request->assistant2;
 
-            return response()->json(['message' => 'Grupo actualizado correctamente'], 200);
-        } catch (\Throwable $th) {
-            return response()->json(['message' => 'Error al actualizar el grupo: ' . $th->getMessage()], 500);
-        }
+        $group->employees()->sync(array_unique($members));
+
+        return response()->json(['message' => 'Grupo actualizado correctamente'], 200);
+    } catch (\Throwable $th) {
+        return response()->json(['message' => 'Error al actualizar el grupo: ' . $th->getMessage()], 500);
     }
+}
+
 
     /**
      * Remove the specified resource from storage.

@@ -186,4 +186,15 @@ class Employee extends Authenticatable
 
         return in_array($contract->contrato_type, ['nombrado', 'permanente']);
     }
+
+   public function employeegroups()
+    {
+        return $this->belongsToMany(
+            Employeegroup::class,
+            'configgroups',
+            'employee_id',
+            'employeegroup_id'
+        )->withTimestamps();
+    }
+
 }

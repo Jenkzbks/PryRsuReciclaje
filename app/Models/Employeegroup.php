@@ -32,6 +32,13 @@ class Employeegroup extends Model
 
     public function employees()
     {
-        return $this->belongsToMany(Employee::class, 'configgroups', 'employeegroup_id', 'employee_id');
+        return $this->belongsToMany(
+            Employee::class,
+            'configgroups',           // tabla pivote
+            'employeegroup_id',       // FK al grupo
+            'employee_id'             // FK al empleado
+        )->withTimestamps();          // si tu pivote tiene created_at y updated_at
     }
+
+
 }
