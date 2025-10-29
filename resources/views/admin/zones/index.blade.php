@@ -106,8 +106,11 @@
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
+                                        <!-- ABRE MODAL -->
                                         <a href="{{ route('admin.zones.show', $zone) }}" 
-                                           class="btn btn-sm btn-outline-info"
+                                           class="btn btn-sm btn-outline-info btn-show-zone"
+                                           data-title="Ver Zona - {{ $zone->name }}"
+                                           data-url="{{ route('admin.zones.show', $zone) }}"
                                            title="Ver">
                                             <i class="fas fa-eye"></i>
                                         </a>
@@ -155,83 +158,96 @@
             @endif
         </div>
     </div>
+
+    <!-- Modal para ver zona -->
+    <div class="modal fade" id="zoneModal" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable modal-xl" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Ver Zona</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body p-3">
+            <div class="text-center text-muted py-5">Cargando…</div>
+          </div>
+        </div>
+      </div>
+    </div>
 @stop
 
 @section('css')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+    <!-- Leaflet CSS para el modal -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body {
-            background-color: #f9f7f7 !important;
-        }
-        .card {
-            border: none;
-            border-radius: 12px;
-        }
-        .table th {
-            border-top: none;
-            font-weight: 600;
-            color: #495057;
-        }
-        .btn-group .btn {
-            margin-right: 2px;
-        }
+        body { background-color: #f9f7f7 !important; }
+        .card { border: none; border-radius: 12px; }
+        .table th { border-top: none; font-weight: 600; color: #495057; }
+        .btn-group .btn { margin-right: 2px; }
     </style>
 @stop
 
 @section('js')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <!-- Leaflet JS para el modal -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <script>
         $(document).ready(function() {
-            // Configurar Toastr
+            // Toastr
             toastr.options = {
-                "closeButton": true,
-                "debug": false,
-                "newestOnTop": true,
-                "progressBar": true,
-                "positionClass": "toast-top-right",
-                "preventDuplicates": false,
-                "onclick": null,
-                "showDuration": "300",
-                "hideDuration": "1000",
-                "timeOut": "5000",
-                "extendedTimeOut": "1000",
-                "showEasing": "swing",
-                "hideEasing": "linear",
-                "showMethod": "fadeIn",
-                "hideMethod": "fadeOut"
+                closeButton: true, progressBar: true, positionClass: "toast-top-right",
+                showDuration: "300", hideDuration: "1000", timeOut: "5000"
             };
+
             // Filtros dependientes
             $('#department_filter').change(function() {
                 const departmentId = $(this).val();
-                
                 $('#province_filter').html('<option value="">Provincia</option>');
                 $('#district_filter').html('<option value="">Distrito</option>');
-                
                 if (departmentId) {
                     $.get(`/admin/api/provinces/${departmentId}`, function(provinces) {
-                        provinces.forEach(function(province) {
-                            $('#province_filter').append(
-                                `<option value="${province.id}">${province.name}</option>`
-                            );
-                        });
+                        provinces.forEach(p => $('#province_filter').append(`<option value="${p.id}">${p.name}</option>`));
                     });
                 }
             });
-            
+
             $('#province_filter').change(function() {
                 const provinceId = $(this).val();
-                
                 $('#district_filter').html('<option value="">Distrito</option>');
-                
                 if (provinceId) {
                     $.get(`/admin/api/districts/${provinceId}`, function(districts) {
-                        districts.forEach(function(district) {
-                            $('#district_filter').append(
-                                `<option value="${district.id}">${district.name}</option>`
-                            );
-                        });
+                        districts.forEach(d => $('#district_filter').append(`<option value="${d.id}">${d.name}</option>`));
                     });
                 }
+            });
+
+            // Abrir modal y cargar show por AJAX
+            $(document).on('click', '.btn-show-zone', function (e) {
+                e.preventDefault();
+                const url   = $(this).data('url');
+                const title = $(this).data('title') || 'Ver Zona';
+                $('#zoneModal .modal-title').text(title);
+                $('#zoneModal .modal-body').html('<div class="text-center text-muted py-5">Cargando…</div>');
+                $('#zoneModal').modal('show');
+
+                $.get(url, function (html) {
+                    // El controller nos devuelve SOLO la sección "content"
+                    $('#zoneModal .modal-body').html(html);
+
+                    // Si el script inline ya creó el mapa, asegura tamaño:
+                    setTimeout(() => {
+                        if (window.__zoneShowMap) { try { window.__zoneShowMap.invalidateSize(); } catch(e){} }
+                    }, 300);
+                });
+            });
+
+            // Limpieza al cerrar
+            $('#zoneModal').on('hidden.bs.modal', function () {
+                $('#zoneModal .modal-body').empty();
+                if (window.__zoneShowMap) { try { window.__zoneShowMap.remove(); } catch(e){}; window.__zoneShowMap = null; }
             });
         });
 

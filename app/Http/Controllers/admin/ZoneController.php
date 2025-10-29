@@ -124,11 +124,22 @@ class ZoneController extends Controller
         return redirect()->route('admin.zones.index')->with('success', 'Zona creada exitosamente.');
     }
 
-    public function show(Zone $zone)
-    {
-        $zone->load(['district.department', 'district.province', 'province.department']);
-        return view('admin.zones.show', compact('zone'));
+ public function show(\App\Models\Zone $zone, \Illuminate\Http\Request $request)
+{
+    // Renderiza la vista completa en memoria para extraer secciones
+    $sections = view('admin.zones.show', compact('zone'))->renderSections();
+
+    if ($request->ajax()) {
+        // Devuelve solo el contenido de la sección "content" para el modal
+        return $sections['content'];
     }
+
+    // Acceso directo por URL: página completa normal
+    return view('admin.zones.show', compact('zone'));
+}
+
+
+
 
     public function edit(Zone $zone)
     {
