@@ -60,7 +60,7 @@ class EmployeegroupController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+public function store(Request $request)
 {
     try {
         $request->validate([
@@ -68,9 +68,28 @@ class EmployeegroupController extends Controller
             'zone_id' => 'required',
             'shift_id' => 'required',
             'vehicle_id' => 'required',
+            'days' => 'required|array|min:1',
         ]);
 
-        $days = is_array($request->days) ? implode(',', $request->days) : ($request->days ?? '');
+        $days = implode(',', $request->days);
+
+        // Recolectar IDs de empleados
+        $members = array_filter([
+            $request->conductor,
+            $request->assistant1,
+            $request->assistant2,
+        ]);
+
+        // Validar conflictos antes de registrar
+        if (!empty($members)) {
+            $conflict = $this->hasScheduleConflict($members, $request->shift_id, $days);
+
+            if ($conflict) {
+                return response()->json([
+                    'message' => "El empleado {$conflict['employee']} ya está asignado al grupo '{$conflict['group']}' en los días: {$conflict['days']} (turno actual)."
+                ], 422);
+            }
+        }
 
         $group = Employeegroup::create([
             'name'       => $request->name,
@@ -81,14 +100,7 @@ class EmployeegroupController extends Controller
             'status'     => $request->status ?? 1,
         ]);
 
-        // Guardar conductor y ayudantes
-        $members = [];
-        if ($request->conductor)  $members[] = $request->conductor;
-        if ($request->assistant1) $members[] = $request->assistant1;
-        if ($request->assistant2) $members[] = $request->assistant2;
-
         if (!empty($members)) {
-            // Adjunta los tres empleados
             $group->employees()->syncWithoutDetaching(array_unique($members));
         }
 
@@ -97,6 +109,7 @@ class EmployeegroupController extends Controller
         return response()->json(['message' => 'Error al registrar el grupo: ' . $th->getMessage()], 500);
     }
 }
+
 
 
     /**
@@ -147,16 +160,38 @@ class EmployeegroupController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+public function update(Request $request, string $id)
 {
     try {
         $group = Employeegroup::findOrFail($id);
 
         $request->validate([
             'name' => 'required|unique:employeegroups,name,' . $id,
+            'zone_id' => 'required',
+            'shift_id' => 'required',
+            'vehicle_id' => 'required',
+            'days' => 'required|array|min:1',
         ]);
 
-        $days = is_array($request->days) ? implode(',', $request->days) : ($request->days ?? '');
+        $days = implode(',', $request->days);
+
+        // miembros seleccionados
+        $members = array_filter([
+            $request->conductor,
+            $request->assistant1,
+            $request->assistant2,
+        ]);
+
+        // validar conflicto antes de actualizar
+        if (!empty($members)) {
+            $conflict = $this->hasScheduleConflict($members, $request->shift_id, $days, $id);
+
+            if ($conflict) {
+                return response()->json([
+                    'message' => "El empleado {$conflict['employee']} ya está asignado al grupo '{$conflict['group']}' en los días: {$conflict['days']} (turno actual)."
+                ], 422);
+            }
+        }
 
         $group->update([
             'name'       => $request->name,
@@ -167,12 +202,6 @@ class EmployeegroupController extends Controller
             'status'     => $request->status ?? $group->status,
         ]);
 
-        // Reasignar miembros
-        $members = [];
-        if ($request->conductor)  $members[] = $request->conductor;
-        if ($request->assistant1) $members[] = $request->assistant1;
-        if ($request->assistant2) $members[] = $request->assistant2;
-
         $group->employees()->sync(array_unique($members));
 
         return response()->json(['message' => 'Grupo actualizado correctamente'], 200);
@@ -180,6 +209,7 @@ class EmployeegroupController extends Controller
         return response()->json(['message' => 'Error al actualizar el grupo: ' . $th->getMessage()], 500);
     }
 }
+
 
 
     /**
@@ -192,4 +222,47 @@ class EmployeegroupController extends Controller
         $group->delete();
         return redirect()->route('personnel.employeegroups.index')->with('action', 'Grupo eliminado');
     }
+
+
+    /**
+ * Verifica si alguno de los empleados ya tiene conflicto de turno/días
+ */
+private function hasScheduleConflict($employeeIds, $shiftId, $days, $excludeGroupId = null)
+{
+    // convertir días actuales a array limpio
+    $currentDays = array_map('trim', explode(',', $days));
+
+    // obtener todos los grupos del turno indicado
+    $query = \App\Models\Employeegroup::with('employees')
+        ->where('shift_id', $shiftId);
+
+    // si estamos editando, excluir el grupo actual
+    if ($excludeGroupId) {
+        $query->where('id', '!=', $excludeGroupId);
+    }
+
+    $groups = $query->get();
+
+    foreach ($groups as $group) {
+        $groupDays = array_map('trim', explode(',', $group->days));
+
+        // Si hay al menos un día en común
+        $dayOverlap = count(array_intersect($currentDays, $groupDays)) > 0;
+
+        if (!$dayOverlap) continue;
+
+        foreach ($group->employees as $emp) {
+            if (in_array($emp->id, $employeeIds)) {
+                return [
+                    'employee' => $emp->names . ' ' . $emp->lastnames,
+                    'group'    => $group->name,
+                    'days'     => implode(', ', array_intersect($currentDays, $groupDays))
+                ];
+            }
+        }
+    }
+
+    return false; // sin conflictos
+}
+
 }
