@@ -410,10 +410,11 @@ return [
                     'icon' => 'fas fa-fw fa-users',
                 ],
                 [
-                    'text' => 'Programación',
-                    'route' => 'admin.routes.index',
-                    'icon' => 'fas fa-fw fa-clock',
+                'text'  => 'Programación',
+                'route' => 'admin.schedulings.index',
+                'icon'  => 'fas fa-fw fa-clock',
                 ],
+
                 
             ],
         ],

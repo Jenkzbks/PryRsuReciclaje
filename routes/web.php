@@ -11,7 +11,7 @@ use App\Http\Controllers\admin\ShiftController;
 use App\Http\Controllers\admin\VehicleTypeController;
 use App\Http\Controllers\admin\VehicleController;
 use App\Http\Controllers\admin\EmployeegroupController;
-
+use App\Http\Controllers\admin\SchedulingController;
 // Controladores del módulo de personal
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeTypeController;
@@ -53,6 +53,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('vehicles', VehicleController::class);
     Route::resource('colors', ColorController::class);
     Route::resource('shifts', ShiftController::class);
+    Route::resource('schedulings', SchedulingController::class);
     // API routes para selects dependientes
     Route::get('api/provinces/{department_id}', [ZoneController::class, 'getProvinces'])->name('api.provinces');
     Route::get('api/districts/{province_id}', [ZoneController::class, 'getDistricts'])->name('api.districts');
@@ -186,3 +187,8 @@ Route::resource('vehicletypes', VehicleTypeController::class)->names('admin.vehi
 // Rutas públicas para asistencias (sin autenticación completa)
 Route::get('/attendance-kiosk', [AttendanceController::class, 'loginPage'])->name('attendance-kiosk.index');
 Route::post('/attendance-kiosk/login', [AttendanceController::class, 'processLogin'])->name('attendance-kiosk.login');
+
+
+
+
+
