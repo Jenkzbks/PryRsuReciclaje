@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 
+
 class SchedulingController extends Controller
 {
     // Listado con filtros de fecha
@@ -114,4 +115,83 @@ class SchedulingController extends Controller
         $scheduling->delete();
         return back()->with('success', 'Programación eliminada.');
     }
+
+    
+
+public function groupInfo(Employeegroup $group)
+{
+    // Miembros en el orden de inserción en la pivote
+    $members = $group->employees()
+        ->select('employee.*') // asegura columnas de employee
+        ->orderBy('configgroups.id')
+        ->get();
+
+    // Clasifica por type_id
+    $driver     = $members->firstWhere('type_id', 1);
+    $assistants = $members->where('type_id', 2)->values();
+
+    $assistant1 = $assistants->get(0);
+    $assistant2 = $assistants->get(1);
+
+    $today = Carbon::today();
+
+    $buildPerson = function ($emp) use ($today) {
+        if (!$emp) return null;
+
+        // Contrato activo (según tu relación activeContract ya definida)
+        $contract = $emp->activeContract()->first();
+
+        // Vacaciones “activas” ahora mismo.
+        // Tus modelos usan start_date (modelo) y también hay instalaciones con request_date (migración).
+        // Para no tocar tus modelos, consultamos ambos campos de forma segura.
+        $vacation = $emp->vacations()
+            ->whereIn('status', ['approved', 'Approved', 'APPROVED']) // tolerante a variantes
+            ->where(function($q) use ($today) {
+                // Caso 1: start_date/end_date existen en tu modelo
+                $q->where(function($qq) use ($today) {
+                    $qq->whereNotNull('start_date')
+                       ->whereDate('start_date', '<=', $today)
+                       ->whereDate('end_date', '>=', $today);
+                })
+                // Caso 2: request_date/end_date (por si tu instalación usa estos nombres)
+                ->orWhere(function($qq) use ($today) {
+                    $qq->whereNotNull('request_date')
+                       ->whereDate('request_date', '<=', $today)
+                       ->whereDate('end_date', '>=', $today);
+                });
+            })
+            ->orderByDesc('id')
+            ->first();
+
+        // Normalizamos fechas de contrato
+        $contractStart = $contract?->start_date?->format('Y-m-d');
+        $contractEnd   = $contract?->end_date?->format('Y-m-d');
+
+        // Normalizamos fechas de vacaciones (según qué campo exista)
+        $vacStart = $vacation?->start_date ?? $vacation?->request_date;
+        $vacStart = $vacStart ? Carbon::parse($vacStart)->format('Y-m-d') : null;
+        $vacEnd   = $vacation?->end_date ? Carbon::parse($vacation->end_date)->format('Y-m-d') : null;
+
+        return [
+            'full_name' => trim(($emp->lastnames ?? '').' '.($emp->names ?? '')),
+            'contract'  => $contract ? [
+                'start_date' => $contractStart,
+                'end_date'   => $contractEnd,
+                'is_active'  => (bool) $contract->is_active,
+            ] : null,
+            'vacation'  => $vacation ? [
+                'start_date' => $vacStart,
+                'end_date'   => $vacEnd,
+                'status'     => $vacation->status,
+            ] : null,
+        ];
+    };
+
+    return response()->json([
+        'driver'     => $buildPerson($driver),
+        'assistant1' => $buildPerson($assistant1),
+        'assistant2' => $buildPerson($assistant2),
+    ]);
+}
+
 }
