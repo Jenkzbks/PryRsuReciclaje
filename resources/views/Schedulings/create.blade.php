@@ -72,32 +72,35 @@
       {{-- === CARDS DE PERSONAL === --}}
       <div class="row mt-3">
         <div class="col-md-4">
-          <div class="card shadow-sm">
+          <div class="card shadow-sm" id="card_driver">
             <div class="card-header bg-light"><strong>Conductor</strong></div>
             <div class="card-body">
               <div class="mb-1"><small class="text-muted">Nombre</small><div id="drv_name">-</div></div>
               <div class="mb-1"><small class="text-muted">Contrato</small><div id="drv_contract">-</div></div>
               <div class="mb-1"><small class="text-muted">Vacaciones</small><div id="drv_vacation">-</div></div>
+              <div class="mt-2 small" id="drv_warn"></div>
             </div>
           </div>
         </div>
         <div class="col-md-4">
-          <div class="card shadow-sm">
+          <div class="card shadow-sm" id="card_a1">
             <div class="card-header bg-light"><strong>Ayudante 1</strong></div>
             <div class="card-body">
               <div class="mb-1"><small class="text-muted">Nombre</small><div id="a1_name">-</div></div>
               <div class="mb-1"><small class="text-muted">Contrato</small><div id="a1_contract">-</div></div>
               <div class="mb-1"><small class="text-muted">Vacaciones</small><div id="a1_vacation">-</div></div>
+              <div class="mt-2 small" id="a1_warn"></div>
             </div>
           </div>
         </div>
         <div class="col-md-4">
-          <div class="card shadow-sm">
+          <div class="card shadow-sm" id="card_a2">
             <div class="card-header bg-light"><strong>Ayudante 2</strong></div>
             <div class="card-body">
               <div class="mb-1"><small class="text-muted">Nombre</small><div id="a2_name">-</div></div>
               <div class="mb-1"><small class="text-muted">Contrato</small><div id="a2_contract">-</div></div>
               <div class="mb-1"><small class="text-muted">Vacaciones</small><div id="a2_vacation">-</div></div>
+              <div class="mt-2 small" id="a2_warn"></div>
             </div>
           </div>
         </div>
@@ -116,6 +119,44 @@
 
 @section('js')
 <script>
+  // ============== Helpers UI ==============
+  function badge(text, level) {
+    const cls = level==='danger' ? 'badge badge-danger'
+              : level==='warning' ? 'badge badge-warning'
+              : 'badge badge-success';
+    return `<span class="${cls}">${text}</span>`;
+  }
+
+  function setCardStatus(role, status, messages) {
+    // role: 'driver' | 'assistant1' | 'assistant2'
+    const map = { driver: 'card_driver', assistant1: 'card_a1', assistant2: 'card_a2' };
+    const warnMap = { driver: 'drv_warn', assistant1: 'a1_warn', assistant2: 'a2_warn' };
+    const card = document.getElementById(map[role]);
+    const warn = document.getElementById(warnMap[role]);
+
+    // limpia clases previas
+    card.classList.remove('border-danger','border-success','border-warning','border');
+    warn.innerHTML = '';
+
+    if (status === 'ok') {
+      card.classList.add('border','border-success');
+      warn.innerHTML = badge('Disponible', 'success');
+    } else if (status === 'warn') {
+      card.classList.add('border','border-warning');
+      warn.innerHTML = badge(messages.join(' | '), 'warning');
+    } else if (status === 'error') {
+      card.classList.add('border','border-danger');
+      warn.innerHTML = badge(messages.join(' | '), 'danger');
+    }
+  }
+
+  function clearCardsStatus() {
+    setCardStatus('driver', 'ok', []);
+    setCardStatus('assistant1', 'ok', []);
+    setCardStatus('assistant2', 'ok', []);
+  }
+
+  // ============== Info del grupo + cards ==============
   function updateGroupInfo() {
     const opt = document.querySelector('#group_id option:checked');
     if (!opt) return;
@@ -131,7 +172,8 @@
     fetch("{{ route('admin.schedulings.group-info', ':id') }}".replace(':id', gid))
       .then(r => r.json())
       .then(fillCards)
-      .catch(() => clearCards());
+      .then(clearCardsStatus)
+      .catch(() => { clearCards(); clearCardsStatus(); });
   }
 
   function fmtContract(c) {
@@ -169,8 +211,74 @@
     });
   }
 
-  // Previsualización (tu lógica original)
-  document.getElementById('btnPreview').addEventListener('click', function() {
+  // ============== Check disponibilidad (AJAX a backend) ==============
+  async function checkAvailabilityClient() {
+    const gid = document.getElementById('group_id').value;
+    const from = document.querySelector('input[name="from"]').value;
+    const to   = document.querySelector('input[name="to"]').value;
+
+    if (!gid || !from || !to) {
+      alert('Seleccione grupo y rango de fechas.');
+      return { ok:false, message:'Faltan campos', data:null };
+    }
+
+    clearCardsStatus();
+
+    const res = await fetch("{{ route('admin.schedulings.check-availability') }}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+      },
+      body: JSON.stringify({ group_id: gid, from, to }),
+    });
+
+    if (!res.ok) {
+      return { ok:false, message:'Error al validar', data:null };
+    }
+
+    const data = await res.json();
+
+    // Marca cards
+    const byRole = data.byRole || {};
+    const renderRole = (role) => {
+      const items = byRole[role] || [];
+      if (!items.length) {
+        setCardStatus(role, 'ok', []);
+      } else {
+        // si hay contrato expira o sin contrato => error; si solo vacaciones => warning
+        const hasContractIssue = items.some(x => x.reason.toLowerCase().includes('contrato') || x.reason.toLowerCase().includes('sin contrato'));
+        const msgs = items.map(x => `${x.reason}: ${x.dates.join(', ')}`);
+        setCardStatus(role, hasContractIssue ? 'error' : 'warn', msgs);
+      }
+    };
+    renderRole('driver');
+    renderRole('assistant1');
+    renderRole('assistant2');
+
+    // Mensaje global en la caja info
+    const box = document.getElementById('previewBox');
+    if (!data.ok) {
+      const lines = data.conflicts.flatMap(c => c.items.map(it => `${c.name} no está disponible por ${it.reason} en: ${it.dates.join(', ')}`));
+      box.style.display = 'block';
+      box.classList.remove('alert-info');
+      box.classList.add('alert-danger');
+      box.innerHTML = `<strong>Conflictos detectados:</strong><br>${lines.map(l=>`• ${l}`).join('<br>')}`;
+    } else {
+      // si no hay conflictos, mantener/mostrar info previa si existe
+      if (!box.innerHTML) {
+        box.style.display = 'block';
+        box.classList.remove('alert-danger');
+        box.classList.add('alert-info');
+        box.innerHTML = '<strong>Validación OK:</strong> No se encontraron conflictos de disponibilidad.';
+      }
+    }
+
+    return { ok:data.ok, data };
+  }
+
+  // ============== Previsualización (conteo simple) + check disponibilidad ==============
+  document.getElementById('btnPreview').addEventListener('click', async function() {
     const from = document.querySelector('input[name="from"]').value;
     const to   = document.querySelector('input[name="to"]').value;
     const opt  = document.querySelector('#group_id option:checked');
@@ -194,10 +302,25 @@
 
     const box = document.getElementById('previewBox');
     box.style.display = 'block';
+    box.classList.remove('alert-danger');
+    box.classList.add('alert-info');
     box.innerHTML = `<strong>Previsualización:</strong> se crearán aproximadamente <b>${count}</b> programaciones.`;
+
+    // validar disponibilidad en backend
+    await checkAvailabilityClient();
   });
 
+  // ============== Bloquear submit si hay conflictos ==============
+  document.querySelector('form[action="{{ route('admin.schedulings.store') }}"]').addEventListener('submit', async function(e) {
+    const res = await checkAvailabilityClient();
+    if (!res.ok) {
+      e.preventDefault();
+      alert('Hay conflictos de disponibilidad. Revisa las tarjetas resaltadas.');
+    }
+  });
+
+  // init
   document.getElementById('group_id').addEventListener('change', updateGroupInfo);
-  updateGroupInfo(); // al cargar
+  updateGroupInfo();
 </script>
 @stop

@@ -56,6 +56,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('schedulings', SchedulingController::class);
     Route::get('schedulings/group-info/{group}', [\App\Http\Controllers\admin\SchedulingController::class, 'groupInfo'])
     ->name('schedulings.group-info');
+    Route::post('schedulings/check-availability', [\App\Http\Controllers\admin\SchedulingController::class, 'checkAvailability'])
+    ->name('schedulings.check-availability');
+
 
     // API routes para selects dependientes
     Route::get('api/provinces/{department_id}', [ZoneController::class, 'getProvinces'])->name('api.provinces');
