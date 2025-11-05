@@ -39,7 +39,6 @@
         <thead class="thead-light">
           <tr>
             <th>Fecha</th>
-            <th>Estado</th>
             <th>Zona</th>
             <th>Turno</th>
             <th>Vehículo</th>
@@ -51,16 +50,17 @@
         <tbody>
           @forelse($schedulings as $s)
             <tr>
-              <td>{{ \Carbon\Carbon::parse($s->date)->format('Y-m-d') }}</td>
-              <td><span class="badge badge-info">Programado</span></td>
-              <td>{{ $s->zone->name ?? '' }}</td>
-              <td>{{ $s->shift->name ?? '' }}</td>
-              <td>{{ $s->vehicle->plate ?? '' }}</td>
-              <td>{{ $s->group->name ?? '' }}</td>
+              <td>{{ $s->date }}</td>
+              <td>{{ $s->zone->name ?? '-' }}</td>
+              <td>{{ $s->shift->name ?? '-' }}</td>
+              <td>{{ $s->vehicle->plate ?? '-' }}</td>
+              <td>{{ $s->group->name ?? '-' }}</td>
               <td>{{ $s->notes }}</td>
-              <td>
-                <form method="POST" action="{{ route('admin.schedulings.destroy',$s) }}"
-                      onsubmit="return confirm('¿Eliminar programación?')">
+              <td class="d-flex">
+                <a href="{{ route('admin.schedulings.edit',$s) }}" class="btn btn-sm btn-outline-primary mr-2">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <form method="POST" action="{{ route('admin.schedulings.destroy',$s) }}" onsubmit="return confirm('¿Eliminar programación?')">
                   @csrf @method('DELETE')
                   <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
                 </form>
@@ -73,9 +73,7 @@
       </table>
     </div>
 
-    <div class="mt-3">
-      {{ $schedulings->appends(request()->query())->links() }}
-    </div>
+    <div class="mt-3">{{ $schedulings->appends(request()->query())->links() }}</div>
   </div>
 </div>
 @stop

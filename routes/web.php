@@ -53,12 +53,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('vehicles', VehicleController::class);
     Route::resource('colors', ColorController::class);
     Route::resource('shifts', ShiftController::class);
+     Route::get('schedulings/available-candidates', [SchedulingController::class, 'availableCandidates'])
+    ->name('schedulings.available-candidates');
+
     Route::resource('schedulings', SchedulingController::class);
+
     Route::get('schedulings/group-info/{group}', [\App\Http\Controllers\admin\SchedulingController::class, 'groupInfo'])
     ->name('schedulings.group-info');
+    
     Route::post('schedulings/check-availability', [\App\Http\Controllers\admin\SchedulingController::class, 'checkAvailability'])
     ->name('schedulings.check-availability');
 
+   
 
     // API routes para selects dependientes
     Route::get('api/provinces/{department_id}', [ZoneController::class, 'getProvinces'])->name('api.provinces');
