@@ -65,15 +65,21 @@
           </div>
         </div>
         <div class="col-md-8">
-          <div class="alert alert-info" id="previewBox" style="display:none;"></div>
+          <div class="alert" id="previewBox" style="display:none;"></div>
         </div>
       </div>
 
       {{-- === CARDS DE PERSONAL === --}}
       <div class="row mt-3">
+        {{-- Driver --}}
         <div class="col-md-4">
           <div class="card shadow-sm" id="card_driver">
-            <div class="card-header bg-light"><strong>Conductor</strong></div>
+            <div class="card-header bg-light d-flex justify-content-between">
+              <strong>Conductor</strong>
+              <button type="button" class="btn btn-sm btn-outline-secondary d-none" id="btnChange_driver" title="Cambiar">
+                <i class="fas fa-exchange-alt"></i>
+              </button>
+            </div>
             <div class="card-body">
               <div class="mb-1"><small class="text-muted">Nombre</small><div id="drv_name">-</div></div>
               <div class="mb-1"><small class="text-muted">Contrato</small><div id="drv_contract">-</div></div>
@@ -82,9 +88,16 @@
             </div>
           </div>
         </div>
+
+        {{-- Assistant 1 --}}
         <div class="col-md-4">
           <div class="card shadow-sm" id="card_a1">
-            <div class="card-header bg-light"><strong>Ayudante 1</strong></div>
+            <div class="card-header bg-light d-flex justify-content-between">
+              <strong>Ayudante 1</strong>
+              <button type="button" class="btn btn-sm btn-outline-secondary d-none" id="btnChange_assistant1" title="Cambiar">
+                <i class="fas fa-exchange-alt"></i>
+              </button>
+            </div>
             <div class="card-body">
               <div class="mb-1"><small class="text-muted">Nombre</small><div id="a1_name">-</div></div>
               <div class="mb-1"><small class="text-muted">Contrato</small><div id="a1_contract">-</div></div>
@@ -93,9 +106,16 @@
             </div>
           </div>
         </div>
+
+        {{-- Assistant 2 --}}
         <div class="col-md-4">
           <div class="card shadow-sm" id="card_a2">
-            <div class="card-header bg-light"><strong>Ayudante 2</strong></div>
+            <div class="card-header bg-light d-flex justify-content-between">
+              <strong>Ayudante 2</strong>
+              <button type="button" class="btn btn-sm btn-outline-secondary d-none" id="btnChange_assistant2" title="Cambiar">
+                <i class="fas fa-exchange-alt"></i>
+              </button>
+            </div>
             <div class="card-body">
               <div class="mb-1"><small class="text-muted">Nombre</small><div id="a2_name">-</div></div>
               <div class="mb-1"><small class="text-muted">Contrato</small><div id="a2_contract">-</div></div>
@@ -107,6 +127,16 @@
       </div>
       {{-- === /CARDS DE PERSONAL === --}}
 
+      {{-- Hidden para reemplazos --}}
+      <input type="hidden" name="replacements[driver][employee_id]" id="rep_driver_employee_id">
+      <input type="hidden" name="replacements[driver][dates]"       id="rep_driver_dates">
+
+      <input type="hidden" name="replacements[assistant1][employee_id]" id="rep_assistant1_employee_id">
+      <input type="hidden" name="replacements[assistant1][dates]"       id="rep_assistant1_dates">
+
+      <input type="hidden" name="replacements[assistant2][employee_id]" id="rep_assistant2_employee_id">
+      <input type="hidden" name="replacements[assistant2][dates]"       id="rep_assistant2_dates">
+
     </div>
 
     <div class="card-footer text-right">
@@ -115,11 +145,37 @@
     </div>
   </form>
 </div>
+
+{{-- Modal de reemplazo --}}
+<div class="modal fade" id="modalReplace" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-md" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title">Seleccionar reemplazo</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2"><strong id="replaceRoleLabel">Rol</strong></div>
+        <div class="form-group">
+          <label>Empleado disponible</label>
+          <select id="replaceSelect" class="form-control">
+            <option value="">-- Seleccione --</option>
+          </select>
+        </div>
+        <div class="alert alert-info" id="replaceDatesInfo" style="display:none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btnApplyReplace">Aplicar</button>
+      </div>
+    </div>
+  </div>
+</div>
 @stop
 
 @section('js')
 <script>
-  // ============== Helpers UI ==============
+  // ===== Helpers UI =====
   function badge(text, level) {
     const cls = level==='danger' ? 'badge badge-danger'
               : level==='warning' ? 'badge badge-warning'
@@ -128,14 +184,12 @@
   }
 
   function setCardStatus(role, status, messages) {
-    // role: 'driver' | 'assistant1' | 'assistant2'
     const map = { driver: 'card_driver', assistant1: 'card_a1', assistant2: 'card_a2' };
     const warnMap = { driver: 'drv_warn', assistant1: 'a1_warn', assistant2: 'a2_warn' };
     const card = document.getElementById(map[role]);
     const warn = document.getElementById(warnMap[role]);
 
-    // limpia clases previas
-    card.classList.remove('border-danger','border-success','border-warning','border');
+    card.classList.remove('border','border-danger','border-success','border-warning');
     warn.innerHTML = '';
 
     if (status === 'ok') {
@@ -156,7 +210,7 @@
     setCardStatus('assistant2', 'ok', []);
   }
 
-  // ============== Info del grupo + cards ==============
+  // ===== Info de grupo + cards =====
   function updateGroupInfo() {
     const opt = document.querySelector('#group_id option:checked');
     if (!opt) return;
@@ -189,15 +243,14 @@
   }
 
   function fillCards(data) {
-    // Conductor
     document.getElementById('drv_name').textContent     = data.driver?.full_name ?? '-';
     document.getElementById('drv_contract').textContent = fmtContract(data.driver?.contract ?? null);
     document.getElementById('drv_vacation').textContent = fmtVacation(data.driver?.vacation ?? null);
-    // Ayudante 1
+
     document.getElementById('a1_name').textContent      = data.assistant1?.full_name ?? '-';
     document.getElementById('a1_contract').textContent  = fmtContract(data.assistant1?.contract ?? null);
     document.getElementById('a1_vacation').textContent  = fmtVacation(data.assistant1?.vacation ?? null);
-    // Ayudante 2
+
     document.getElementById('a2_name').textContent      = data.assistant2?.full_name ?? '-';
     document.getElementById('a2_contract').textContent  = fmtContract(data.assistant2?.contract ?? null);
     document.getElementById('a2_vacation').textContent  = fmtVacation(data.assistant2?.vacation ?? null);
@@ -211,7 +264,19 @@
     });
   }
 
-  // ============== Check disponibilidad (AJAX a backend) ==============
+  // ===== Estado de disponibilidad recordado para “Cambiar” =====
+  let lastAvailability = null;
+
+  function toggleChangeButtons() {
+    const roles = ['driver','assistant1','assistant2'];
+    roles.forEach(role => {
+      const btn = document.getElementById('btnChange_'+role);
+      if (!btn) return;
+      const hasIssues = !!(lastAvailability && lastAvailability.byRole && (lastAvailability.byRole[role] || []).length);
+      btn.classList.toggle('d-none', !hasIssues);
+    });
+  }
+
   async function checkAvailabilityClient() {
     const gid = document.getElementById('group_id').value;
     const from = document.querySelector('input[name="from"]').value;
@@ -239,14 +304,12 @@
 
     const data = await res.json();
 
-    // Marca cards
     const byRole = data.byRole || {};
     const renderRole = (role) => {
       const items = byRole[role] || [];
       if (!items.length) {
         setCardStatus(role, 'ok', []);
       } else {
-        // si hay contrato expira o sin contrato => error; si solo vacaciones => warning
         const hasContractIssue = items.some(x => x.reason.toLowerCase().includes('contrato') || x.reason.toLowerCase().includes('sin contrato'));
         const msgs = items.map(x => `${x.reason}: ${x.dates.join(', ')}`);
         setCardStatus(role, hasContractIssue ? 'error' : 'warn', msgs);
@@ -256,7 +319,6 @@
     renderRole('assistant1');
     renderRole('assistant2');
 
-    // Mensaje global en la caja info
     const box = document.getElementById('previewBox');
     if (!data.ok) {
       const lines = data.conflicts.flatMap(c => c.items.map(it => `${c.name} no está disponible por ${it.reason} en: ${it.dates.join(', ')}`));
@@ -265,11 +327,10 @@
       box.classList.add('alert-danger');
       box.innerHTML = `<strong>Conflictos detectados:</strong><br>${lines.map(l=>`• ${l}`).join('<br>')}`;
     } else {
-      // si no hay conflictos, mantener/mostrar info previa si existe
+      box.style.display = 'block';
+      box.classList.remove('alert-danger');
+      box.classList.add('alert-info');
       if (!box.innerHTML) {
-        box.style.display = 'block';
-        box.classList.remove('alert-danger');
-        box.classList.add('alert-info');
         box.innerHTML = '<strong>Validación OK:</strong> No se encontraron conflictos de disponibilidad.';
       }
     }
@@ -277,7 +338,110 @@
     return { ok:data.ok, data };
   }
 
-  // ============== Previsualización (conteo simple) + check disponibilidad ==============
+  async function runAvailabilityAndDecorate() {
+    const res = await checkAvailabilityClient();
+    if (res && res.data) lastAvailability = res.data;
+    toggleChangeButtons();
+  }
+
+  // === Botones Cambiar (abrir modal) ===
+  ['driver','assistant1','assistant2'].forEach(role => {
+    const btn = document.getElementById('btnChange_'+role);
+    if (!btn) return;
+    btn.addEventListener('click', () => openReplaceModal(role));
+  });
+
+function openReplaceModal(role) {
+  if (!lastAvailability || !lastAvailability.byRole) return;
+
+  const items = lastAvailability.byRole[role] || [];
+  const dates = [...new Set(items.flatMap(it => it.dates))].sort();
+
+  document.getElementById('replaceRoleLabel').textContent =
+    role === 'driver' ? 'Conductor'
+    : role === 'assistant1' ? 'Ayudante 1'
+    : 'Ayudante 2';
+
+  const info = document.getElementById('replaceDatesInfo');
+  info.style.display = 'block';
+  info.innerHTML = `<strong>Fechas a cubrir:</strong> ${dates.join(', ')}`;
+
+  const typeId = (role === 'driver') ? 1 : 2;
+
+  // Excluir al titular del rol (opcional)
+  const exclude = [];
+  const currentNameEl = role === 'driver' ? 'drv_name' : (role === 'assistant1' ? 'a1_name' : 'a2_name');
+  // si manejas IDs del titular en hidden podrías agregarlo aquí a exclude
+
+ const baseUrl = "{{ route('admin.schedulings.available-candidates') }}";
+const query = new URLSearchParams({
+  type_id: typeId,
+  dates: dates.join(',')
+});
+exclude.forEach((id) => query.append('exclude[]', id));
+
+fetch(`${baseUrl}?${query.toString()}`, {
+  headers: {
+    'X-Requested-With': 'XMLHttpRequest'
+  }
+})
+  .then(response => {
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json();
+  })
+  .then(list => {
+    const sel = document.getElementById('replaceSelect');
+    sel.innerHTML = '<option value="">-- Seleccione --</option>';
+    if (!list.length) {
+      const opt = document.createElement('option');
+      opt.textContent = 'No hay empleados disponibles';
+      opt.disabled = true;
+      sel.appendChild(opt);
+    } else {
+      list.forEach(it => {
+        const opt = document.createElement('option');
+        opt.value = it.id;
+        opt.textContent = it.name;
+        sel.appendChild(opt);
+      });
+    }
+    sel.dataset.role = role;
+    sel.dataset.dates = dates.join(',');
+
+    $('#modalReplace').modal('show');
+  })
+  .catch(err => {
+    console.error('Error cargando candidatos:', err);
+    alert('No se pudo cargar la lista de empleados disponibles.');
+  });
+
+}
+
+
+  document.getElementById('btnApplyReplace').addEventListener('click', function() {
+    const sel = document.getElementById('replaceSelect');
+    const role  = sel.dataset.role;
+    const dates = sel.dataset.dates || '';
+    const empId = sel.value;
+
+    if (!role || !dates || !empId) {
+      alert('Seleccione un empleado.');
+      return;
+    }
+
+    document.getElementById(`rep_${role}_employee_id`).value = empId;
+    document.getElementById(`rep_${role}_dates`).value       = dates;
+
+    const warnId = role === 'driver' ? 'drv_warn' : (role === 'assistant1' ? 'a1_warn' : 'a2_warn');
+    const warnEl = document.getElementById(warnId);
+    if (warnEl) {
+      warnEl.innerHTML = `<span class="badge badge-primary">Reemplazo seleccionado</span>`;
+    }
+
+    $('#modalReplace').modal('hide');
+  });
+
+  // ===== Previsualización + validar
   document.getElementById('btnPreview').addEventListener('click', async function() {
     const from = document.querySelector('input[name="from"]').value;
     const to   = document.querySelector('input[name="to"]').value;
@@ -306,16 +470,33 @@
     box.classList.add('alert-info');
     box.innerHTML = `<strong>Previsualización:</strong> se crearán aproximadamente <b>${count}</b> programaciones.`;
 
-    // validar disponibilidad en backend
-    await checkAvailabilityClient();
+    await runAvailabilityAndDecorate();
   });
 
-  // ============== Bloquear submit si hay conflictos ==============
+  // ===== Bloquear submit si hay conflictos (invita a reemplazar)
   document.querySelector('form[action="{{ route('admin.schedulings.store') }}"]').addEventListener('submit', async function(e) {
     const res = await checkAvailabilityClient();
+    lastAvailability = res.data || null;
+    toggleChangeButtons();
+
     if (!res.ok) {
-      e.preventDefault();
-      alert('Hay conflictos de disponibilidad. Revisa las tarjetas resaltadas.');
+      // Permitimos continuar si el usuario ya ingresó reemplazos para TODAS las fechas en conflicto
+      const stillHasErrors = role => {
+        const items = (lastAvailability?.byRole?.[role] || []);
+        if (!items.length) return false;
+        // si hay reemplazo y cubre todas las fechas conflictivas, está ok
+        const repDates = (document.getElementById(`rep_${role}_dates`).value || '').split(',').filter(Boolean);
+        const conflictDates = [...new Set(items.flatMap(it => it.dates))];
+        return !conflictDates.every(d => repDates.includes(d));
+      };
+
+      const roles = ['driver','assistant1','assistant2'];
+      const pending = roles.filter(stillHasErrors);
+
+      if (pending.length) {
+        e.preventDefault();
+        alert('Hay conflictos sin cubrir. Usa el botón "Cambiar" en las tarjetas rojas para seleccionar reemplazos.');
+      }
     }
   });
 

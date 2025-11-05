@@ -16,4 +16,9 @@ class Scheduling extends Model
     public function shift()   { return $this->belongsTo(\App\Models\Shift::class,        'shift_id'); }
     public function vehicle() { return $this->belongsTo(\App\Models\Vehicle::class,      'vehicle_id'); }
     public function zone()    { return $this->belongsTo(\App\Models\Zone::class,         'zone_id'); }
+    public function details()
+{
+    return $this->hasMany(\App\Models\Groupdetail::class, 'scheduling_id');
+}
+
 }

@@ -196,5 +196,10 @@ class Employee extends Authenticatable
             'employeegroup_id'
         )->withTimestamps();
     }
+public function groupdetails()
+{
+    // OJO: 'emplooyee_id' con doble "o", tal como está en tu migración
+    return $this->hasMany(Groupdetail::class, 'emplooyee_id');
+}
 
 }
