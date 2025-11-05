@@ -17,15 +17,18 @@
         <hr>
         <h6>Galería (Opcional)</h6>
         <div class="row">
-            <div class="col-4">
-                <img src="{{ asset('storage/vehicles/noimage.jpg') }}" class="img-fluid rounded" alt="Imagen de galería 2">
-            </div>
-            <div class="col-4">
-                <img src="{{ asset('storage/vehicles/noimage.jpg') }}" class="img-fluid rounded" alt="Imagen de galería 3">
-            </div>
-            <div class="col-4">
-                <img src="{{ asset('storage/vehicles/noimage.jpg') }}" class="img-fluid rounded" alt="Imagen de galería 4">
-            </div>
+            @for ($i = 0; $i < 3; $i++)
+                <div class="col-4 mb-2">
+                    @php
+                        $galleryImage = isset($vehicle) && $vehicle->images->skip(1)->get($i) ? $vehicle->images->skip(1)->get($i) : null;
+                    @endphp
+                    <img src="{{ $galleryImage ? asset('storage/' . $galleryImage->image) : asset('storage/vehicles/noimage.jpg') }}"
+                         class="img-fluid rounded gallery-img"
+                         alt="Imagen de galería {{ $i + 1 }}"
+                         data-index="{{ $i }}">
+                    <input type="file" class="d-none" name="gallery_images[]" id="gallery_image_{{ $i }}" accept="image/*">
+                </div>
+            @endfor
         </div>
     </div>
 
@@ -124,6 +127,14 @@
                         <label for="load_capacity">Capacidad de Carga (Kg)</label>
                         <input type="number" step="0.01" name="load_capacity" id="load_capacity" class="form-control" value="{{ old('load_capacity', $vehicle->load_capacity ?? '') }}" placeholder="Ej: 1500.50">
                     </div>
+                    <div class="col-md-6 form-group">
+                        <label for="passengers">Cantidad de Pasajeros</label>
+                        <input type="number" name="passengers" id="passengers" class="form-control" value="{{ old('passengers', $vehicle->passengers ?? '') }}" placeholder="Ej: 5">
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label for="fuel_capacity">Capacidad de Combustible (L)</label>
+                        <input type="number" step="0.01" name="fuel_capacity" id="fuel_capacity" class="form-control" value="{{ old('fuel_capacity', $vehicle->fuel_capacity ?? '') }}" placeholder="Ej: 50.0">
+                    </div>
                 </div>
             </div>
         </div>
@@ -141,7 +152,27 @@
         }
     });
 
+    // Manejar clics en imágenes de galería
+    document.querySelectorAll('.gallery-img').forEach(function(img) {
+        img.addEventListener('click', function() {
+            var index = this.getAttribute('data-index');
+            document.getElementById('gallery_image_' + index).click();
+        });
+    });
 
+    // Manejar cambios en inputs de galería
+    @for ($i = 0; $i < 3; $i++)
+        document.getElementById('gallery_image_{{ $i }}').addEventListener('change', function(event) {
+            if (event.target.files && event.target.files[0]) {
+                var reader = new FileReader();
+                var index = event.target.id.split('_')[2]; // gallery_image_0 -> 0
+                reader.onload = function(e) {
+                    document.querySelector('.gallery-img[data-index="' + index + '"]').setAttribute('src', e.target.result);
+                };
+                reader.readAsDataURL(event.target.files[0]);
+            }
+        });
+    @endfor
 </script>
 <script>
     (function() {

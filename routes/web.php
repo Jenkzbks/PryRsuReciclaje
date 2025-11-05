@@ -34,15 +34,16 @@ Route::get('/', function () {
 });
 
 Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified',
+    'auth',
 ])->group(function () {
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
+
+
 });
 
+Route::post('admin/vehicles/filter', [VehicleController::class, 'filter'])->name('admin.vehicles.filter');
 
 Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
 
@@ -71,12 +72,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // ===================================
     // MÓDULO DE GESTIÓN DE PERSONAL
     // ===================================
-    
+
     // ===== DASHBOARD PERSONAL =====
     Route::get('/personnel', function () {
         return view('personnel.dashboard');
     })->name('personnel.dashboard');
-    
+
     // ===== EMPLEADOS =====
     Route::resource('personnel/employees', EmployeeController::class, [
         'as' => 'personnel'
@@ -86,13 +87,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('personnel/employeegroups', EmployeegroupController::class, [
         'as' => 'personnel'
     ]);
-    
+
     // Rutas especiales para empleados
     Route::prefix('personnel/employees')->name('personnel.employees.')->group(function () {
         Route::patch('{employee}/toggle-status', [EmployeeController::class, 'toggleStatus'])->name('toggle-status');
         Route::delete('{employee}/remove-photo', [EmployeeController::class, 'removePhoto'])->name('remove-photo');
         Route::get('export', [EmployeeController::class, 'export'])->name('export');
-        
+
         // API endpoints
         Route::get('api/active', [EmployeeController::class, 'getActiveEmployees'])->name('api.active');
     });
@@ -102,13 +103,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
         'as' => 'personnel'
     ]);
 
-    
-    
+
+
     // Rutas especiales para tipos de empleado
     Route::prefix('personnel/employee-types')->name('personnel.employee-types.')->group(function () {
         Route::post('{employeeType}/duplicate', [EmployeeTypeController::class, 'duplicate'])->name('duplicate');
         Route::patch('update-order', [EmployeeTypeController::class, 'updateOrder'])->name('update-order');
-        
+
         // API endpoints
         Route::get('api/for-select', [EmployeeTypeController::class, 'getForSelect'])->name('api.for-select');
         Route::get('api/statistics', [EmployeeTypeController::class, 'getStatistics'])->name('api.statistics');
@@ -118,13 +119,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('personnel/contracts', ContractController::class, [
         'as' => 'personnel'
     ]);
-    
+
     // Rutas especiales para contratos
     Route::prefix('personnel/contracts')->name('personnel.contracts.')->group(function () {
         Route::patch('{contract}/activate', [ContractController::class, 'activate'])->name('activate');
         Route::patch('{contract}/deactivate', [ContractController::class, 'deactivate'])->name('deactivate');
         Route::get('employee/{employee}', [ContractController::class, 'getByEmployee'])->name('by-employee');
-        
+
         // API endpoints
         Route::get('api/active', [ContractController::class, 'getActiveContracts'])->name('api.active');
         Route::get('api/expiring', [ContractController::class, 'getExpiringContracts'])->name('api.expiring');
@@ -134,13 +135,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('personnel/vacations', VacationController::class, [
         'as' => 'personnel'
     ]);
-    
+
     // Rutas especiales para vacaciones
     Route::prefix('personnel/vacations')->name('personnel.vacations.')->group(function () {
         Route::patch('{vacation}/approve', [VacationController::class, 'approve'])->name('approve');
         Route::patch('{vacation}/reject', [VacationController::class, 'reject'])->name('reject');
         Route::patch('{vacation}/cancel', [VacationController::class, 'cancel'])->name('cancel');
-        
+
         // API endpoints
         Route::get('api/pending', [VacationController::class, 'getPendingVacations'])->name('api.pending');
         Route::get('api/calendar', [VacationController::class, 'getCalendarData'])->name('api.calendar');
@@ -154,7 +155,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('bulk-import', [AttendanceController::class, 'bulkImport'])->name('bulk-import');
         Route::post('clock-in', [AttendanceController::class, 'clockIn'])->name('clock-in');
         Route::post('clock-out', [AttendanceController::class, 'clockOut'])->name('clock-out');
-        
+
         // API endpoints para reportes
         Route::get('api/daily/{date}', [AttendanceController::class, 'getDailyAttendance'])->name('api.daily');
         Route::get('api/employee/{employee}/month/{month}', [AttendanceController::class, 'getMonthlyByEmployee'])->name('api.monthly');
@@ -164,12 +165,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('api/employee/{employee}/report', [AttendanceController::class, 'employeeReport'])->name('api.employee-report');
         Route::get('api/general-report', [AttendanceController::class, 'generalReport'])->name('api.general-report');
     });
-    
+
     // Resource DESPUÉS de las rutas específicas
     Route::resource('personnel/attendances', AttendanceController::class, [
         'as' => 'personnel'
     ]);
-    
+
     // Rutas especiales adicionales para asistencias (que requieren {attendance})
     Route::prefix('personnel/attendances')->name('personnel.attendances.')->group(function () {
         Route::patch('{attendance}/approve', [AttendanceController::class, 'approve'])->name('approve');
@@ -183,7 +184,7 @@ Route::resource('brands', BrandController::class)->names('admin.brands');
 Route::resource('brandmodels', BrandModelController::class)->names('admin.brandmodels');
 
 Route::resource('vehicletypes', VehicleTypeController::class)->names('admin.vehicletypes');
-    
+
 
 
 // ===================================
@@ -193,8 +194,3 @@ Route::resource('vehicletypes', VehicleTypeController::class)->names('admin.vehi
 // Rutas públicas para asistencias (sin autenticación completa)
 Route::get('/attendance-kiosk', [AttendanceController::class, 'loginPage'])->name('attendance-kiosk.index');
 Route::post('/attendance-kiosk/login', [AttendanceController::class, 'processLogin'])->name('attendance-kiosk.login');
-
-
-
-
-

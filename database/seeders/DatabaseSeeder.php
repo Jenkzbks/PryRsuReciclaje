@@ -16,6 +16,10 @@ class DatabaseSeeder extends Seeder
             DepartmentSeeder::class,
             ProvinceSeeder::class,
             DistrictSeeder::class,
+            BrandSeeder::class,
+            BrandModelSeeder::class,
+            ColorSeeder::class,
+            VehicleTypeSeeder::class,
         ]);
     }
 }

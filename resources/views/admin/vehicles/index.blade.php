@@ -64,54 +64,7 @@
 
         {{-- Contenedor de la cuadrícula de vehículos --}}
         <div id="vehicle-grid-container">
-            {{-- La cuadrícula se generará aquí. Uso de clases de Bootstrap para un diseño responsivo --}}
-            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
-                @foreach ($vehicles as $vehicle)
-                    <div class="col">
-                        <div class="card h-100 shadow-sm">
-                            <div class="position-relative" style="overflow: hidden;">
-                                {{-- Mostrar imagen principal si existe, si no usar un SVG inline ligero (no depender de via.placeholder.com) --}}
-                                <img src="{{ $vehicle->images->isNotEmpty() ? asset('storage/' . $vehicle->images->first()->image) : asset('storage/vehicles/noimage.jpg') }}"
-                                     class="card-img-top" alt="Imagen del vehículo" style="z-index:0; position: relative;">
-                                @if(!empty($vehicle->plate))
-                                    <span class="vehicle-plate">{{ $vehicle->plate }}</span>
-                                @endif
-
-                            </div>
-                            <div class="card-body py-3 d-flex justify-content-between align-items-start">
-                                <div class="vehicle-info">
-                                    {{-- Primera línea: nombre + tipo + estado --}}
-                                    <div class="d-flex align-items-center mb-2 gap-2">
-                                        <h6 class="mb-0 fw-bold text-truncate" style="max-width:180px;">{{ $vehicle->name ?? ($vehicle->model->brand->name ?? 'Marca') . ' ' . ($vehicle->model->name ?? 'Modelo') }}</h6>
-                                        <span class="badge bg-secondary">{{ $vehicle->type->name ?? 'Tipo' }}</span>
-                                        @if ($vehicle->status == 1)
-                                            <span class="badge bg-success">Activo</span>
-                                        @else
-                                            <span class="badge bg-danger">Inactivo</span>
-                                        @endif
-                                    </div>
-
-                                    <div class="mb-1 text-muted small">Modelo: {{ $vehicle->model->brand->name ?? 'Marca' }} {{ $vehicle->model->name ?? 'Modelo' }}</div>
-
-                                    <div class="text-muted small">Categoría: {{ $vehicle->color->name ?? 'N/A' }}</div>
-                                </div>
-
-                                {{-- Derecha: año --}}
-                                <div class="text-end">
-                                    <div class="vehicle-year fw-bold">{{ $vehicle->year ?? '2025' }}</div>
-                                </div>
-                            </div>                            <div class="card-footer bg-white border-0 d-flex justify-content-end gap-2">
-                                <form action="{{ route('admin.vehicles.destroy', $vehicle) }}" method="POST" class="frmDelete d-inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
-                                </form>
-                                <button class="btn btn-sm btn-dark btnEditar" id="{{ $vehicle->id }}">Editar</button>
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
+            @include('admin.vehicles.partials.grid')
         </div>
     </div>
 
@@ -254,11 +207,40 @@
                 });
             });
 
-            // --- Filtros funcionales (solo emito la intención; no hace petición en este fragmento) ---
+            // --- Filtros funcionales ---
             $(document).off('change keyup', '#searchPlaca, #selectMarca, #selectModelo, #selectTipo, #selectEstado')
                 .on('change keyup', '#searchPlaca, #selectMarca, #selectModelo, #selectTipo, #selectEstado', function() {
-                    // Puedes implementar búsqueda vía AJAX aquí y luego llamar a refreshVehicleGrid
+                    filterVehicles();
                 });
+
+            // --- Función para filtrar vehículos ---
+            function filterVehicles() {
+                var filters = {
+                    plate: $('#searchPlaca').val(),
+                    brand_id: $('#selectMarca').val(),
+                    model_id: $('#selectModelo').val(),
+                    type_id: $('#selectTipo').val(),
+                    status: $('#selectEstado').val(),
+                };
+
+                // muestra un indicador pequeño
+                var loadingHtml = '<div class="text-center w-100 py-5">Cargando...</div>';
+                $('#vehicle-grid-container').html(loadingHtml);
+
+                $.ajax({
+                    url: "{{ route('admin.vehicles.filter') }}",
+                    type: 'POST',
+                    data: { ...filters, _token: '{{ csrf_token() }}' },
+                    success: function(response) {
+                        // El response es el HTML de la vista parcial
+                        $('#vehicle-grid-container').html(response);
+                        // Actualizar el footer si es necesario, pero como es paginación, quizás no
+                    },
+                    error: function() {
+                        $('#vehicle-grid-container').html('<div class="text-danger p-3">No se pudo filtrar los resultados.</div>');
+                    }
+                });
+            }
 
             // --- Función que recarga solo el fragmento de grid y el footer (paginación) ---
             function refreshVehicleGrid() {

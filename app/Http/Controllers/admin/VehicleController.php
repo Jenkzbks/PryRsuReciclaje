@@ -40,6 +40,8 @@ class VehicleController extends Controller
             'plate' => 'required|string|max:20|unique:vehicles,plate',
             'year' => 'nullable|integer',
             'load_capacity' => 'nullable|numeric',
+            'passengers' => 'nullable|integer',
+            'fuel_capacity' => 'nullable|numeric',
             'description' => 'nullable|string',
             'status' => 'required|in:1,0',
             'brand_id' => 'required|exists:brands,id',
@@ -47,6 +49,7 @@ class VehicleController extends Controller
             'type_id' => 'required|exists:vehicletypes,id',
             'color_id' => 'required|exists:colors,id',
             'image' => 'nullable|image|max:2048',
+            'gallery_images.*' => 'nullable|image|max:2048',
         ]);
 
         $data = $request->all();
@@ -58,6 +61,18 @@ class VehicleController extends Controller
                 'image' => $imagePath,
                 'profile' => 1,
             ]);
+        }
+        if ($request->hasFile('gallery_images')) {
+            foreach ($request->file('gallery_images') as $galleryImage) {
+                if ($galleryImage) {
+                    $galleryPath = $galleryImage->store('vehicles', 'public');
+                    VehicleImage::create([
+                        'vehicle_id' => $vehicle->id,
+                        'image' => $galleryPath,
+                        'profile' => 0,
+                    ]);
+                }
+            }
         }
         return response()->json(['message' => 'Vehículo registrado correctamente']);
     }
@@ -110,6 +125,8 @@ class VehicleController extends Controller
             'plate' => 'required|string|max:20|unique:vehicles,plate,' . $id,
             'year' => 'nullable|integer',
             'load_capacity' => 'nullable|numeric',
+            'passengers' => 'nullable|integer',
+            'fuel_capacity' => 'nullable|numeric',
             'description' => 'nullable|string',
             'status' => 'required|in:1,0',
             'brand_id' => 'required|exists:brands,id',
@@ -117,6 +134,7 @@ class VehicleController extends Controller
             'type_id' => 'required|exists:vehicletypes,id',
             'color_id' => 'required|exists:colors,id',
             'image' => 'nullable|image|max:2048',
+            'gallery_images.*' => 'nullable|image|max:2048',
         ]);
 
         $vehicle = Vehicle::findOrFail($id);
@@ -129,6 +147,18 @@ class VehicleController extends Controller
                 'image' => $imagePath,
                 'profile' => 1,
             ]);
+        }
+        if ($request->hasFile('gallery_images')) {
+            foreach ($request->file('gallery_images') as $galleryImage) {
+                if ($galleryImage) {
+                    $galleryPath = $galleryImage->store('vehicles', 'public');
+                    VehicleImage::create([
+                        'vehicle_id' => $vehicle->id,
+                        'image' => $galleryPath,
+                        'profile' => 0,
+                    ]);
+                }
+            }
         }
         return response()->json(['message' => 'Vehículo actualizado correctamente']);
     }
