@@ -18,6 +18,10 @@ use App\Http\Controllers\EmployeeTypeController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\VacationController;
 use App\Http\Controllers\AttendanceController;
+// Controladores del módulo de mantenimiento
+use App\Http\Controllers\MaintenanceController;
+use App\Http\Controllers\MaintenanceScheduleController;
+use App\Http\Controllers\MaintenanceRecordController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -183,6 +187,51 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::patch('{attendance}/reject', [AttendanceController::class, 'reject'])->name('reject');
         Route::patch('{attendance}/correct', [AttendanceController::class, 'correct'])->name('correct');
     });
+
+    // ===================================
+    // MÓDULO DE MANTENIMIENTO
+    // ===================================
+
+    // ===== MANTENIMIENTOS =====
+    Route::resource('maintenance', MaintenanceController::class);
+    
+    // Rutas especiales para mantenimientos
+    Route::prefix('maintenance')->name('maintenance.')->group(function () {
+        Route::get('statistics', [MaintenanceController::class, 'statistics'])->name('statistics');
+        Route::post('validate-overlap', [MaintenanceController::class, 'validateDateOverlap'])->name('validate-overlap');
+    });
+
+    // ===== HORARIOS DE MANTENIMIENTO =====
+    Route::get('maintenance-schedules', [MaintenanceScheduleController::class, 'index'])->name('maintenance-schedules.index');
+    Route::get('maintenance/{maintenance}/schedules', [MaintenanceScheduleController::class, 'index'])->name('maintenance.schedules.index');
+    Route::post('maintenance-schedules', [MaintenanceScheduleController::class, 'store'])->name('maintenance-schedules.store');
+    Route::get('maintenance-schedules/{schedule}', [MaintenanceScheduleController::class, 'show'])->name('maintenance-schedules.show');
+    Route::put('maintenance-schedules/{schedule}', [MaintenanceScheduleController::class, 'update'])->name('maintenance-schedules.update');
+    Route::delete('maintenance-schedules/{schedule}', [MaintenanceScheduleController::class, 'destroy'])->name('maintenance-schedules.destroy');
+    
+    // API para horarios
+    Route::prefix('api/maintenance-schedules')->name('api.maintenance-schedules.')->group(function () {
+        Route::get('vehicles', [MaintenanceScheduleController::class, 'getAvailableVehicles'])->name('vehicles');
+        Route::get('drivers', [MaintenanceScheduleController::class, 'getAvailableDrivers'])->name('drivers');
+        Route::post('validate-overlap', [MaintenanceScheduleController::class, 'validateScheduleOverlap'])->name('validate-overlap');
+    });
+
+    // ===== ACTIVIDADES DE MANTENIMIENTO =====
+    Route::get('maintenance-records', [MaintenanceRecordController::class, 'index'])->name('maintenance-records.index');
+    Route::get('maintenance-schedules/{schedule}/activities', [MaintenanceRecordController::class, 'index'])->name('maintenance-activities.index');
+    Route::post('maintenance-records', [MaintenanceRecordController::class, 'store'])->name('maintenance-records.store');
+    Route::post('maintenance-activities', [MaintenanceRecordController::class, 'store'])->name('maintenance-activities.store');
+    Route::get('maintenance-records/{record}', [MaintenanceRecordController::class, 'show'])->name('maintenance-records.show');
+    Route::get('maintenance-activities/{record}', [MaintenanceRecordController::class, 'show'])->name('maintenance-activities.show');
+    Route::put('maintenance-records/{record}', [MaintenanceRecordController::class, 'update'])->name('maintenance-records.update');
+    Route::put('maintenance-activities/{record}', [MaintenanceRecordController::class, 'update'])->name('maintenance-activities.update');
+    Route::delete('maintenance-records/{record}', [MaintenanceRecordController::class, 'destroy'])->name('maintenance-records.destroy');
+    Route::delete('maintenance-activities/{record}', [MaintenanceRecordController::class, 'destroy'])->name('maintenance-activities.destroy');
+    Route::delete('maintenance-activities/{record}/image', [MaintenanceRecordController::class, 'deleteImage'])->name('maintenance-activities.delete-image');
+    
+    // API para actividades
+    Route::get('api/maintenance-schedules/{schedule}/valid-dates', [MaintenanceRecordController::class, 'getValidDates'])->name('api.maintenance-activities.valid-dates');
+
 });
 
 Route::resource('brands', BrandController::class)->names('admin.brands');

@@ -386,6 +386,11 @@ return [
             ],
         ],
         [
+            'text'    => 'MANTENIMIENTO',
+            'icon'    => 'fas fa-tools',
+            'route'   => 'admin.maintenance.index',
+        ],
+        [
             'text'    => 'Programación',
             'icon'    => 'fas fa-fw fa-calendar-alt',
             'submenu' => [

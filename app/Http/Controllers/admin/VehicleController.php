@@ -12,8 +12,29 @@ use App\Http\Controllers\Controller;
 
 class VehicleController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        if ($request->ajax()) {
+            $vehicles = Vehicle::with(['brand', 'model', 'type', 'color'])
+                ->where('status', 1) // Solo vehículos activos
+                ->get()
+                ->map(function($vehicle) {
+                    return [
+                        'id' => $vehicle->id,
+                        'license_plate' => $vehicle->plate,
+                        'brand' => $vehicle->brand->name ?? null,
+                        'model' => $vehicle->model->name ?? null,
+                        'name' => $vehicle->name,
+                        'code' => $vehicle->code
+                    ];
+                });
+            
+            return response()->json([
+                'success' => true,
+                'data' => $vehicles
+            ]);
+        }
+        
         $vehicles = Vehicle::with(['brand', 'model', 'type', 'color', 'images'])->paginate(20);
         $brands = Brand::all();
         $models = BrandModel::all();
