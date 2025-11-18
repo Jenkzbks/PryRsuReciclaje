@@ -63,6 +63,14 @@ class MaintenanceRecordsController extends Controller
             'image_url' => 'nullable|image|max:2048',
         ]);
 
+         // Validar que no exista ya un registro para la misma fecha y horario
+            $existe = MaintenanceRecords::where('schedule_id', $schedule_id)
+                ->where('maintenance_date', $request->maintenance_date)
+                ->exists();
+            if ($existe) {
+                return response()->json(['message' => 'Ya existe un registro para esta fecha en este horario.'], 422);
+            }
+
         // Validar que la fecha esté dentro del rango del mantenimiento y coincida con el día del horario
         $schedule = MaintenanceShedules::findOrFail($schedule_id);
         $maintenance = Maintenances::findOrFail($maintenance_id);
@@ -134,12 +142,20 @@ class MaintenanceRecordsController extends Controller
             'image_url' => 'nullable|image|max:2048',
         ]);
 
+        // Validar que no exista ya un registro para la misma fecha y horario (excluyendo el actual)
+            $existe = MaintenanceRecords::where('schedule_id', $schedule_id)
+                ->where('maintenance_date', $request->maintenance_date)
+                ->where('id', '!=', $id)
+                ->exists();
+            if ($existe) {
+                return response()->json(['message' => 'Ya existe un registro para esta fecha en este horario.'], 422);
+            }
         // Validar que la fecha esté dentro del rango del mantenimiento y coincida con el día del horario
-        $schedule = \App\Models\MaintenanceShedules::findOrFail($schedule_id);
-        $maintenance = \App\Models\Maintenances::findOrFail($maintenance_id);
-        $date = \Carbon\Carbon::parse($request->maintenance_date);
-        $start = \Carbon\Carbon::parse($maintenance->start_date);
-        $end = \Carbon\Carbon::parse($maintenance->end_date);
+        $schedule = MaintenanceShedules::findOrFail($schedule_id);
+        $maintenance = Maintenances::findOrFail($maintenance_id);
+        $date = Carbon::parse($request->maintenance_date);
+        $start = Carbon::parse($maintenance->start_date);
+        $end = Carbon::parse($maintenance->end_date);
         $dias = [
             'LUNES' => 1,
             'MARTES' => 2,
