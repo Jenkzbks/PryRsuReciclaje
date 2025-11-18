@@ -12,12 +12,17 @@ use App\Http\Controllers\admin\VehicleTypeController;
 use App\Http\Controllers\admin\VehicleController;
 use App\Http\Controllers\admin\EmployeegroupController;
 use App\Http\Controllers\admin\SchedulingController;
+use App\Http\Controllers\admin\MaintenancesController;
+use App\Http\Controllers\admin\MaintenanceShedulesController;
+use App\Http\Controllers\admin\MaintenanceRecordsController;
+
 // Controladores del módulo de personal
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeTypeController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\VacationController;
 use App\Http\Controllers\AttendanceController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -191,6 +196,11 @@ Route::resource('brandmodels', BrandModelController::class)->names('admin.brandm
 
 Route::resource('vehicletypes', VehicleTypeController::class)->names('admin.vehicletypes');
 
+
+// MÓDULO DE MANTENIMIENTOS - EXAMEN 03
+Route::resource('admin/examen03/maintenances', MaintenancesController::class)->names('admin.maintenances');
+Route::resource('admin/examen03/maintenances/{maintenance}/maintenance_shedules', MaintenanceShedulesController::class)->names('admin.maintenance_shedules');
+Route::resource('admin/examen03/maintenances/{maintenance}/maintenance_shedules/{schedule}/maintenance_records', MaintenanceRecordsController::class)->names('admin.maintenance_records');
 
 
 // ===================================

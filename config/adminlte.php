@@ -435,6 +435,11 @@ return [
                 ],
             ],
         ],
+        [
+            'text'    => 'Mantenimiento',
+            'route'  => 'admin.maintenances.index',
+            'icon'    => 'fas fa-fw fa-tools',
+        ],
 
         [
             'text'    => 'Otros',
