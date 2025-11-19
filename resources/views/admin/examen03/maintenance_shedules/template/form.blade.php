@@ -7,8 +7,10 @@
 		'Jueves' => 'Jueves',
 		'Viernes' => 'Viernes',
 		'Sábado' => 'Sábado',
+		'Domingo' => 'Domingo',
 	];
 	$tipos = [
+		'Preventivo' => 'Preventivo',
 		'Limpieza' => 'Limpieza',
 		'Reparación' => 'Reparación',
 	];

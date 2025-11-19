@@ -28,7 +28,7 @@
                         <th>Tipo</th>
                         <th>Inicio</th>
                         <th>Fin</th>
-                        <th width="60px" class="text-center align-middle">Act</th>
+                        <th width="60px" class="text-center align-middle">Ver</th>
                         <th width="60px" class="text-center align-middle">Editar</th>
                         <th width="60px" class="text-center align-middle">Eliminar</th>
                     </tr>
@@ -199,7 +199,7 @@
             var form = $(this);
             Swal.fire({
                 title: "¿Estás seguro de eliminar?",
-                text: "Esto no se puede deshacer!",
+                text: "Se eliminará el horario y todas las fechas generadas asociadas. ¡Esto no se puede deshacer!",
                 icon: "warning",
                 showCancelButton: true,
                 confirmButtonColor: "#3085d6",
