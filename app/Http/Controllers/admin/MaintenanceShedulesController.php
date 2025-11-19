@@ -144,7 +144,8 @@ class MaintenanceShedulesController extends Controller
                             'schedule_id' => $schedule->id,
                             'maintenance_date' => $fecha->toDateString(),
                             'descripcion' => 'Añada la observación del mantenimiento.',
-                            'image_url' => ''
+                            'image_url' => '',
+                            'estado' => false
                         ]);
                     }
                     $fecha->addDay();

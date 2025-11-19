@@ -16,6 +16,7 @@ class MaintenanceRecords extends Model
         'maintenance_date',
         'descripcion',
         'image_url',
+        'estado',
     ];
 
     public function schedule()

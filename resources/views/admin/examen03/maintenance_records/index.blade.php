@@ -25,10 +25,10 @@
                 <thead>
                     <tr>
                         <th>Fecha</th>
-                        <th>Descripción</th>
+                        <th>Observación</th>
                         <th>Imagen</th>
                         <th width="60px" class="text-center align-middle">Editar</th>
-                        <th width="60px" class="text-center align-middle">Eliminar</th>
+                        <th width="60px" class="text-center align-middle">Est.</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -86,7 +86,19 @@
                     }
                 },
                 { "data": "edit", "orderable": false, "searchable": false, "className": "text-center align-middle" },
-                { "data": "delete", "orderable": false, "searchable": false, "className": "text-center align-middle" }
+                {
+                    "data": null,
+                    "orderable": false,
+                    "searchable": false,
+                    "className": "text-center align-middle",
+                    "render": function(data, type, row) {
+                        if (row.estado == 1 || row.estado === true) {
+                            return '<span class="toggle-estado" data-id="'+row.id+'" data-estado="1" title="Realizado" style="font-size:1.5em;color:green;cursor:pointer;">&#10004;</span>';
+                        } else {
+                            return '<span class="toggle-estado" data-id="'+row.id+'" data-estado="0" title="No realizado" style="font-size:1.5em;color:red;cursor:pointer;">&#10008;</span>';
+                        }
+                    }
+                }
             ],
             'language': {
                 "url": "https://cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json"
@@ -188,42 +200,28 @@
             });
         });
 
-        $(document).on('click', '.frmDelete', function(e) {
-            e.preventDefault();
-            var form = $(this);
-            Swal.fire({
-                title: "¿Estás seguro de eliminar?",
-                text: "Esto no se puede deshacer!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Si, eliminar",
-                cancelButtonText: "Cancelar"
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: form.attr('action'),
-                        type: form.attr('method'),
-                        data: form.serialize(),
-                        success: function(response) {
-                            refreshTable();
-                            Swal.fire({
-                                title: "Proceso Exitoso!",
-                                text: response.message,
-                                icon: "success",
-                                draggable: true
-                            });
-                        },
-                        error: function(response) {
-                            var error = response.responseJSON;
-                            Swal.fire({
-                                title: "Error!",
-                                text: error && error.message ? error.message : 'Ocurrió un error inesperado.',
-                                icon: "error",
-                                draggable: true
-                            });
-                        }
+        // Cambiar estado dinámicamente al hacer clic en el ícono
+        $(document).on('click', '.toggle-estado', function() {
+            var id = $(this).data('id');
+            var estadoActual = $(this).data('estado');
+            var nuevoEstado = estadoActual == 1 ? 0 : 1;
+            $.ajax({
+                url: window.location.pathname + '/' + id + '/toggle-estado',
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    estado: nuevoEstado
+                },
+                success: function(response) {
+                    refreshTable();
+                },
+                error: function(response) {
+                    var error = response.responseJSON;
+                    Swal.fire({
+                        title: "Error!",
+                        text: error && error.message ? error.message : 'Ocurrió un error inesperado.',
+                        icon: "error",
+                        draggable: true
                     });
                 }
             });

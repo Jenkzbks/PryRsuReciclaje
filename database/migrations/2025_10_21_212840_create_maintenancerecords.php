@@ -16,13 +16,14 @@ return new class extends Migration
             $table->unsignedBigInteger('schedule_id');
             $table->foreign('schedule_id')->references('id')->on('maintenanceschedules');
             $table->date('maintenance_date');
-            $table->string('descripcion'); 
-            $table->string('image_url',255); 
+            $table->string('descripcion');
+            $table->boolean('estado')->default(false); // 0: no realizado, 1: realizado
+            $table->string('image_url',255);
             $table->timestamps();
         });
     }
 
-    /**
+    /**    
      * Reverse the migrations.
      */
     public function down(): void

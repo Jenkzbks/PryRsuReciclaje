@@ -61,6 +61,7 @@ class MaintenanceRecordsController extends Controller
             'maintenance_date' => 'required|date',
             'descripcion' => 'required|string',
             'image_url' => 'nullable|image|max:2048',
+            'estado' => 'required|boolean',
         ]);
 
          // Validar que no exista ya un registro para la misma fecha y horario
@@ -97,7 +98,7 @@ class MaintenanceRecordsController extends Controller
             return response()->json(['message' => 'La fecha no corresponde al día programado en el horario.'], 422);
         }
 
-        $data = $request->only(['maintenance_date', 'descripcion']);
+        $data = $request->only(['maintenance_date', 'descripcion', 'estado']);
         $data['schedule_id'] = $schedule_id;
 
         if ($request->hasFile('image_url')) {
@@ -140,6 +141,7 @@ class MaintenanceRecordsController extends Controller
             'maintenance_date' => 'required|date',
             'descripcion' => 'required|string',
             'image_url' => 'nullable|image|max:2048',
+            'estado' => 'required|boolean',
         ]);
 
         // Validar que no exista ya un registro para la misma fecha y horario (excluyendo el actual)
@@ -177,7 +179,7 @@ class MaintenanceRecordsController extends Controller
         }
 
         $model = MaintenanceRecords::findOrFail($id);
-        $data = $request->only(['maintenance_date', 'descripcion']);
+        $data = $request->only(['maintenance_date', 'descripcion', 'estado']);
 
         if ($request->hasFile('image_url')) {
             $file = $request->file('image_url');
@@ -201,5 +203,16 @@ class MaintenanceRecordsController extends Controller
         } catch (\Throwable $th) {
             return response()->json(['message' => 'Error al eliminar: ' . $th->getMessage()], 500);
         }
+    }
+
+    /**
+     * Cambia el estado (realizado/no realizado) de un registro por AJAX.
+     */
+    public function toggleEstado(Request $request, $maintenance_id, $schedule_id, $id)
+    {
+        $record = MaintenanceRecords::findOrFail($id);
+        $record->estado = $request->input('estado') ? 1 : 0;
+        $record->save();
+        return response()->json(['message' => 'Estado actualizado correctamente']);
     }
 }

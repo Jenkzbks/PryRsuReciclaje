@@ -201,6 +201,7 @@ Route::resource('vehicletypes', VehicleTypeController::class)->names('admin.vehi
 Route::resource('admin/examen03/maintenances', MaintenancesController::class)->names('admin.maintenances');
 Route::resource('admin/examen03/maintenances/{maintenance}/maintenance_shedules', MaintenanceShedulesController::class)->names('admin.maintenance_shedules');
 Route::resource('admin/examen03/maintenances/{maintenance}/maintenance_shedules/{schedule}/maintenance_records', MaintenanceRecordsController::class)->names('admin.maintenance_records');
+Route::post('admin/examen03/maintenances/{maintenance}/maintenance_shedules/{schedule}/maintenance_records/{record}/toggle-estado', [\App\Http\Controllers\admin\MaintenanceRecordsController::class, 'toggleEstado'])->name('admin.maintenance_records.toggle_estado');
 
 
 // ===================================
