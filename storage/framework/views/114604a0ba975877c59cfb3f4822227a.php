@@ -1,6 +1,4 @@
-@extends('adminlte::page')
-
-@php
+<?php
     $days = [
         '0' => 'Domingo',
         '1' => 'Lunes',
@@ -10,11 +8,11 @@
         '5' => 'Viernes',
         '6' => 'Sábado'
     ];
-@endphp
+?>
 
-@section('title', 'Gestionar Actividades - Horario #' . $schedule->id)
+<?php $__env->startSection('title', 'Gestionar Actividades - Horario #' . $schedule->id); ?>
 
-@section('content_header')
+<?php $__env->startSection('content_header'); ?>
     <div class="row">
         <div class="col-sm-6">
             <h1>
@@ -23,15 +21,15 @@
             </h1>
         </div>
         <div class="col-sm-6 text-right">
-            <a href="{{ url('/admin/maintenance/' . $schedule->maintenance_id . '/schedules') }}" class="btn btn-secondary">
+            <a href="<?php echo e(url('/admin/maintenance/' . $schedule->maintenance_id . '/schedules')); ?>" class="btn btn-secondary">
                 <i class="fas fa-arrow-left mr-1"></i>
                 Volver a Horarios
             </a>
         </div>
     </div>
-@stop
+<?php $__env->stopSection(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <!-- Información del Horario -->
     <div class="row mb-4">
         <div class="col-12">
@@ -46,15 +44,17 @@
                     <div class="row">
                         <div class="col-md-3">
                             <strong>Mantenimiento:</strong><br>
-                            {{ $schedule->maintenance->name ?? 'N/A' }}
+                            <?php echo e($schedule->maintenance->name ?? 'N/A'); ?>
+
                         </div>
                         <div class="col-md-3">
                             <strong>Día:</strong><br>
-                            {{ $days[$schedule->day_of_week] ?? 'N/A' }}
+                            <?php echo e($days[$schedule->day_of_week] ?? 'N/A'); ?>
+
                         </div>
                         <div class="col-md-3">
                             <strong>Horario:</strong><br>
-                            @php
+                            <?php
                                 $startTime = $schedule->start_time;
                                 $endTime = $schedule->end_time;
                                 // Si son objetos Carbon o datetime, formatear solo la hora
@@ -69,12 +69,13 @@
                                 } elseif (strlen($endTime) > 5) {
                                     $endTime = date('H:i', strtotime($endTime));
                                 }
-                            @endphp
-                            {{ $startTime }} - {{ $endTime }}
+                            ?>
+                            <?php echo e($startTime); ?> - <?php echo e($endTime); ?>
+
                         </div>
                         <div class="col-md-3">
                             <strong>Estado:</strong><br>
-                            @php
+                            <?php
                                 $statusText = [
                                     'scheduled' => 'Programado',
                                     'in_progress' => 'En Progreso', 
@@ -85,9 +86,10 @@
                                     'in_progress' => 'badge-primary',
                                     'completed' => 'badge-success'
                                 ];
-                            @endphp
-                            <span class="badge {{ $statusClass[$schedule->status] ?? 'badge-secondary' }}">
-                                {{ $statusText[$schedule->status] ?? $schedule->status }}
+                            ?>
+                            <span class="badge <?php echo e($statusClass[$schedule->status] ?? 'badge-secondary'); ?>">
+                                <?php echo e($statusText[$schedule->status] ?? $schedule->status); ?>
+
                             </span>
                         </div>
                     </div>
@@ -195,15 +197,16 @@
                 </div>
                 <form id="activityForm" enctype="multipart/form-data">
                     <div class="modal-body">
-                        <input type="hidden" id="schedule_id" name="schedule_id" value="{{ $schedule->id }}">
+                        <input type="hidden" id="schedule_id" name="schedule_id" value="<?php echo e($schedule->id); ?>">
                         <input type="hidden" id="activity_id" name="activity_id">
                         
                         <div class="form-group">
                             <label for="maintenance_date" class="required">Fecha de Mantenimiento</label>
                             <input type="date" class="form-control" id="maintenance_date" name="maintenance_date" required>
                             <small class="form-text text-muted">
-                                La fecha debe estar entre {{ $schedule->maintenance->start_date->format('d/m/Y') }} y {{ $schedule->maintenance->end_date->format('d/m/Y') }}
-                                y debe ser un {{ $days[$schedule->day_of_week] ?? 'día válido' }}.
+                                La fecha debe estar entre <?php echo e($schedule->maintenance->start_date->format('d/m/Y')); ?> y <?php echo e($schedule->maintenance->end_date->format('d/m/Y')); ?>
+
+                                y debe ser un <?php echo e($days[$schedule->day_of_week] ?? 'día válido'); ?>.
                             </small>
                         </div>
                         
@@ -235,9 +238,9 @@
             </div>
         </div>
     </div>
-@stop
+<?php $__env->stopSection(); ?>
 
-@section('css')
+<?php $__env->startSection('css'); ?>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <style>
     .required::after {
@@ -256,12 +259,12 @@
         cursor: pointer;
     }
 </style>
-@stop
+<?php $__env->stopSection(); ?>
 
-@section('js')
+<?php $__env->startSection('js'); ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
-    let scheduleId = {{ $schedule->id }};
+    let scheduleId = <?php echo e($schedule->id); ?>;
     
     $(document).ready(function() {
         console.log('Document ready - Schedule ID:', scheduleId);
@@ -277,8 +280,8 @@
         loadStatistics();
 
         // Configurar fechas mínima y máxima
-        $('#maintenance_date').attr('min', '{{ $schedule->maintenance->start_date->format('Y-m-d') }}');
-        $('#maintenance_date').attr('max', '{{ $schedule->maintenance->end_date->format('Y-m-d') }}');
+        $('#maintenance_date').attr('min', '<?php echo e($schedule->maintenance->start_date->format('Y-m-d')); ?>');
+        $('#maintenance_date').attr('max', '<?php echo e($schedule->maintenance->end_date->format('Y-m-d')); ?>');
 
         // Evento para enviar formulario
         $('#activityForm').on('submit', function(e) {
@@ -299,7 +302,7 @@
         console.log('Loading activities for schedule ID:', scheduleId);
         
         $.ajax({
-            url: `{{ route('admin.maintenance-records.index') }}`,
+            url: `<?php echo e(route('admin.maintenance-records.index')); ?>`,
             type: 'GET',
             data: {
                 schedule_id: scheduleId
@@ -327,7 +330,7 @@
         console.log('Loading statistics for schedule ID:', scheduleId);
         
         $.ajax({
-            url: `{{ route('admin.maintenance-records.index') }}`,
+            url: `<?php echo e(route('admin.maintenance-records.index')); ?>`,
             type: 'GET', 
             data: {
                 schedule_id: scheduleId,
@@ -390,7 +393,7 @@
             const imagePath = activity.image_url || activity.image_path || activity.image;
             
             // Construir URL completa de la imagen
-            const imageUrl = imagePath ? `{{ asset('storage') }}/${imagePath}` : null;
+            const imageUrl = imagePath ? `<?php echo e(asset('storage')); ?>/${imagePath}` : null;
             
             const imageColumn = imageUrl ? 
                 `<img src="${imageUrl}" alt="Imagen" class="activity-image" onclick="showImageModal('${imageUrl}')" onerror="console.error('Error loading image:', '${imageUrl}')">` :
@@ -430,8 +433,8 @@
         const formData = new FormData($('#activityForm')[0]);
         const isEditing = $('#activity_id').val() !== '';
         const url = isEditing ? 
-            `{{ url('/admin/maintenance-records') }}/${$('#activity_id').val()}` :
-            `{{ route('admin.maintenance-records.store') }}`;
+            `<?php echo e(url('/admin/maintenance-records')); ?>/${$('#activity_id').val()}` :
+            `<?php echo e(route('admin.maintenance-records.store')); ?>`;
         const method = isEditing ? 'PUT' : 'POST';
 
         if (isEditing) {
@@ -488,7 +491,7 @@
         
         // Cargar datos de la actividad
         $.ajax({
-            url: `{{ url('/admin/maintenance-records') }}/${id}`,
+            url: `<?php echo e(url('/admin/maintenance-records')); ?>/${id}`,
             type: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
@@ -560,7 +563,7 @@
             console.log('Deleting activity:', id);
             
             $.ajax({
-                url: `{{ url('/admin/maintenance-records') }}/${id}`,
+                url: `<?php echo e(url('/admin/maintenance-records')); ?>/${id}`,
                 type: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
@@ -659,4 +662,5 @@
         });
     }
 </script>
-@stop
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('adminlte::page', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\Operador\Documents\PryRsuReciclaje\resources\views/maintenance/activities/index.blade.php ENDPATH**/ ?>

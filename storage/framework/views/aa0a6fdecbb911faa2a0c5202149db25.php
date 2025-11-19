@@ -1,17 +1,15 @@
-@extends('adminlte::page')
+<?php $__env->startSection('title', 'Gestión de Mantenimientos'); ?>
 
-@section('title', 'Gestión de Mantenimientos')
-
-@section('content_header')
+<?php $__env->startSection('content_header'); ?>
     <div class="d-flex justify-content-between align-items-center">
         <h1><i class="fas fa-tools"></i> Gestión de Mantenimientos</h1>
         <button type="button" class="btn btn-success" id="btnNewMaintenance">
             <i class="fas fa-plus"></i> Nuevo Mantenimiento
         </button>
     </div>
-@stop
+<?php $__env->stopSection(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <!-- Estadísticas -->
     <div class="row mb-4">
         <div class="col-lg-3 col-6">
@@ -142,7 +140,7 @@
                     </button>
                 </div>
                 <form id="maintenanceForm">
-                    @csrf
+                    <?php echo csrf_field(); ?>
                     <div class="modal-body">
                         <input type="hidden" id="maintenanceId" name="id">
                         
@@ -216,7 +214,7 @@
                 </div>
                 <div class="modal-body">
                     <form id="scheduleForm" method="POST">
-                        @csrf
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" id="scheduleId" name="scheduleId" value="">
                         
                         <div class="row">
@@ -340,7 +338,7 @@
                 </div>
                 <div class="modal-body">
                     <form id="recordForm" method="POST" enctype="multipart/form-data">
-                        @csrf
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" id="recordId" name="recordId" value="">
                         
                         <div class="row">
@@ -407,9 +405,9 @@
         </div>
     </div>
 
-@stop
+<?php $__env->stopSection(); ?>
 
-@section('css')
+<?php $__env->startSection('css'); ?>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <style>
         .table th, .table td {
@@ -436,9 +434,9 @@
             border-bottom: none;
         }
     </style>
-@stop
+<?php $__env->stopSection(); ?>
 
-@section('js')
+<?php $__env->startSection('js'); ?>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script>
         // Configuración de Toastr
@@ -492,7 +490,7 @@
             const status = $('#statusFilter').val();
 
             $.ajax({
-                url: '{{ route("admin.maintenance.index") }}',
+                url: '<?php echo e(route("admin.maintenance.index")); ?>',
                 type: 'GET',
                 data: {
                     page: page,
@@ -518,7 +516,7 @@
 
         function loadStatistics() {
             $.ajax({
-                url: '{{ route("admin.maintenance.statistics") }}',
+                url: '<?php echo e(route("admin.maintenance.statistics")); ?>',
                 type: 'GET',
                 success: function(response) {
                     if (response.success) {
@@ -655,8 +653,8 @@
         function saveMaintenance() {
             const maintenanceId = $('#maintenanceId').val();
             const url = maintenanceId 
-                ? `{{ route("admin.maintenance.index") }}/${maintenanceId}`
-                : '{{ route("admin.maintenance.store") }}';
+                ? `<?php echo e(route("admin.maintenance.index")); ?>/${maintenanceId}`
+                : '<?php echo e(route("admin.maintenance.store")); ?>';
             const method = maintenanceId ? 'PUT' : 'POST';
 
             const formData = {
@@ -696,7 +694,7 @@
 
         function editMaintenance(id) {
             $.ajax({
-                url: `{{ route("admin.maintenance.index") }}/${id}`,
+                url: `<?php echo e(route("admin.maintenance.index")); ?>/${id}`,
                 type: 'GET',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
@@ -725,7 +723,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: `{{ route("admin.maintenance.index") }}/${id}`,
+                        url: `<?php echo e(route("admin.maintenance.index")); ?>/${id}`,
                         type: 'POST',
                         data: {
                             _method: 'DELETE',
@@ -749,7 +747,7 @@
 
         function showMaintenanceDetail(id) {
             $.ajax({
-                url: `{{ route("admin.maintenance.index") }}/${id}`,
+                url: `<?php echo e(route("admin.maintenance.index")); ?>/${id}`,
                 type: 'GET',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
@@ -847,7 +845,7 @@
             }
 
             $.ajax({
-                url: '{{ route("admin.maintenance.validate-overlap") }}',
+                url: '<?php echo e(route("admin.maintenance.validate-overlap")); ?>',
                 type: 'POST',
                 data: {
                     start_date: startDate,
@@ -928,7 +926,7 @@
         // ========== FUNCIONES PARA HORARIOS ==========
         function loadSchedules() {
             $.ajax({
-                url: '{{ route("admin.maintenance-schedules.index") }}',
+                url: '<?php echo e(route("admin.maintenance-schedules.index")); ?>',
                 method: 'GET',
                 success: function(response) {
                     let tbody = '';
@@ -994,8 +992,8 @@
             const formData = new FormData($('#scheduleForm')[0]);
             const scheduleId = $('#scheduleId').val();
             const url = scheduleId 
-                ? `{{ route("admin.maintenance-schedules.update", ":id") }}`.replace(':id', scheduleId)
-                : '{{ route("admin.maintenance-schedules.store") }}';
+                ? `<?php echo e(route("admin.maintenance-schedules.update", ":id")); ?>`.replace(':id', scheduleId)
+                : '<?php echo e(route("admin.maintenance-schedules.store")); ?>';
             const method = scheduleId ? 'PUT' : 'POST';
 
             if (method === 'PUT') {
@@ -1021,7 +1019,7 @@
 
         function editSchedule(id) {
             $.ajax({
-                url: `{{ route("admin.maintenance-schedules.show", ":id") }}`.replace(':id', id),
+                url: `<?php echo e(route("admin.maintenance-schedules.show", ":id")); ?>`.replace(':id', id),
                 method: 'GET',
                 success: function(response) {
                     showScheduleModal(response.data);
@@ -1035,7 +1033,7 @@
         function deleteSchedule(id) {
             if (confirm('¿Está seguro de eliminar este horario?')) {
                 $.ajax({
-                    url: `{{ route("admin.maintenance-schedules.destroy", ":id") }}`.replace(':id', id),
+                    url: `<?php echo e(route("admin.maintenance-schedules.destroy", ":id")); ?>`.replace(':id', id),
                     method: 'DELETE',
                     data: { _token: $('meta[name="csrf-token"]').attr('content') },
                     success: function(response) {
@@ -1052,13 +1050,13 @@
         // Función para redirigir a gestionar horarios de un mantenimiento específico
         function assignScheduleToMaintenance(maintenanceId) {
             // Redirigir a la página de gestión de horarios para este mantenimiento
-            window.location.href = `{{ url('/admin/maintenance') }}/${maintenanceId}/schedules`;
+            window.location.href = `<?php echo e(url('/admin/maintenance')); ?>/${maintenanceId}/schedules`;
         }
 
         // ========== FUNCIONES PARA REGISTROS ==========
         function loadRecords() {
             $.ajax({
-                url: '{{ route("admin.maintenance-records.index") }}',
+                url: '<?php echo e(route("admin.maintenance-records.index")); ?>',
                 method: 'GET',
                 success: function(response) {
                     let tbody = '';
@@ -1115,8 +1113,8 @@
             const formData = new FormData($('#recordForm')[0]);
             const recordId = $('#recordId').val();
             const url = recordId 
-                ? `{{ route("admin.maintenance-records.update", ":id") }}`.replace(':id', recordId)
-                : '{{ route("admin.maintenance-records.store") }}';
+                ? `<?php echo e(route("admin.maintenance-records.update", ":id")); ?>`.replace(':id', recordId)
+                : '<?php echo e(route("admin.maintenance-records.store")); ?>';
             
             if (recordId) {
                 formData.append('_method', 'PUT');
@@ -1141,7 +1139,7 @@
 
         function editRecord(id) {
             $.ajax({
-                url: `{{ route("admin.maintenance-records.show", ":id") }}`.replace(':id', id),
+                url: `<?php echo e(route("admin.maintenance-records.show", ":id")); ?>`.replace(':id', id),
                 method: 'GET',
                 success: function(response) {
                     showRecordModal(response.data);
@@ -1155,7 +1153,7 @@
         function deleteRecord(id) {
             if (confirm('¿Está seguro de eliminar este registro?')) {
                 $.ajax({
-                    url: `{{ route("admin.maintenance-records.destroy", ":id") }}`.replace(':id', id),
+                    url: `<?php echo e(route("admin.maintenance-records.destroy", ":id")); ?>`.replace(':id', id),
                     method: 'DELETE',
                     data: { _token: $('meta[name="csrf-token"]').attr('content') },
                     success: function(response) {
@@ -1172,7 +1170,7 @@
         // ========== FUNCIONES AUXILIARES ==========
         function loadMaintenancesForSelect(selector) {
             $.ajax({
-                url: '{{ route("admin.maintenance.index") }}',
+                url: '<?php echo e(route("admin.maintenance.index")); ?>',
                 method: 'GET',
                 success: function(response) {
                     let options = '<option value="">Seleccionar Mantenimiento</option>';
@@ -1189,7 +1187,7 @@
 
         function loadEmployeesForSelect(selector) {
             $.ajax({
-                url: '{{ route("admin.personnel.employees.api.active") }}',
+                url: '<?php echo e(route("admin.personnel.employees.api.active")); ?>',
                 method: 'GET',
                 success: function(response) {
                     let options = '<option value="">Seleccionar Empleado</option>';
@@ -1206,7 +1204,7 @@
 
         function loadVehiclesForSelect(selector) {
             $.ajax({
-                url: '{{ route("admin.vehicles.index") }}',
+                url: '<?php echo e(route("admin.vehicles.index")); ?>',
                 method: 'GET',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
@@ -1241,4 +1239,6 @@
             }
         }
     </script>
-@stop
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('adminlte::page', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\Operador\Documents\PryRsuReciclaje\resources\views/maintenance/index.blade.php ENDPATH**/ ?>

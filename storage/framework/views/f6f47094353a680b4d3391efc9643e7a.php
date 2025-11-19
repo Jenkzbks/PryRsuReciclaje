@@ -1,20 +1,18 @@
-@extends('adminlte::page')
+<?php $__env->startSection('title', 'Horarios de Mantenimiento'); ?>
 
-@section('title', 'Horarios de Mantenimiento')
-
-@section('content_header')
+<?php $__env->startSection('content_header'); ?>
     <div class="d-flex justify-content-between align-items-center">
         <div>
             <h1><i class="fas fa-calendar-alt"></i> Horarios de Mantenimiento</h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item">
-                        <a href="{{ route('admin.maintenance.index') }}">
+                        <a href="<?php echo e(route('admin.maintenance.index')); ?>">
                             <i class="fas fa-tools"></i> Mantenimientos
                         </a>
                     </li>
                     <li class="breadcrumb-item active" aria-current="page">
-                        Horarios: <span id="maintenance-name">{{ $maintenance->name ?? 'Cargando...' }}</span>
+                        Horarios: <span id="maintenance-name"><?php echo e($maintenance->name ?? 'Cargando...'); ?></span>
                     </li>
                 </ol>
             </nav>
@@ -25,28 +23,28 @@
             </button>
         </div>
     </div>
-@stop
+<?php $__env->stopSection(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <!-- Información del Mantenimiento -->
     <div class="card mb-4">
         <div class="card-body">
             <div class="row">
                 <div class="col-md-3">
                     <strong>Mantenimiento:</strong><br>
-                    <span id="maintenance-title">{{ $maintenance->name ?? 'Cargando...' }}</span>
+                    <span id="maintenance-title"><?php echo e($maintenance->name ?? 'Cargando...'); ?></span>
                 </div>
                 <div class="col-md-3">
                     <strong>Fecha de Inicio:</strong><br>
-                    <span id="maintenance-start">{{ $maintenance->start_date ?? 'N/A' }}</span>
+                    <span id="maintenance-start"><?php echo e($maintenance->start_date ?? 'N/A'); ?></span>
                 </div>
                 <div class="col-md-3">
                     <strong>Fecha de Fin:</strong><br>
-                    <span id="maintenance-end">{{ $maintenance->end_date ?? 'N/A' }}</span>
+                    <span id="maintenance-end"><?php echo e($maintenance->end_date ?? 'N/A'); ?></span>
                 </div>
                 <div class="col-md-3">
                     <strong>Estado:</strong><br>
-                    <span id="maintenance-status" class="badge badge-info">{{ $maintenance->status_text ?? 'N/A' }}</span>
+                    <span id="maintenance-status" class="badge badge-info"><?php echo e($maintenance->status_text ?? 'N/A'); ?></span>
                 </div>
             </div>
         </div>
@@ -292,12 +290,12 @@
             </div>
         </div>
     </div>
-@stop
+<?php $__env->stopSection(); ?>
 
-@section('js')
+<?php $__env->startSection('js'); ?>
 <script>
     // Variable global para el ID del mantenimiento
-    const maintenanceId = {{ $maintenance->id ?? 'null' }};
+    const maintenanceId = <?php echo e($maintenance->id ?? 'null'); ?>;
 
     // Funciones globales para acceso desde onclick
     window.showScheduleModal = function() {
@@ -321,7 +319,7 @@
     window.editSchedule = function(id) {
         console.log('Editando horario:', id);
         $.ajax({
-            url: `{{ url('/admin/maintenance-schedules') }}/${id}`,
+            url: `<?php echo e(url('/admin/maintenance-schedules')); ?>/${id}`,
             type: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
@@ -372,7 +370,7 @@
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: `{{ url('/admin/maintenance-schedules') }}/${id}`,
+                    url: `<?php echo e(url('/admin/maintenance-schedules')); ?>/${id}`,
                     type: 'DELETE',
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
@@ -395,7 +393,7 @@
 
     window.viewActivities = function(id) {
         console.log('Viendo actividades del horario:', id);
-        window.location.href = `{{ url('/admin/maintenance-schedules') }}/${id}/activities`;
+        window.location.href = `<?php echo e(url('/admin/maintenance-schedules')); ?>/${id}/activities`;
     };
 
     window.filterSchedules = function() {
@@ -412,7 +410,7 @@
     window.loadVehiclesForSelect = function(selector) {
         console.log('Loading vehicles for selector:', selector);
         $.ajax({
-            url: '{{ route("admin.vehicles.index") }}',
+            url: '<?php echo e(route("admin.vehicles.index")); ?>',
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
@@ -446,7 +444,7 @@
     window.loadEmployeesForSelect = function(selector) {
         console.log('Loading employees for selector:', selector);
         $.ajax({
-            url: '{{ route("admin.personnel.employees.api.active") }}',
+            url: '<?php echo e(route("admin.personnel.employees.api.active")); ?>',
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
@@ -486,7 +484,7 @@
                 console.error('Error al cargar empleados para select:', xhr);
                 // Fallback: intentar con otra ruta
                 $.ajax({
-                    url: '{{ route("admin.personnel.employees.index") }}',
+                    url: '<?php echo e(route("admin.personnel.employees.index")); ?>',
                     method: 'GET',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest'
@@ -575,7 +573,7 @@
         console.log('Sending data:', data); // Debug log
 
         $.ajax({
-            url: `{{ url("/admin/maintenance") }}/${maintenanceId}/schedules`,
+            url: `<?php echo e(url("/admin/maintenance")); ?>/${maintenanceId}/schedules`,
             type: 'GET',
             data: data,
             headers: {
@@ -637,7 +635,7 @@
         }
 
         $.ajax({
-            url: `{{ url("/admin/maintenance") }}/${maintenanceId}/schedules`,
+            url: `<?php echo e(url("/admin/maintenance")); ?>/${maintenanceId}/schedules`,
             type: 'GET',
             data: {
                 stats_only: true
@@ -738,8 +736,8 @@
         console.log('Enviando horario:', formData, 'Es edición:', isEdit);
 
         const url = isEdit 
-            ? `{{ url('/admin/maintenance-schedules') }}/${scheduleId}`
-            : '{{ route("admin.maintenance-schedules.store") }}';
+            ? `<?php echo e(url('/admin/maintenance-schedules')); ?>/${scheduleId}`
+            : '<?php echo e(route("admin.maintenance-schedules.store")); ?>';
 
         $.ajax({
             url: url,
@@ -852,28 +850,28 @@
         // Implementar paginación si es necesario
     }
 </script>
-@stop
+<?php $__env->stopSection(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <!-- Información del Mantenimiento -->
     <div class="card mb-4">
         <div class="card-body">
             <div class="row">
                 <div class="col-md-3">
                     <strong>Mantenimiento:</strong><br>
-                    <span id="maintenance-title">{{ $maintenance->name ?? 'Cargando...' }}</span>
+                    <span id="maintenance-title"><?php echo e($maintenance->name ?? 'Cargando...'); ?></span>
                 </div>
                 <div class="col-md-3">
                     <strong>Fecha de Inicio:</strong><br>
-                    <span id="maintenance-start">{{ $maintenance->start_date ?? 'N/A' }}</span>
+                    <span id="maintenance-start"><?php echo e($maintenance->start_date ?? 'N/A'); ?></span>
                 </div>
                 <div class="col-md-3">
                     <strong>Fecha de Fin:</strong><br>
-                    <span id="maintenance-end">{{ $maintenance->end_date ?? 'N/A' }}</span>
+                    <span id="maintenance-end"><?php echo e($maintenance->end_date ?? 'N/A'); ?></span>
                 </div>
                 <div class="col-md-3">
                     <strong>Estado:</strong><br>
-                    <span id="maintenance-status" class="badge badge-info">{{ $maintenance->status_text ?? 'N/A' }}</span>
+                    <span id="maintenance-status" class="badge badge-info"><?php echo e($maintenance->status_text ?? 'N/A'); ?></span>
                 </div>
             </div>
         </div>
@@ -1039,9 +1037,9 @@
                 </div>
                 <div class="modal-body">
                     <form id="scheduleForm" method="POST">
-                        @csrf
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" id="scheduleId" name="scheduleId" value="">
-                        <input type="hidden" id="maintenanceId" name="maintenance_id" value="{{ $maintenance->id ?? '' }}">
+                        <input type="hidden" id="maintenanceId" name="maintenance_id" value="<?php echo e($maintenance->id ?? ''); ?>">
                         
                         <div class="row">
                             <div class="col-md-6">
@@ -1154,9 +1152,9 @@
         </div>
     </div>
 
-@stop
+<?php $__env->stopSection(); ?>
 
-@section('css')
+<?php $__env->startSection('css'); ?>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
         .table th, .table td {
@@ -1174,13 +1172,13 @@
             padding: 0;
         }
     </style>
-@stop
+<?php $__env->stopSection(); ?>
 
-@section('js')
+<?php $__env->startSection('js'); ?>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     // Variables globales
-    const maintenanceId = {{ $maintenance->id ?? 0 }};
+    const maintenanceId = <?php echo e($maintenance->id ?? 0); ?>;
     
     console.log('Script cargado, maintenance ID:', maintenanceId);
 
@@ -1235,7 +1233,7 @@
 
     window.editSchedule = function(id) {
         $.ajax({
-            url: `{{ url('/admin/maintenance-schedules') }}/${id}`,
+            url: `<?php echo e(url('/admin/maintenance-schedules')); ?>/${id}`,
             type: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
@@ -1264,7 +1262,7 @@
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: `{{ url('/admin/maintenance-schedules') }}/${id}`,
+                    url: `<?php echo e(url('/admin/maintenance-schedules')); ?>/${id}`,
                     type: 'DELETE',
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
@@ -1286,7 +1284,7 @@
     };
 
     window.viewActivities = function(scheduleId) {
-        window.location.href = `{{ url('/admin/maintenance-records') }}?schedule_id=${scheduleId}`;
+        window.location.href = `<?php echo e(url('/admin/maintenance-records')); ?>?schedule_id=${scheduleId}`;
     };
 
     window.filterSchedules = function() {
@@ -1366,8 +1364,8 @@
     window.saveSchedule = function() {
         const scheduleId = $('#scheduleId').val();
         const url = scheduleId 
-            ? `{{ url('/admin/maintenance-schedules') }}/${scheduleId}`
-            : '{{ url("/admin/maintenance-schedules") }}';
+            ? `<?php echo e(url('/admin/maintenance-schedules')); ?>/${scheduleId}`
+            : '<?php echo e(url("/admin/maintenance-schedules")); ?>';
         const method = scheduleId ? 'PUT' : 'POST';
 
         const formData = new FormData($('#scheduleForm')[0]);
@@ -1423,7 +1421,7 @@
 
     window.editSchedule = function(id) {
         $.ajax({
-            url: `{{ url('/admin/maintenance-schedules') }}/${id}`,
+            url: `<?php echo e(url('/admin/maintenance-schedules')); ?>/${id}`,
             type: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
@@ -1452,7 +1450,7 @@
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: `{{ url('/admin/maintenance-schedules') }}/${id}`,
+                    url: `<?php echo e(url('/admin/maintenance-schedules')); ?>/${id}`,
                     type: 'DELETE',
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
@@ -1474,7 +1472,7 @@
     };
 
     window.viewActivities = function(scheduleId) {
-        window.location.href = `{{ url('/admin/maintenance-records') }}?schedule_id=${scheduleId}`;
+        window.location.href = `<?php echo e(url('/admin/maintenance-records')); ?>?schedule_id=${scheduleId}`;
     };
 
     $(document).ready(function() {
@@ -1539,7 +1537,7 @@
         console.log('Sending data:', data); // Debug log
 
         $.ajax({
-            url: `{{ url("/admin/maintenance") }}/${maintenanceId}/schedules`,
+            url: `<?php echo e(url("/admin/maintenance")); ?>/${maintenanceId}/schedules`,
             type: 'GET',
             data: data,
             headers: {
@@ -1587,7 +1585,7 @@
         }
 
         $.ajax({
-            url: `{{ url("/admin/maintenance") }}/${maintenanceId}/schedules`,
+            url: `<?php echo e(url("/admin/maintenance")); ?>/${maintenanceId}/schedules`,
             type: 'GET',
             data: {
                 stats_only: true
@@ -1663,7 +1661,7 @@
     // Funciones auxiliares (mantenidas aquí para no duplicar)
     function loadVehiclesForSelect(selector) {
         $.ajax({
-            url: '{{ route("admin.vehicles.index") }}',
+            url: '<?php echo e(route("admin.vehicles.index")); ?>',
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
@@ -1693,7 +1691,7 @@
 
     function loadEmployeesForSelect(selector) {
         $.ajax({
-            url: '{{ route("admin.personnel.employees.api.active") }}',
+            url: '<?php echo e(route("admin.personnel.employees.api.active")); ?>',
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
@@ -1716,7 +1714,7 @@
                 console.error('Error al cargar empleados para select:', xhr);
                 // Fallback: intentar con otra ruta
                 $.ajax({
-                    url: '{{ route("admin.personnel.employees.index") }}',
+                    url: '<?php echo e(route("admin.personnel.employees.index")); ?>',
                     method: 'GET',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest'
@@ -1804,4 +1802,5 @@
         console.log('Pagination:', pagination);
     }
 </script>
-@stop
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('adminlte::page', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\Operador\Documents\PryRsuReciclaje\resources\views/maintenance/schedules/index.blade.php ENDPATH**/ ?>

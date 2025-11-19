@@ -33,6 +33,10 @@ use App\Http\Controllers\MaintenanceRecordController;
 |
 */
 
+Route::get('/test', function () {
+    return 'Laravel funciona correctamente!';
+});
+
 Route::get('/', function () {
     return view('welcome');
 });

@@ -79,6 +79,11 @@ class MaintenanceSchedule extends Model
         return $this->hasMany(MaintenanceRecord::class, 'schedule_id');
     }
 
+    public function scheduledDays()
+    {
+        return $this->hasMany(MaintenanceScheduleDay::class, 'schedule_id');
+    }
+
     // Scopes
     public function scopeByDay($query, $day)
     {

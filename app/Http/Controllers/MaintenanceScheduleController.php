@@ -150,7 +150,7 @@ class MaintenanceScheduleController extends Controller
             'day_of_week' => 'required|in:0,1,2,3,4,5,6',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
-            'maintenance_type' => 'required|in:preventive,corrective,predictive',
+            'maintenance_type' => 'required|in:preventivo,limpieza,reparacion',
             'recurrence_weeks' => 'required|integer|min:1',
             'status' => 'required|in:scheduled,in_progress,completed',
             'description' => 'nullable|string|max:500'
@@ -192,10 +192,13 @@ class MaintenanceScheduleController extends Controller
 
         $schedule = MaintenanceSchedule::create($request->all());
 
+        // Generar días automáticamente
+        $this->generateScheduledDays($schedule);
+
         return response()->json([
             'success' => true,
             'message' => 'Horario creado exitosamente.',
-            'data' => $schedule->load(['vehicle', 'driver'])
+            'data' => $schedule->load(['vehicle', 'driver', 'scheduledDays'])
         ]);
     }
 
@@ -218,7 +221,7 @@ class MaintenanceScheduleController extends Controller
             'day_of_week' => 'required|in:0,1,2,3,4,5,6',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
-            'maintenance_type' => 'required|in:preventive,corrective,predictive',
+            'maintenance_type' => 'required|in:preventivo,limpieza,reparacion',
             'recurrence_weeks' => 'required|integer|min:1',
             'status' => 'required|in:scheduled,in_progress,completed',
             'description' => 'nullable|string|max:500'
@@ -279,11 +282,28 @@ class MaintenanceScheduleController extends Controller
             ], 422);
         }
 
-        $schedule->delete();
+        // Contar días generados
+        $daysCount = $schedule->scheduledDays()->count();
+
+        // Eliminar todos los días generados asociados (la relación ya tiene onDelete cascade en la BD)
+        // Pero también eliminamos las imágenes del storage
+        $days = $schedule->scheduledDays;
+        foreach ($days as $day) {
+            if ($day->image_path && \Storage::disk('public')->exists($day->image_path)) {
+                \Storage::disk('public')->delete($day->image_path);
+            }
+        }
+
+        $schedule->delete(); // Esto eliminará en cascada los días
+
+        $message = 'Horario eliminado exitosamente.';
+        if ($daysCount > 0) {
+            $message .= " Se eliminaron {$daysCount} días programados.";
+        }
 
         return response()->json([
             'success' => true,
-            'message' => 'Horario eliminado exitosamente.'
+            'message' => $message
         ]);
     }
 
@@ -364,5 +384,134 @@ class MaintenanceScheduleController extends Controller
             'success' => true,
             'has_overlap' => $hasOverlap
         ]);
+    }
+
+    /**
+     * Generar automáticamente los días del mes según el día de la semana del horario
+     */
+    protected function generateScheduledDays(MaintenanceSchedule $schedule)
+    {
+        // Obtener el mantenimiento asociado para obtener fechas
+        $maintenance = $schedule->maintenance;
+        
+        if (!$maintenance) {
+            return;
+        }
+
+        $startDate = \Carbon\Carbon::parse($maintenance->start_date);
+        $endDate = \Carbon\Carbon::parse($maintenance->end_date);
+        $dayOfWeek = (int) $schedule->day_of_week; // 0=Domingo, 1=Lunes, ..., 6=Sábado
+
+        // Buscar todas las fechas en el rango que coincidan con el día de la semana
+        $currentDate = $startDate->copy();
+        $scheduledDates = [];
+
+        while ($currentDate->lte($endDate)) {
+            // Verificar si el día de la semana coincide
+            if ($currentDate->dayOfWeek === $dayOfWeek) {
+                $scheduledDates[] = $currentDate->format('Y-m-d');
+            }
+            $currentDate->addDay();
+        }
+
+        // Crear los registros en la tabla maintenance_schedule_days
+        foreach ($scheduledDates as $date) {
+            \App\Models\MaintenanceScheduleDay::create([
+                'schedule_id' => $schedule->id,
+                'scheduled_date' => $date,
+                'observation' => null,
+                'image_path' => null,
+                'is_completed' => false
+            ]);
+        }
+    }
+
+    /**
+     * Obtener los días generados para un horario específico
+     */
+    public function getScheduledDays(MaintenanceSchedule $schedule)
+    {
+        $days = $schedule->scheduledDays()
+            ->orderBy('scheduled_date')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $days
+        ]);
+    }
+
+    /**
+     * Actualizar un día específico (observación, imagen, estado)
+     */
+    public function updateScheduledDay(Request $request, $dayId)
+    {
+        $validator = Validator::make($request->all(), [
+            'observation' => 'nullable|string|max:1000',
+            'is_completed' => 'nullable|boolean',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $day = \App\Models\MaintenanceScheduleDay::findOrFail($dayId);
+
+        // Actualizar observación y estado
+        if ($request->has('observation')) {
+            $day->observation = $request->observation;
+        }
+
+        if ($request->has('is_completed')) {
+            $day->is_completed = $request->is_completed;
+        }
+
+        // Manejar subida de imagen
+        if ($request->hasFile('image')) {
+            // Eliminar imagen anterior si existe
+            if ($day->image_path && \Storage::disk('public')->exists($day->image_path)) {
+                \Storage::disk('public')->delete($day->image_path);
+            }
+
+            // Guardar nueva imagen
+            $imagePath = $request->file('image')->store('maintenance_images', 'public');
+            $day->image_path = $imagePath;
+        }
+
+        $day->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Día actualizado exitosamente.',
+            'data' => $day
+        ]);
+    }
+
+    /**
+     * Eliminar la imagen de un día específico
+     */
+    public function deleteScheduledDayImage($dayId)
+    {
+        $day = \App\Models\MaintenanceScheduleDay::findOrFail($dayId);
+
+        if ($day->image_path && \Storage::disk('public')->exists($day->image_path)) {
+            \Storage::disk('public')->delete($day->image_path);
+            $day->image_path = null;
+            $day->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Imagen eliminada exitosamente.'
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'No hay imagen para eliminar.'
+        ], 404);
     }
 }

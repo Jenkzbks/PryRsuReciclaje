@@ -164,10 +164,36 @@ class MaintenanceRecordController extends Controller
      */
     public function update(Request $request, MaintenanceRecord $record)
     {
+        // Si solo se está actualizando el status, hacer actualización simple
+        if ($request->has('status') && count($request->all()) <= 2) { // status + _method
+            $validator = Validator::make($request->all(), [
+                'status' => 'required|in:pending,completed'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error de validación',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $record->status = $request->status;
+            $record->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Estado actualizado correctamente',
+                'data' => $record
+            ]);
+        }
+
+        // Validación completa para actualización normal
         $validator = Validator::make($request->all(), [
             'maintenance_date' => 'required|date',
             'descripcion' => 'required|string|max:1000',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'status' => 'nullable|in:pending,completed'
         ], [
             'maintenance_date.required' => 'La fecha es obligatoria.',
             'descripcion.required' => 'La descripción es obligatoria.',
