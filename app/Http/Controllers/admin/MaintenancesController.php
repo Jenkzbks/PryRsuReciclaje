@@ -26,7 +26,7 @@ class MaintenancesController extends Controller
                     return '<button class="btn btn-warning btn-sm btnEditar" id="'.$maintenance->id.'"><i class="fas fa-pen"></i></button>';
                 })
                 ->addColumn('delete', function($maintenance){
-                    return '<form action="'.route('admin.maintenances.destroy', $maintenance->id).'" method="POST" class="frmDelete"'
+                    return '<form action="'.route('admin.maintenances.destroy', $maintenance->id).'" method="POST" class="frmDelete">'
                         .csrf_field().method_field('DELETE').
                         '<button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button></form>';
                 })
@@ -55,7 +55,18 @@ class MaintenancesController extends Controller
                 'name' => 'required|string|max:255|unique:maintenances,name',
                 'start_date' => 'required|date',
                 'end_date' => 'required|date|after_or_equal:start_date',
+            ], [
+                'end_date.after_or_equal' => 'La fecha de fin debe ser posterior a la fecha de inicio.',
+                'start_date.required' => 'La fecha de inicio es obligatoria.',
+                'end_date.required' => 'La fecha de fin es obligatoria.',
+                'name.required' => 'El nombre es obligatorio.',
+                'name.unique' => 'Ya existe un mantenimiento con ese nombre.'
             ]);
+
+            // Validar que la fecha de inicio no sea igual a la fecha final
+            if ($request->start_date === $request->end_date) {
+                return response()->json(['message' => 'La fecha de inicio no puede ser igual a la fecha de fin.'], 422);
+            }
 
             // Validar que las fechas no se solapen
             $overlap = Maintenances::where(function($q) use ($request) {
@@ -76,8 +87,11 @@ class MaintenancesController extends Controller
                 'end_date' => $request->end_date,
             ]);
             return response()->json(['message' => 'Mantenimiento registrado correctamente'], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $error = $e->validator->errors()->first();
+            return response()->json(['message' => $error], 422);
         } catch (\Throwable $th) {
-            return response()->json(['message' => 'Error al registrar el mantenimiento: ' . $th->getMessage()], 500);
+            return response()->json(['message' => 'Error al registrar el mantenimiento.'], 500);
         }
     }
 
@@ -109,7 +123,18 @@ class MaintenancesController extends Controller
                 'name' => 'required|string|max:255|unique:maintenances,name,' . $id,
                 'start_date' => 'required|date',
                 'end_date' => 'required|date|after_or_equal:start_date',
+            ], [
+                'end_date.after_or_equal' => 'La fecha de fin debe ser posterior a la fecha de inicio.',
+                'start_date.required' => 'La fecha de inicio es obligatoria.',
+                'end_date.required' => 'La fecha de fin es obligatoria.',
+                'name.required' => 'El nombre es obligatorio.',
+                'name.unique' => 'Ya existe un mantenimiento con ese nombre.'
             ]);
+
+            // Validar que la fecha de inicio no sea igual a la fecha final
+            if ($request->start_date === $request->end_date) {
+                return response()->json(['message' => 'La fecha de inicio no puede ser igual a la fecha de fin.'], 422);
+            }
 
             // Validar que las fechas no se solapen (excluyendo el actual)
             $overlap = Maintenances::where('id', '!=', $id)
@@ -131,8 +156,11 @@ class MaintenancesController extends Controller
                 'end_date' => $request->end_date,
             ]);
             return response()->json(['message' => 'Mantenimiento actualizado correctamente'], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $error = $e->validator->errors()->first();
+            return response()->json(['message' => $error], 422);
         } catch (\Throwable $th) {
-            return response()->json(['message' => 'Error al actualizar el mantenimiento: ' . $th->getMessage()], 500);
+            return response()->json(['message' => 'Error al actualizar el mantenimiento.'], 500);
         }
     }
 

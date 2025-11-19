@@ -322,7 +322,6 @@ return [
             'route' => 'admin.index',
             'icon' => 'fas fa-fw fa-tachometer-alt',
         ],
-
         [
             'text' => 'Gestión de Vehículos',
             'icon' => 'fas fa-car',
@@ -351,6 +350,11 @@ return [
                     'text' => 'Vehículo',
                     'route'  => 'admin.vehicles.index',
                     'icon' => 'fas fa-car-side',
+                ],
+                [
+                    'text'    => 'Mantenimiento',
+                    'route'  => 'admin.maintenances.index',
+                    'icon'    => 'fas fa-fw fa-tools',
                 ],
             ],
         ],
@@ -435,12 +439,6 @@ return [
                 ],
             ],
         ],
-        [
-            'text'    => 'Mantenimiento',
-            'route'  => 'admin.maintenances.index',
-            'icon'    => 'fas fa-fw fa-tools',
-        ],
-
         [
             'text'    => 'Otros',
             'icon'    => 'fa fa-bug',
