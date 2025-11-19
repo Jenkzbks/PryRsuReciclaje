@@ -31,6 +31,9 @@
             ]) !!}
         </div>
     </div>
+
+    {{-- Campo oculto para estado, para que siempre se envíe el valor actual --}}
+    {!! Form::hidden('estado', isset($model) ? $model->estado : 0) !!}
 </div>
 
 <script>
