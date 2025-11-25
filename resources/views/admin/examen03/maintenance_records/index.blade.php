@@ -28,7 +28,7 @@
                         <th>Observación</th>
                         <th>Imagen</th>
                         <th width="60px" class="text-center align-middle">Editar</th>
-                        <th width="60px" class="text-center align-middle">Est.</th>
+                        <th width="60px" class="text-center align-middle">Estado</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
