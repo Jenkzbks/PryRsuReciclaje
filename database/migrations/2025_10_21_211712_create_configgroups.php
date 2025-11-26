@@ -14,11 +14,16 @@ return new class extends Migration
         Schema::create('configgroups', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('employeegroup_id');
-            $table->foreign('employeegroup_id')->references('id')->on('employeegroups'); 
             $table->unsignedBigInteger('employee_id');
-            $table->foreign('employee_id')->references('id')->on('employee'); 
-                
+            $table->integer('posicion'); // 1=conductor, 2=ayudante 1, etc.
             $table->timestamps();
+
+            $table->foreign('employeegroup_id')
+                ->references('id')->on('employeegroups')
+                ->onDelete('cascade');
+            $table->foreign('employee_id')
+                ->references('id')->on('employee')
+                ->onDelete('cascade');
         });
     }
 

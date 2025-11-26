@@ -32,7 +32,7 @@
     <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
-               <div class="modal-header text-white" style="background:#0b4f6f;">
+               <div class="modal-header text-white" style="background:#072d3f;">
                     <h5 class="modal-title" id="exampleModalLabel">Formulario de turnos</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>

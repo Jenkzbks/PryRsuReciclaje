@@ -31,17 +31,39 @@ class EmployeegroupController extends Controller
                 ->addColumn('vehicle', function ($g) {
                     return optional($g->vehicle)->plate ?? '';
                 })
+                ->addColumn('view_employees', function ($g) {
+                    return '<button class="btn btn-info btn-sm btnViewEmployees" data-id="' . $g->id . '"><i class="fas fa-eye"></i></button>';
+                })
                 ->addColumn('edit', function ($g) {
                     return '<button class="btn btn-warning btn-sm btnEditar" id="' . $g->id . '"><i class="fas fa-pen"></i></button>';
                 })
                 ->addColumn('delete', function ($g) {
                     return '<form action="' . route('admin.personnel.employeegroups.destroy', $g) . '" method="POST" class="frmDelete">' . csrf_field() . method_field('DELETE') . '<button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button></form>';
                 })
-                ->rawColumns(['edit', 'delete'])
+                ->rawColumns(['edit', 'delete', 'view_employees'])
                 ->make(true);
         }
 
         return view('personnel.employeegroup.index', compact('groups'));
+
+    }
+
+    // NUEVO: método para mostrar empleados del grupo
+    public function employees($id)
+    {
+        $group = Employeegroup::with(['employees' => function($q) {
+            $q->withPivot('posicion');
+        }])->findOrFail($id);
+
+        $empleados = $group->employees->sortBy('pivot.posicion');
+        $html = '<ul class="list-group">';
+        foreach ($empleados as $emp) {
+            $rol = $emp->pivot->posicion == 1 ? 'Conductor' : 'Ayudante ' . ($emp->pivot->posicion - 1);
+            $html .= '<li class="list-group-item"><strong>' . $rol . ':</strong> ' . $emp->full_name . '</li>';
+        }
+        $html .= '</ul>';
+
+        return response()->json(['html' => $html]);
     }
 
     /**
@@ -52,9 +74,24 @@ class EmployeegroupController extends Controller
         $zones = Zone::all();
         $shifts = Shift::all();
         $vehicles = Vehicle::all();
-        $employees = Employee::where('status', 1)->get();
+        // Obtener los IDs de los tipos de empleado para conductor y ayudante
+        $conductorTypeId = \App\Models\EmployeeType::where('name', 'like', '%conduc%')->orWhere('code', 'like', '%conduc%')->value('id');
+        $ayudanteTypeId = \App\Models\EmployeeType::where('name', 'like', '%ayud%')->orWhere('code', 'like', '%ayud%')->value('id');
 
-        return view('personnel.employeegroup.create', compact('zones', 'shifts', 'vehicles', 'employees'));
+        // Buscar empleados con contrato activo y position_id correspondiente
+        $conductores = \App\Models\Employee::where('status', 1)
+            ->whereHas('activeContract', function($q) use ($conductorTypeId) {
+                $q->where('position_id', $conductorTypeId);
+            })
+            ->get();
+
+        $ayudantes = \App\Models\Employee::where('status', 1)
+            ->whereHas('activeContract', function($q) use ($ayudanteTypeId) {
+                $q->where('position_id', $ayudanteTypeId);
+            })
+            ->get();
+
+        return view('personnel.employeegroup.create', compact('zones', 'shifts', 'vehicles', 'conductores', 'ayudantes'));
     }
 
     /**
@@ -71,22 +108,46 @@ public function store(Request $request)
             'days' => 'required|array|min:1',
         ]);
 
+        // Validación de empleados con contrato activo
+        $crew = $request->input('crew', []);
+        if (!empty($crew)) {
+            $invalidEmployees = [];
+            foreach ($crew as $employeeId) {
+                if (!$employeeId) continue;
+                $employee = Employee::find($employeeId);
+                if (!$employee || !$employee->activeContract) {
+                    $invalidEmployees[] = $employeeId;
+                }
+            }
+            if (count($invalidEmployees) > 0) {
+                return response()->json([
+                    'message' => 'Uno o más empleados seleccionados no tienen contrato activo. Por favor, revise la selección.'
+                ], 422);
+            }
+        }
+
         $days = implode(',', $request->days);
 
-        // Recolectar IDs de empleados
-        $members = array_filter([
-            $request->conductor,
-            $request->assistant1,
-            $request->assistant2,
-        ]);
+        // Recolectar IDs de empleados de forma dinámica
+        $members = [];
+        if ($request->has('crew')) {
+            foreach ($request->crew as $pos => $empId) {
+                if ($empId) {
+                    $members[$empId] = ['posicion' => $pos];
+                }
+            }
+        }
 
         // Validar conflictos antes de registrar
         if (!empty($members)) {
-            $conflict = $this->hasScheduleConflict($members, $request->shift_id, $days);
-
-            if ($conflict) {
+            $conflicts = $this->hasScheduleConflict(array_keys($members), $request->shift_id, $days);
+            if ($conflicts && count($conflicts) > 0) {
+                $messages = collect($conflicts)->map(function($c) {
+                    return "<li>El empleado <strong>{$c['employee']}</strong> ya está asignado al grupo <strong>{$c['group']}</strong> en los días: <strong>{$c['days']}</strong> (turno actual).</li>";
+                })->implode("");
+                $messages = "<ul style='margin-bottom:0'>" . $messages . "</ul>";
                 return response()->json([
-                    'message' => "El empleado {$conflict['employee']} ya está asignado al grupo '{$conflict['group']}' en los días: {$conflict['days']} (turno actual)."
+                    'message' => $messages
                 ], 422);
             }
         }
@@ -101,7 +162,7 @@ public function store(Request $request)
         ]);
 
         if (!empty($members)) {
-            $group->employees()->syncWithoutDetaching(array_unique($members));
+            $group->employees()->sync($members);
         }
 
         return response()->json(['message' => 'Grupo registrado correctamente'], 200);
@@ -125,34 +186,42 @@ public function store(Request $request)
      */
     public function edit(string $id)
 {
-    $group = Employeegroup::with('employees')->findOrFail($id);
+    $group = Employeegroup::with(['employees' => function($q) {
+        $q->withPivot('posicion');
+    }])->findOrFail($id);
     $zones = Zone::all();
     $shifts = Shift::all();
     $vehicles = Vehicle::all();
-    $employees = Employee::where('status', 1)->get();
 
-    // obtenemos los empleados que pertenecen al grupo
-    $groupEmployees = $group->employees;
+    // Obtener los IDs de los tipos de empleado para conductor y ayudante
+    $conductorTypeId = \App\Models\EmployeeType::where('name', 'like', '%conduc%')->orWhere('code', 'like', '%conduc%')->value('id');
+    $ayudanteTypeId = \App\Models\EmployeeType::where('name', 'like', '%ayud%')->orWhere('code', 'like', '%ayud%')->value('id');
 
-    // determinamos conductor y ayudantes
-    $conductor = $groupEmployees->firstWhere('type_id', 1)?->id;
+    $conductores = \App\Models\Employee::where('status', 1)
+        ->whereHas('activeContract', function($q) use ($conductorTypeId) {
+            $q->where('position_id', $conductorTypeId);
+        })
+        ->get();
 
-    // filtramos solo ayudantes (type_id = 2)
-    $ayudantes = $groupEmployees->where('type_id', 2)->pluck('id')->values();
+    $ayudantes = \App\Models\Employee::where('status', 1)
+        ->whereHas('activeContract', function($q) use ($ayudanteTypeId) {
+            $q->where('position_id', $ayudanteTypeId);
+        })
+        ->get();
 
-    // según el orden de registro (posición 0, 1)
-    $assistant1 = $ayudantes->get(0);
-    $assistant2 = $ayudantes->get(1);
+    // Obtener la configuración actual del grupo (empleados y su posición)
+    $crewConfig = $group->employees->mapWithKeys(function($emp) {
+        return [$emp->pivot->posicion => $emp->id];
+    })->toArray();
 
     return view('personnel.employeegroup.edit', compact(
         'group',
         'zones',
         'shifts',
         'vehicles',
-        'employees',
-        'conductor',
-        'assistant1',
-        'assistant2'
+        'conductores',
+        'ayudantes',
+        'crewConfig'
     ));
 }
 
@@ -168,27 +237,29 @@ public function update(Request $request, string $id)
         $request->validate([
             'name' => 'required|unique:employeegroups,name,' . $id,
             'zone_id' => 'required',
-            'shift_id' => 'required',
-            'vehicle_id' => 'required',
-            'days' => 'required|array|min:1',
         ]);
-
         $days = implode(',', $request->days);
 
-        // miembros seleccionados
-        $members = array_filter([
-            $request->conductor,
-            $request->assistant1,
-            $request->assistant2,
-        ]);
+        // Recolectar IDs de empleados de forma dinámica
+        $members = [];
+        if ($request->has('crew')) {
+            foreach ($request->crew as $pos => $empId) {
+                if ($empId) {
+                    $members[$empId] = ['posicion' => $pos];
+                }
+            }
+        }
 
         // validar conflicto antes de actualizar
         if (!empty($members)) {
-            $conflict = $this->hasScheduleConflict($members, $request->shift_id, $days, $id);
-
-            if ($conflict) {
+            $conflicts = $this->hasScheduleConflict(array_keys($members), $request->shift_id, $days, $id);
+            if ($conflicts && count($conflicts) > 0) {
+                $messages = collect($conflicts)->map(function($c) {
+                    return "<li>El empleado <strong>{$c['employee']}</strong> ya está asignado al grupo <strong>{$c['group']}</strong> en los días: <strong>{$c['days']}</strong> (turno actual).</li>";
+                })->implode("");
+                $messages = "<ul style='margin-bottom:0'>" . $messages . "</ul>";
                 return response()->json([
-                    'message' => "El empleado {$conflict['employee']} ya está asignado al grupo '{$conflict['group']}' en los días: {$conflict['days']} (turno actual)."
+                    'message' => $messages
                 ], 422);
             }
         }
@@ -202,7 +273,11 @@ public function update(Request $request, string $id)
             'status'     => $request->status ?? $group->status,
         ]);
 
-        $group->employees()->sync(array_unique($members));
+        if (!empty($members)) {
+            $group->employees()->sync($members);
+        } else {
+            $group->employees()->detach();
+        }
 
         return response()->json(['message' => 'Grupo actualizado correctamente'], 200);
     } catch (\Throwable $th) {
@@ -220,7 +295,7 @@ public function update(Request $request, string $id)
         $group = Employeegroup::find($id);
         $group->employees()->detach();
         $group->delete();
-        return redirect()->route('personnel.employeegroups.index')->with('action', 'Grupo eliminado');
+        return redirect()->route('admin.personnel.employeegroups.index')->with('action', 'Grupo eliminado');
     }
 
 
@@ -242,6 +317,7 @@ private function hasScheduleConflict($employeeIds, $shiftId, $days, $excludeGrou
     }
 
     $groups = $query->get();
+    $conflicts = [];
 
     foreach ($groups as $group) {
         $groupDays = array_map('trim', explode(',', $group->days));
@@ -253,7 +329,7 @@ private function hasScheduleConflict($employeeIds, $shiftId, $days, $excludeGrou
 
         foreach ($group->employees as $emp) {
             if (in_array($emp->id, $employeeIds)) {
-                return [
+                $conflicts[] = [
                     'employee' => $emp->names . ' ' . $emp->lastnames,
                     'group'    => $group->name,
                     'days'     => implode(', ', array_intersect($currentDays, $groupDays))
@@ -262,7 +338,7 @@ private function hasScheduleConflict($employeeIds, $shiftId, $days, $excludeGrou
         }
     }
 
-    return false; // sin conflictos
+    return $conflicts;
 }
 
 }

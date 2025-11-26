@@ -98,6 +98,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('personnel/employeegroups', EmployeegroupController::class, [
         'as' => 'personnel'
     ]);
+    // Ruta para ver empleados del grupo (modal)
+    Route::get('personnel/employeegroups/{group}/employees', [EmployeegroupController::class, 'employees'])->name('personnel.employeegroups.employees');
 
     // Rutas especiales para empleados
     Route::prefix('personnel/employees')->name('personnel.employees.')->group(function () {
