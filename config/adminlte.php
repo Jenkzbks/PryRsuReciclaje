@@ -483,7 +483,11 @@ return [
             'url' => '#',
             'icon' => 'fas fa-fw fa-user-cog',
         ],
-
+        [
+            'text' => 'Mantenimiento',
+            'url' => 'admin/maintenances',
+            'icon' => 'fas fa-fw fa-user-cog',
+        ],
     ],
 
     /*

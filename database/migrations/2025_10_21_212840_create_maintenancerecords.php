@@ -18,6 +18,7 @@ return new class extends Migration
             $table->date('maintenance_date');
             $table->string('descripcion'); 
             $table->string('image_url',255); 
+            $table->string('estado'); 
             $table->timestamps();
         });
     }
