@@ -338,37 +338,42 @@ class SchedulingController extends Controller
     /* =========================
      * CANDIDATOS DISPONIBLES (AJAX)
      * ========================= */
-    public function availableCandidates(Request $request)
-    {
-        $request->validate([
-            'type_id' => 'required|integer',
-            'dates'   => 'required|string',
+   public function availableCandidates(Request $request)
+{
+    $request->validate([
+        'type_id' => 'required|integer',
+        'dates'   => 'required|string',
+        'group_id' => 'required|exists:employeegroups,id', // 🔥 NUEVO: necesitamos el grupo
+    ]);
+
+    $dates = collect(explode(',', $request->dates))
+        ->map(fn($d) => trim($d))
+        ->filter();
+
+    // 🔥 OBTENER LOS EMPLEADOS ACTUALES DEL GRUPO PARA EXCLUIRLOS
+    $group = Employeegroup::with('employees')->findOrFail($request->group_id);
+    $currentMemberIds = $group->employees->pluck('id')->toArray();
+
+    $candidates = Employee::where('status', 1)
+        ->where('type_id', $request->type_id)
+        ->whereNotIn('id', $currentMemberIds) // 🔥 EXCLUIR MIEMBROS ACTUALES DEL GRUPO
+        ->whereNotExists(function ($sub) use ($dates) {
+            $sub->select(DB::raw(1))
+                ->from('groupdetails as gd')
+                ->join('schedulings as s', 's.id', '=', 'gd.scheduling_id')
+                ->whereColumn('gd.emplooyee_id', 'employee.id')
+                ->whereIn('s.date', $dates->all());
+        })
+        ->orderBy('lastnames')
+        ->get(['id', 'names', 'lastnames'])
+        ->map(fn($e) => [
+            'id'   => $e->id,
+            'name' => trim("{$e->lastnames} {$e->names}"),
         ]);
 
-        $dates = collect(explode(',', $request->dates))
-            ->map(fn($d) => trim($d))
-            ->filter();
+    return response()->json($candidates);
+}
 
-        // Empleados activos del tipo solicitado que NO tengan groupdetails
-        // en schedulings para cualquiera de las fechas pedidas.
-        $candidates = Employee::where('status', 1)
-            ->where('type_id', $request->type_id)
-            ->whereNotExists(function ($sub) use ($dates) {
-                $sub->select(DB::raw(1))
-                    ->from('groupdetails as gd')
-                    ->join('schedulings as s', 's.id', '=', 'gd.scheduling_id')
-                    ->whereColumn('gd.emplooyee_id', 'employee.id')
-                    ->whereIn('s.date', $dates->all());
-            })
-            ->orderBy('lastnames')
-            ->get(['id', 'names', 'lastnames'])
-            ->map(fn($e) => [
-                'id'   => $e->id,
-                'name' => trim("{$e->lastnames} {$e->names}"),
-            ]);
-
-        return response()->json($candidates);
-    }
 
     /* =========================
      * HELPERS PRIVADOS
