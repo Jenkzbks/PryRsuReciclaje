@@ -148,68 +148,63 @@ class SchedulingController extends Controller
      * EDITAR (si lo usas para cambios manuales)
      * ========================= */
     public function edit(Scheduling $scheduling)
-    {
-        $scheduling->load(['group.shift','group.vehicle','group.zone','details.employee']);
+{
+    $scheduling->load(['group.shift','group.vehicle','group.zone','details.employee']);
 
-        $drivers    = Employee::where('status', 1)->where('type_id', 1)->orderBy('lastnames')->get();
-        $assistants = Employee::where('status', 1)->where('type_id', 2)->orderBy('lastnames')->get();
+    $drivers    = Employee::where('status', 1)->where('type_id', 1)->orderBy('lastnames')->get();
+    $assistants = Employee::where('status', 1)->where('type_id', 2)->orderBy('lastnames')->get();
+    $shifts     = \App\Models\Shift::all(); // Nuevo: para selector de turnos
+    $vehicles   = \App\Models\Vehicle::all(); // Nuevo: para selector de vehículos
 
-        $driverDetail = $scheduling->details->firstWhere('employee.type_id', 1);
-        $aDetails     = $scheduling->details->filter(fn($d) => optional($d->employee)->type_id == 2)->values();
+    $driverDetail = $scheduling->details->firstWhere('employee.type_id', 1);
+    $aDetails     = $scheduling->details->filter(fn($d) => optional($d->employee)->type_id == 2)->values();
 
-        $selectedDriverId = $driverDetail?->employee?->id;
-        $selectedA1Id     = $aDetails->get(0)?->employee?->id;
-        $selectedA2Id     = $aDetails->get(1)?->employee?->id;
+    $selectedDriverId = $driverDetail?->employee?->id;
+    $selectedA1Id     = $aDetails->get(0)?->employee?->id;
+    $selectedA2Id     = $aDetails->get(1)?->employee?->id;
 
-        return view('schedulings.edit', compact(
-            'scheduling', 'drivers', 'assistants', 'selectedDriverId', 'selectedA1Id', 'selectedA2Id'
-        ));
+    return view('schedulings.edit', compact(
+        'scheduling', 'drivers', 'assistants', 'selectedDriverId', 'selectedA1Id', 'selectedA2Id', 'shifts', 'vehicles'
+    ));
+}
+
+   public function update(Request $request, Scheduling $scheduling)
+{
+    $request->validate([
+        'date'          => 'required|date',
+        'driver_id'     => 'nullable|exists:employee,id',
+        'assistant1_id' => 'nullable|exists:employee,id|different:driver_id|different:assistant2_id',
+        'assistant2_id' => 'nullable|exists:employee,id|different:driver_id|different:assistant1_id',
+        'shift_id'      => 'nullable|exists:shifts,id',
+        'vehicle_id'    => 'nullable|exists:vehicles,id',
+        'notes'         => 'nullable|string|max:120', // 🔥 AÑADIR VALIDACIÓN PARA NOTES
+    ], [
+        'different' => 'No puede repetir el mismo trabajador en más de un rol.'
+    ]);
+
+    // Actualizar campos básicos
+    $scheduling->update([
+        'date'       => $request->date,
+        'notes'      => $request->notes ?? '', // 🔥 ASIGNAR CADENA VACÍA SI ES NULL
+        'shift_id'   => $request->shift_id ?? $scheduling->shift_id,
+        'vehicle_id' => $request->vehicle_id ?? $scheduling->vehicle_id,
+    ]);
+
+    // Actualizar personal
+    $scheduling->details()->delete();
+
+    foreach (['driver_id', 'assistant1_id', 'assistant2_id'] as $field) {
+        if ($request->$field) {
+            Groupdetail::create([
+                'scheduling_id' => $scheduling->id,
+                'emplooyee_id'  => $request->$field,
+            ]);
+        }
     }
 
-    public function update(Request $request, Scheduling $scheduling)
-    {
-        $request->validate([
-            'driver_id'     => 'nullable|exists:employee,id',
-            'assistant1_id' => 'nullable|exists:employee,id|different:driver_id|different:assistant2_id',
-            'assistant2_id' => 'nullable|exists:employee,id|different:driver_id|different:assistant1_id',
-        ], [
-            'different' => 'No puede repetir el mismo trabajador en más de un rol.'
-        ]);
-
-        $ids = collect([
-            'driver'     => $request->driver_id,
-            'assistant1' => $request->assistant1_id,
-            'assistant2' => $request->assistant2_id,
-        ])->filter();
-
-        if ($ids->isNotEmpty()) {
-            $emps = Employee::whereIn('id', $ids->values())->get()->keyBy('id');
-
-            if ($request->driver_id && optional($emps[$request->driver_id])->type_id != 1) {
-                return back()->withErrors(['driver_id' => 'El seleccionado no es de tipo Conductor'])->withInput();
-            }
-            if ($request->assistant1_id && optional($emps[$request->assistant1_id])->type_id != 2) {
-                return back()->withErrors(['assistant1_id' => 'El seleccionado no es de tipo Ayudante'])->withInput();
-            }
-            if ($request->assistant2_id && optional($emps[$request->assistant2_id])->type_id != 2) {
-                return back()->withErrors(['assistant2_id' => 'El seleccionado no es de tipo Ayudante'])->withInput();
-            }
-        }
-
-        $scheduling->details()->delete();
-
-        foreach (['driver_id', 'assistant1_id', 'assistant2_id'] as $field) {
-            if ($request->$field) {
-                Groupdetail::create([
-                    'scheduling_id' => $scheduling->id,
-                    'emplooyee_id'  => $request->$field,
-                ]);
-            }
-        }
-
-        return redirect()->route('admin.schedulings.index')
-            ->with('success', 'Personal actualizado para la programación.');
-    }
+    return redirect()->route('admin.schedulings.index')
+        ->with('success', 'Programación actualizada correctamente.');
+}
 
     public function destroy(Scheduling $scheduling)
     {
