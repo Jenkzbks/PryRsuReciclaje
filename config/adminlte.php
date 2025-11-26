@@ -400,19 +400,14 @@ return [
                 ],
                 [
                     'text' => 'Zonas',
-                    'route' => 'admin.zones.index',
-                    'icon' => 'fas fa-fw fa-map-marked-alt',
-                ],
-                [
-                    'text' => 'Zonas',
                     'route' => 'admin.zonesjenkz.index',
                     'icon' => 'fas fa-fw fa-map-marked-alt',
                 ],
-                [
-                    'text' => 'Rutas de Recolección',
-                    'route' => 'admin.routes.index',
-                    'icon' => 'fas fa-fw fa-route',
-                ],
+                // [
+                //     'text' => 'Rutas de Recolección',
+                //     'route' => 'admin.routes.index',
+                //     'icon' => 'fas fa-fw fa-route',
+                // ],
                 [
                     'text' => 'Grupo de Personal',
                     'route' => 'admin.personnel.employeegroups.index',
