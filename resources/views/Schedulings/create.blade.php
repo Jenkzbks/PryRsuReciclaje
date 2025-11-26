@@ -34,7 +34,7 @@
         </div>
       </div>
 
-      {{-- ======================== GRUPO ======================== --}}
+      {{-- ======================== GRUPO Y NOTAS ======================== --}}
       <div class="form-row">
         <div class="form-group col-md-6">
           <label>Grupo de Personal *</label>
@@ -58,108 +58,91 @@
         </div>
       </div>
 
-      {{-- ======================== INFO GRUPO ======================== --}}
+      {{-- ======================== INFORMACIÓN COMPACTA DEL GRUPO ======================== --}}
       <div class="row">
-        <div class="col-md-4">
-          <div class="alert alert-light border">
-            <div><strong>Zona:</strong> <span id="infoZone">-</span></div>
-            <div><strong>Turno:</strong> <span id="infoShift">-</span></div>
-            <div><strong>Vehículo:</strong> <span id="infoVehicle">-</span></div>
-            <div><strong>Días del grupo:</strong> <span id="infoDays">-</span></div>
+        <div class="col-md-12">
+          <div class="alert alert-info py-2 mb-3" id="groupInfoCompact" style="display: none;">
+            <div class="row">
+              <div class="col-md-3">
+                <strong>Zona:</strong> <span id="infoZone">-</span>
+              </div>
+              <div class="col-md-3">
+                <strong>Turno:</strong> <span id="infoShift">-</span>
+              </div>
+              <div class="col-md-3">
+                <strong>Vehículo:</strong> <span id="infoVehicle">-</span>
+              </div>
+              <div class="col-md-3">
+                <strong>Días base:</strong> <span id="infoDays">-</span>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div class="col-md-8">
+      {{-- ======================== DÍAS ADICIONALES ======================== --}}
+      <div class="row mt-3">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-header bg-primary text-white">
+              <strong>Días de Trabajo</strong>
+              <small class="float-right">Los días del grupo ya están marcados. Puede agregar días adicionales si es necesario.</small>
+            </div>
+            <div class="card-body">
+              <div class="form-group mb-0">
+                <div class="row" id="daysChecklist">
+                  @php
+                    $daysMap = [
+                      'lunes' => 'Lunes',
+                      'martes' => 'Martes', 
+                      'miércoles' => 'Miércoles',
+                      'jueves' => 'Jueves',
+                      'viernes' => 'Viernes',
+                      'sábado' => 'Sábado',
+                      'domingo' => 'Domingo'
+                    ];
+                  @endphp
+                  @foreach($daysMap as $key => $label)
+                    <div class="col-md-3 col-sm-4 col-6 mb-2">
+                      <div class="form-check">
+                        <input class="form-check-input day-checkbox" type="checkbox" 
+                               name="additional_days[]" value="{{ $key }}" id="day_{{ $key }}">
+                        <label class="form-check-label" for="day_{{ $key }}">
+                          {{ $label }}
+                        </label>
+                      </div>
+                    </div>
+                  @endforeach
+                </div>
+                <small class="text-muted mt-2 d-block">
+                  <i class="fas fa-info-circle"></i> Los días marcados automáticamente son los configurados en el grupo. 
+                  Puede agregar días adicionales para esta programación específica.
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {{-- ======================== PREVIEW BOX ======================== --}}
+      <div class="row mt-3">
+        <div class="col-md-12">
           <div class="alert" id="previewBox" style="display:none;"></div>
         </div>
       </div>
 
-      {{-- ======================== CARDS PERSONAL ======================== --}}
-      <div class="row mt-3">
-
-        {{-- === CONDUCTOR === --}}
-        <div class="col-md-4">
-          <div class="card shadow-sm" id="card_driver">
-            <div class="card-header bg-light d-flex justify-content-between">
-              <strong>Conductor</strong>
-              <button type="button" class="btn btn-sm btn-outline-secondary d-none" id="btnChange_driver">
-                <i class="fas fa-exchange-alt"></i>
-              </button>
-            </div>
-            <div class="card-body">
-              <div class="mb-1"><small class="text-muted">Nombre</small>
-                <div id="drv_name" data-id=""></div>
-              </div>
-              <div class="mb-1"><small class="text-muted">Contrato</small>
-                <div id="drv_contract">-</div>
-              </div>
-              <div class="mb-1"><small class="text-muted">Vacaciones</small>
-                <div id="drv_vacation">-</div>
-              </div>
-              <div class="mt-2 small" id="drv_warn"></div>
-            </div>
-          </div>
-        </div>
-
-        {{-- === AYUDANTE 1 === --}}
-        <div class="col-md-4">
-          <div class="card shadow-sm" id="card_a1">
-            <div class="card-header bg-light d-flex justify-content-between">
-              <strong>Ayudante 1</strong>
-              <button type="button" class="btn btn-sm btn-outline-secondary d-none" id="btnChange_assistant1">
-                <i class="fas fa-exchange-alt"></i>
-              </button>
-            </div>
-            <div class="card-body">
-              <div class="mb-1"><small class="text-muted">Nombre</small>
-                <div id="a1_name" data-id=""></div>
-              </div>
-              <div class="mb-1"><small class="text-muted">Contrato</small>
-                <div id="a1_contract">-</div>
-              </div>
-              <div class="mb-1"><small class="text-muted">Vacaciones</small>
-                <div id="a1_vacation">-</div>
-              </div>
-              <div class="mt-2 small" id="a1_warn"></div>
-            </div>
-          </div>
-        </div>
-
-        {{-- === AYUDANTE 2 === --}}
-        <div class="col-md-4">
-          <div class="card shadow-sm" id="card_a2">
-            <div class="card-header bg-light d-flex justify-content-between">
-              <strong>Ayudante 2</strong>
-              <button type="button" class="btn btn-sm btn-outline-secondary d-none" id="btnChange_assistant2">
-                <i class="fas fa-exchange-alt"></i>
-              </button>
-            </div>
-            <div class="card-body">
-              <div class="mb-1"><small class="text-muted">Nombre</small>
-                <div id="a2_name" data-id=""></div>
-              </div>
-              <div class="mb-1"><small class="text-muted">Contrato</small>
-                <div id="a2_contract">-</div>
-              </div>
-              <div class="mb-1"><small class="text-muted">Vacaciones</small>
-                <div id="a2_vacation">-</div>
-              </div>
-              <div class="mt-2 small" id="a2_warn"></div>
-            </div>
-          </div>
-        </div>
-
+      {{-- ======================== CARDS PERSONAL DINÁMICAS ======================== --}}
+      <div class="row mt-3" id="membersContainer">
+        {{-- Las cards se generarán dinámicamente aquí --}}
       </div>
 
-      {{-- Hidden REPLACEMENTS --}}
-      <input type="hidden" name="replacements[driver][employee_id]" id="rep_driver_employee_id">
-      <input type="hidden" name="replacements[driver][dates]" id="rep_driver_dates">
+      {{-- Hidden REPLACEMENTS - se generarán dinámicamente --}}
+      <div id="replacementsContainer">
+        {{-- Los hidden inputs se generarán dinámicamente aquí --}}
+      </div>
 
-      <input type="hidden" name="replacements[assistant1][employee_id]" id="rep_assistant1_employee_id">
-      <input type="hidden" name="replacements[assistant1][dates]" id="rep_assistant1_dates">
-
-      <input type="hidden" name="replacements[assistant2][employee_id]" id="rep_assistant2_employee_id">
-      <input type="hidden" name="replacements[assistant2][dates]" id="rep_assistant2_dates">
+      {{-- Hidden para días adicionales procesados --}}
+      <input type="hidden" name="additional_days_processed" id="additional_days_processed">
 
     </div>
 
@@ -210,7 +193,7 @@
 
 <script>
 /* ============================================================
-   ========== TODA LA LÓGICA JS COMPLETA CON EXCLUSIÓN ==========
+   ========== TODA LA LÓGICA JS COMPLETA CON MIEMBROS DINÁMICOS ==========
    ============================================================ */
 
 function badge(text, level) {
@@ -220,11 +203,11 @@ function badge(text, level) {
   return `<span class="${cls}">${text}</span>`;
 }
 
-function setCardStatus(role, status, messages) {
-  const map = { driver: 'card_driver', assistant1: 'card_a1', assistant2: 'card_a2' };
-  const warnMap = { driver: 'drv_warn', assistant1: 'a1_warn', assistant2: 'a2_warn' };
-  const card = document.getElementById(map[role]);
-  const warn = document.getElementById(warnMap[role]);
+function setCardStatus(memberIndex, status, messages) {
+  const card = document.getElementById(`card_member_${memberIndex}`);
+  const warn = document.getElementById(`warn_member_${memberIndex}`);
+
+  if (!card || !warn) return;
 
   card.classList.remove('border','border-danger','border-success','border-warning');
   warn.innerHTML = '';
@@ -242,33 +225,71 @@ function setCardStatus(role, status, messages) {
 }
 
 function clearCardsStatus() {
-  setCardStatus('driver','ok',[]);
-  setCardStatus('assistant1','ok',[]);
-  setCardStatus('assistant2','ok',[]);
+  // Se limpiarán dinámicamente según los miembros
 }
 
-
 /* ============================================================
-   ========== CARGA DE INFO DEL GRUPO + TARJETAS ==========
+   ========== CARGA DE INFO DEL GRUPO + TARJETAS DINÁMICAS ==========
    ============================================================ */
 
 function updateGroupInfo() {
   const opt = document.querySelector('#group_id option:checked');
-  if (!opt) return;
+  if (!opt) {
+    document.getElementById('groupInfoCompact').style.display = 'none';
+    clearCards(); 
+    return; 
+  }
 
+  // Mostrar información compacta del grupo
+  const groupInfo = document.getElementById('groupInfoCompact');
   document.getElementById('infoZone').textContent = opt.dataset.zone || '-';
   document.getElementById('infoShift').textContent = opt.dataset.shift || '-';
   document.getElementById('infoVehicle').textContent = opt.dataset.vehicle || '-';
   document.getElementById('infoDays').textContent = opt.dataset.days || '-';
+  groupInfo.style.display = 'block';
+
+  // Marcar automáticamente los días del grupo en el checklist
+  markGroupDays(opt.dataset.days);
 
   const gid = opt.value;
-  if (!gid) { clearCards(); return; }
+  if (!gid) { 
+    clearCards(); 
+    return; 
+  }
 
   fetch("{{ route('admin.schedulings.group-info', ':id') }}".replace(':id', gid))
     .then(r => r.json())
-    .then(fillCards)
-    .then(clearCardsStatus)
-    .catch(() => { clearCards(); clearCardsStatus(); });
+    .then(data => {
+      fillCards(data.members);
+      clearCardsStatus();
+    })
+    .catch(() => { 
+      clearCards(); 
+      clearCardsStatus(); 
+    });
+}
+
+function markGroupDays(daysCsv) {
+  // Limpiar todos los checkboxes primero
+  const allCheckboxes = document.querySelectorAll('.day-checkbox');
+  allCheckboxes.forEach(checkbox => {
+    checkbox.checked = false;
+    checkbox.disabled = false;
+  });
+
+  if (!daysCsv) return;
+
+  // Marcar los días del grupo y hacerlos readonly
+  const groupDays = daysCsv.split(',').map(day => day.trim().toLowerCase());
+  groupDays.forEach(day => {
+    const checkbox = document.getElementById(`day_${day}`);
+    if (checkbox) {
+      checkbox.checked = true;
+      checkbox.disabled = true;
+      // Agregar estilo visual para días del grupo
+      checkbox.parentElement.classList.add('text-primary', 'font-weight-bold');
+    }
+  });
 }
 
 function fmtContract(c) {
@@ -283,56 +304,98 @@ function fmtVacation(v) {
   return range ? `${range} (${v.status})` : v.status;
 }
 
-function fillCards(data) {
-  document.getElementById('drv_name').textContent = data.driver?.full_name ?? '-';
-  document.getElementById('drv_name').dataset.id = data.driver?.id ?? '';
+function fillCards(members) {
+  const container = document.getElementById('membersContainer');
+  const replacementsContainer = document.getElementById('replacementsContainer');
+  
+  // Limpiar contenedores
+  container.innerHTML = '';
+  replacementsContainer.innerHTML = '';
 
-  document.getElementById('drv_contract').textContent = fmtContract(data.driver?.contract ?? null);
-  document.getElementById('drv_vacation').textContent = fmtVacation(data.driver?.vacation ?? null);
+  if (!members || members.length === 0) {
+    container.innerHTML = '<div class="col-12"><div class="alert alert-warning">No hay miembros en este grupo</div></div>';
+    return;
+  }
 
-  document.getElementById('a1_name').textContent = data.assistant1?.full_name ?? '-';
-  document.getElementById('a1_name').dataset.id = data.assistant1?.id ?? '';
+  // Generar cards dinámicamente
+  members.forEach((member, index) => {
+    const colSize = members.length <= 3 ? '4' : 
+                   members.length === 4 ? '3' : '2';
+    
+    const cardHtml = `
+      <div class="col-md-${colSize} mb-3">
+        <div class="card shadow-sm" id="card_member_${index}">
+          <div class="card-header bg-light d-flex justify-content-between">
+            <strong>${member.role}</strong>
+            <button type="button" class="btn btn-sm btn-outline-secondary d-none" id="btnChange_member_${index}">
+              <i class="fas fa-exchange-alt"></i>
+            </button>
+          </div>
+          <div class="card-body">
+            <div class="mb-1"><small class="text-muted">Nombre</small>
+              <div id="name_member_${index}" data-id="${member.id}">${member.full_name}</div>
+            </div>
+            <div class="mb-1"><small class="text-muted">Tipo</small>
+              <div>${member.type_name}</div>
+            </div>
+            <div class="mb-1"><small class="text-muted">Contrato</small>
+              <div id="contract_member_${index}">${fmtContract(member.contract)}</div>
+            </div>
+            <div class="mb-1"><small class="text-muted">Vacaciones</small>
+              <div id="vacation_member_${index}">${fmtVacation(member.vacation)}</div>
+            </div>
+            <div class="mt-2 small" id="warn_member_${index}"></div>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    container.innerHTML += cardHtml;
 
-  document.getElementById('a1_contract').textContent = fmtContract(data.assistant1?.contract ?? null);
-  document.getElementById('a1_vacation').textContent = fmtVacation(data.assistant1?.vacation ?? null);
+    // Generar hidden inputs para reemplazos
+    const hiddenInputs = `
+      <input type="hidden" name="replacements[member_${index}][employee_id]" id="rep_member_${index}_employee_id">
+      <input type="hidden" name="replacements[member_${index}][dates]" id="rep_member_${index}_dates">
+    `;
+    
+    replacementsContainer.innerHTML += hiddenInputs;
 
-  document.getElementById('a2_name').textContent = data.assistant2?.full_name ?? '-';
-  document.getElementById('a2_name').dataset.id = data.assistant2?.id ?? '';
-
-  document.getElementById('a2_contract').textContent = fmtContract(data.assistant2?.contract ?? null);
-  document.getElementById('a2_vacation').textContent = fmtVacation(data.assistant2?.vacation ?? null);
-}
-
-function clearCards() {
-  ['drv','a1','a2'].forEach(p => {
-    document.getElementById(p+'_name').textContent = '-';
-    document.getElementById(p+'_name').dataset.id = '';
-    document.getElementById(p+'_contract').textContent = '-';
-    document.getElementById(p+'_vacation').textContent = '-';
+    // Agregar event listener al botón de cambio
+    setTimeout(() => {
+      const changeBtn = document.getElementById(`btnChange_member_${index}`);
+      if (changeBtn) {
+        changeBtn.addEventListener('click', () => openReplaceModal(index, member.type_id));
+      }
+    }, 100);
   });
 }
 
-let lastAvailability = null;
+function clearCards() {
+  document.getElementById('membersContainer').innerHTML = '';
+  document.getElementById('replacementsContainer').innerHTML = '';
+}
 
+let lastAvailability = null;
 
 /* ============================================================
    ========== VALIDACIÓN DISPONIBILIDAD ========
    ============================================================ */
 
 function toggleChangeButtons() {
-  const roles = ['driver','assistant1','assistant2'];
-  roles.forEach(role => {
-    const btn = document.getElementById('btnChange_'+role);
+  // Se activarán dinámicamente según los miembros con conflictos
+  if (!lastAvailability || !lastAvailability.byRole) return;
+
+  Object.keys(lastAvailability.byRole).forEach(memberKey => {
+    const memberIndex = memberKey.replace('member_', '');
+    const btn = document.getElementById(`btnChange_member_${memberIndex}`);
     if (!btn) return;
 
-    const hasIssues = !!(lastAvailability &&
-      lastAvailability.byRole &&
-      (lastAvailability.byRole[role] || []).length);
+    const hasIssues = !!(lastAvailability.byRole[memberKey] && 
+                        lastAvailability.byRole[memberKey].length);
 
     btn.classList.toggle('d-none', !hasIssues);
   });
 }
-
 
 async function checkAvailabilityClient() {
   const gid = document.getElementById('group_id').value;
@@ -344,7 +407,14 @@ async function checkAvailabilityClient() {
     return { ok:false, data:null };
   }
 
-  clearCardsStatus();
+  // Limpiar estados de todas las cards
+  const membersContainer = document.getElementById('membersContainer');
+  const cards = membersContainer.querySelectorAll('[id^="card_member_"]');
+  cards.forEach(card => {
+    card.classList.remove('border','border-danger','border-success','border-warning');
+    const warn = card.querySelector('[id^="warn_member_"]');
+    if (warn) warn.innerHTML = '';
+  });
 
   const res = await fetch("{{ route('admin.schedulings.check-availability') }}", {
     method: 'POST',
@@ -352,7 +422,12 @@ async function checkAvailabilityClient() {
       'Content-Type': 'application/json',
       'X-CSRF-TOKEN': '{{ csrf_token() }}'
     },
-    body: JSON.stringify({ group_id: gid, from, to })
+    body: JSON.stringify({ 
+      group_id: gid, 
+      from, 
+      to,
+      additional_days: getAdditionalDays() // 🔥 Incluir días adicionales
+    })
   });
 
   if (!res.ok) return { ok:false, data:null };
@@ -360,23 +435,22 @@ async function checkAvailabilityClient() {
   const data = await res.json();
   const byRole = data.byRole || {};
 
-  const renderRole = role => {
-    const items = byRole[role] || [];
+  // Renderizar estado para cada miembro
+  Object.keys(byRole).forEach(memberKey => {
+    const memberIndex = memberKey.replace('member_', '');
+    const items = byRole[memberKey] || [];
+    
     if (!items.length) {
-      setCardStatus(role, 'ok', []);
+      setCardStatus(memberIndex, 'ok', []);
     } else {
       const hasContract = items.some(x =>
         x.reason.toLowerCase().includes('contrato') ||
         x.reason.toLowerCase().includes('sin contrato')
       );
       const msgs = items.map(x => `${x.reason}: ${x.dates.join(', ')}`);
-      setCardStatus(role, hasContract ? 'error' : 'warn', msgs);
+      setCardStatus(memberIndex, hasContract ? 'error' : 'warn', msgs);
     }
-  };
-
-  renderRole('driver');
-  renderRole('assistant1');
-  renderRole('assistant2');
+  });
 
   const box = document.getElementById('previewBox');
   if (!data.ok) {
@@ -405,35 +479,130 @@ async function runAvailabilityAndDecorate() {
   toggleChangeButtons();
 }
 
-
 /* ============================================================
-   ========== MODAL DE REEMPLAZO (CON EXCLUSIÓN) ==========
+   ========== LÓGICA PARA DÍAS ADICIONALES ==========
    ============================================================ */
 
-function openReplaceModal(role) {
+function getAdditionalDays() {
+    const checkboxes = document.querySelectorAll('.day-checkbox:checked');
+    return Array.from(checkboxes).map(cb => cb.value);
+}
+
+function parseSpanishDays(daysCsv) {
+    const map = {
+        'domingo': 0, 'lunes': 1, 'martes': 2,
+        'miércoles': 3, 'miercoles': 3,
+        'jueves': 4, 'viernes': 5,
+        'sábado': 6, 'sabado': 6,
+    };
+
+    const out = [];
+    const daysArray = daysCsv.split(',');
+    
+    daysArray.forEach(day => {
+        const key = day.trim().toLowerCase();
+        if (map[key] !== undefined) {
+            out.push(map[key]);
+        }
+    });
+    
+    return out;
+}
+
+function getAllWorkingDays(groupDays, additionalDays) {
+    // Convertir días del grupo a números
+    const baseDays = parseSpanishDays(groupDays);
+    
+    // Convertir días adicionales a números
+    const additionalDaysNumbers = additionalDays.map(day => {
+        const map = {
+            'domingo': 0, 'lunes': 1, 'martes': 2,
+            'miércoles': 3, 'miercoles': 3,
+            'jueves': 4, 'viernes': 5,
+            'sábado': 6, 'sabado': 6,
+        };
+        return map[day.toLowerCase()];
+    }).filter(day => day !== undefined);
+    
+    // Combinar y eliminar duplicados
+    const allDays = [...new Set([...baseDays, ...additionalDaysNumbers])];
+    return allDays.sort();
+}
+
+function countWorkingDaysInRange(from, to, groupDays, additionalDays) {
+    const allWorkingDays = getAllWorkingDays(groupDays, additionalDays);
+    
+    let count = 0;
+    const start = new Date(from + 'T00:00:00');
+    const end = new Date(to + 'T00:00:00');
+    
+    for (let dt = new Date(start); dt <= end; dt.setDate(dt.getDate() + 1)) {
+        if (allWorkingDays.includes(dt.getDay())) {
+            count++;
+        }
+    }
+    
+    return count;
+}
+
+function updatePreviewWithAdditionalDays() {
+    const from = document.querySelector('input[name="from"]').value;
+    const to = document.querySelector('input[name="to"]').value;
+    const opt = document.querySelector('#group_id option:checked');
+    
+    if (!from || !to || !opt) return;
+    
+    const groupDays = opt.dataset.days || '';
+    const additionalDays = getAdditionalDays();
+    
+    const baseCount = countWorkingDaysInRange(from, to, groupDays, []);
+    const totalCount = countWorkingDaysInRange(from, to, groupDays, additionalDays);
+    const additionalCount = totalCount - baseCount;
+    
+    const box = document.getElementById('previewBox');
+    box.style.display = 'block';
+    box.classList.remove('alert-danger');
+    box.classList.add('alert-info');
+    
+    let message = `<strong>Previsualización:</strong> se crearán <b>${totalCount}</b> programaciones.`;
+    
+    if (additionalCount > 0) {
+        message += `<br><small class="text-warning">Incluye <b>${additionalCount}</b> días adicionales seleccionados.</small>`;
+    } else {
+        message += `<br><small class="text-muted">Basado en los días configurados del grupo.</small>`;
+    }
+    
+    box.innerHTML = message;
+    
+    // Actualizar el hidden input con los días adicionales procesados
+    document.getElementById('additional_days_processed').value = additionalDays.join(',');
+}
+
+/* ============================================================
+   ========== MODAL DE REEMPLAZO DINÁMICO ==========
+   ============================================================ */
+
+function openReplaceModal(memberIndex, typeId) {
   if (!lastAvailability || !lastAvailability.byRole) return;
 
-  const items = lastAvailability.byRole[role] || [];
+  const memberKey = `member_${memberIndex}`;
+  const items = lastAvailability.byRole[memberKey] || [];
   const dates = [...new Set(items.flatMap(it => it.dates))].sort();
   
-  const groupId = document.getElementById('group_id').value; // 🔥 OBTENER EL GROUP_ID
+  const groupId = document.getElementById('group_id').value;
+  const memberNameElement = document.getElementById(`name_member_${memberIndex}`);
+  const memberName = memberNameElement ? memberNameElement.textContent : 'Miembro';
 
-  document.getElementById('replaceRoleLabel').textContent =
-    role === 'driver' ? 'Conductor'
-    : role === 'assistant1' ? 'Ayudante 1'
-    : 'Ayudante 2';
+  document.getElementById('replaceRoleLabel').textContent = memberName;
 
   const info = document.getElementById('replaceDatesInfo');
   info.style.display = 'block';
   info.innerHTML = `<strong>Fechas a cubrir:</strong> ${dates.join(', ')}`;
 
-  const typeId = (role === 'driver') ? 1 : 2;
-
-  // 🔥 ENVIAR GROUP_ID EN LA PETICIÓN
   const params = new URLSearchParams({
     type_id: typeId,
     dates: dates.join(','),
-    group_id: groupId // 🔥 NUEVO PARÁMETRO
+    group_id: groupId
   });
 
   fetch("{{ route('admin.schedulings.available-candidates') }}?" + params.toString())
@@ -456,7 +625,7 @@ function openReplaceModal(role) {
         });
       }
 
-      sel.dataset.role = role;
+      sel.dataset.memberIndex = memberIndex;
       sel.dataset.dates = dates.join(',');
 
       $('#modalReplace').modal('show');
@@ -464,39 +633,34 @@ function openReplaceModal(role) {
     .catch(() => alert("Error cargando candidatos"));
 }
 
-
 /* ============================================================
-   ========== APLICAR REEMPLAZO ==========
+   ========== APLICAR REEMPLAZO DINÁMICO ==========
    ============================================================ */
 
 document.getElementById('btnApplyReplace').addEventListener('click', function () {
   const sel = document.getElementById('replaceSelect');
-  const role  = sel.dataset.role;
+  const memberIndex = sel.dataset.memberIndex;
   const dates = sel.dataset.dates || '';
   const empId = sel.value;
 
-  if (!role || !dates || !empId) {
+  if (!memberIndex || !dates || !empId) {
     alert('Seleccione un empleado.');
     return;
   }
 
-  document.getElementById(`rep_${role}_employee_id`).value = empId;
-  document.getElementById(`rep_${role}_dates`).value       = dates;
+  document.getElementById(`rep_member_${memberIndex}_employee_id`).value = empId;
+  document.getElementById(`rep_member_${memberIndex}_dates`).value = dates;
 
-  const warnId =
-    role === 'driver' ? 'drv_warn' :
-    role === 'assistant1' ? 'a1_warn' :
-    'a2_warn';
-
-  const warnEl = document.getElementById(warnId);
-  warnEl.innerHTML = `<span class="badge badge-primary">Reemplazo seleccionado</span>`;
+  const warnEl = document.getElementById(`warn_member_${memberIndex}`);
+  if (warnEl) {
+    warnEl.innerHTML = `<span class="badge badge-primary">Reemplazo seleccionado</span>`;
+  }
 
   $('#modalReplace').modal('hide');
 });
 
-
 /* ============================================================
-   ========== PREVIEW ========
+   ========== PREVIEW CON DÍAS ADICIONALES ========
    ============================================================ */
 
 document.getElementById('btnPreview').addEventListener('click', async function() {
@@ -504,32 +668,14 @@ document.getElementById('btnPreview').addEventListener('click', async function()
   const to   = document.querySelector('input[name="to"]').value;
   const opt  = document.querySelector('#group_id option:checked');
 
-  const days = (opt?.dataset.days || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
-  if (!from || !to || !days.length) {
+  if (!from || !to || !opt) {
     alert('Seleccione rango de fechas y grupo.');
     return;
   }
 
-  const map = {domingo:0,lunes:1,martes:2,'miércoles':3,'miercoles':3,jueves:4,viernes:5,'sábado':6,'sabado':6};
-  const allowed = days.map(d => map[d]).filter(n => n !== undefined);
-
-  let count = 0;
-  const start = new Date(from+'T00:00:00');
-  const end   = new Date(to+'T00:00:00');
-
-  for (let dt = new Date(start); dt <= end; dt.setDate(dt.getDate()+1)) {
-    if (allowed.includes(dt.getDay())) count++;
-  }
-
-  const box = document.getElementById('previewBox');
-  box.style.display = 'block';
-  box.classList.remove('alert-danger');
-  box.classList.add('alert-info');
-  box.innerHTML = `<strong>Previsualización:</strong> se crearán aproximadamente <b>${count}</b> programaciones.`;
-
+  updatePreviewWithAdditionalDays();
   await runAvailabilityAndDecorate();
 });
-
 
 /* ============================================================
    ========== VALIDAR SUBMIT ==========
@@ -541,17 +687,18 @@ document.querySelector('form[action="{{ route('admin.schedulings.store') }}"]').
   toggleChangeButtons();
 
   if (!res.ok) {
-    const stillHasErrors = role => {
-      const items = (lastAvailability?.byRole?.[role] || []);
+    const stillHasErrors = memberKey => {
+      const items = (lastAvailability?.byRole?.[memberKey] || []);
       if (!items.length) return false;
 
-      const repDates = (document.getElementById(`rep_${role}_dates`).value || '').split(',').filter(Boolean);
+      const memberIndex = memberKey.replace('member_', '');
+      const repDates = (document.getElementById(`rep_${memberKey}_dates`).value || '').split(',').filter(Boolean);
       const conflictDates = [...new Set(items.flatMap(it => it.dates))];
 
       return !conflictDates.every(d => repDates.includes(d));
     };
 
-    const pending = ['driver','assistant1','assistant2'].filter(stillHasErrors);
+    const pending = Object.keys(lastAvailability?.byRole || {}).filter(stillHasErrors);
 
     if (pending.length) {
       e.preventDefault();
@@ -560,18 +707,29 @@ document.querySelector('form[action="{{ route('admin.schedulings.store') }}"]').
   }
 });
 
-
 /* ============================================================
    ========== INIT ==========
    ============================================================ */
 
 document.getElementById('group_id').addEventListener('change', updateGroupInfo);
-updateGroupInfo();
 
-document.getElementById('btnChange_driver').addEventListener('click', () => openReplaceModal('driver'));
-document.getElementById('btnChange_assistant1').addEventListener('click', () => openReplaceModal('assistant1'));
-document.getElementById('btnChange_assistant2').addEventListener('click', () => openReplaceModal('assistant2'));
+// Agregar event listeners a los checkboxes de días adicionales
+document.addEventListener('DOMContentLoaded', function() {
+    const additionalDayCheckboxes = document.querySelectorAll('.day-checkbox');
+    additionalDayCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const from = document.querySelector('input[name="from"]').value;
+            const to = document.querySelector('input[name="to"]').value;
+            const opt = document.querySelector('#group_id option:checked');
+            
+            if (from && to && opt) {
+                updatePreviewWithAdditionalDays();
+            }
+        });
+    });
+    
+    updateGroupInfo();
+});
 
 </script>
-
 @stop

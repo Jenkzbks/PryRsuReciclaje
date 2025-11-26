@@ -30,7 +30,29 @@
         <div class="col-md-6">
           <div class="form-group">
             <label>Notas</label>
-            <input type="text" name="notes" class="form-control" value="{{ $scheduling->notes }}" placeholder="Notas opcionales">
+            <input type="text" name="notes" class="form-control" value="{{ $scheduling->notes ?? '' }}" placeholder="Notas opcionales">
+          </div>
+        </div>
+      </div>
+
+      <!-- Información del Grupo (solo lectura) -->
+      <div class="row mb-4">
+        <div class="col-md-12">
+          <div class="alert alert-info py-2">
+            <div class="row">
+              <div class="col-md-3">
+                <strong>Grupo:</strong> {{ $scheduling->group->name ?? '-' }}
+              </div>
+              <div class="col-md-3">
+                <strong>Zona:</strong> {{ $scheduling->group->zone->name ?? '-' }}
+              </div>
+              <div class="col-md-3">
+                <strong>Días del grupo:</strong> {{ $scheduling->group->days ?? '-' }}
+              </div>
+              <div class="col-md-3">
+                <strong>Configuración original</strong>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -43,8 +65,14 @@
               <strong>Turno Actual</strong>
             </div>
             <div class="card-body">
-              <p class="mb-1">{{ $scheduling->group->shift->name ?? 'Sin turno asignado' }}</p>
-              <small class="text-muted">Turno configurado en el grupo</small>
+              <p class="mb-1">{{ $scheduling->shift->name ?? $scheduling->group->shift->name ?? 'Sin turno asignado' }}</p>
+              <small class="text-muted">
+                @if($scheduling->shift_id && $scheduling->shift_id != $scheduling->group->shift_id)
+                  <i class="fas fa-exclamation-triangle text-warning"></i> Modificado respecto al grupo original
+                @else
+                  Turno del grupo original
+                @endif
+              </small>
             </div>
           </div>
         </div>
@@ -57,7 +85,8 @@
               <select name="shift_id" class="form-control form-control-sm">
                 <option value="">-- Mantener turno actual --</option>
                 @foreach($shifts as $shift)
-                  <option value="{{ $shift->id }}" {{ old('shift_id') == $shift->id ? 'selected' : '' }}>
+                  <option value="{{ $shift->id }}" 
+                    {{ $scheduling->shift_id == $shift->id ? 'selected' : (old('shift_id') == $shift->id ? 'selected' : '') }}>
                     {{ $shift->name }}
                   </option>
                 @endforeach
@@ -76,8 +105,14 @@
               <strong>Vehículo Actual</strong>
             </div>
             <div class="card-body">
-              <p class="mb-1">{{ $scheduling->group->vehicle->plate ?? 'Sin vehículo asignado' }}</p>
-              <small class="text-muted">Vehículo configurado en el grupo</small>
+              <p class="mb-1">{{ $scheduling->vehicle->plate ?? $scheduling->group->vehicle->plate ?? 'Sin vehículo asignado' }}</p>
+              <small class="text-muted">
+                @if($scheduling->vehicle_id && $scheduling->vehicle_id != $scheduling->group->vehicle_id)
+                  <i class="fas fa-exclamation-triangle text-warning"></i> Modificado respecto al grupo original
+                @else
+                  Vehículo del grupo original
+                @endif
+              </small>
             </div>
           </div>
         </div>
@@ -90,7 +125,8 @@
               <select name="vehicle_id" class="form-control form-control-sm">
                 <option value="">-- Mantener vehículo actual --</option>
                 @foreach($vehicles as $vehicle)
-                  <option value="{{ $vehicle->id }}" {{ old('vehicle_id') == $vehicle->id ? 'selected' : '' }}>
+                  <option value="{{ $vehicle->id }}" 
+                    {{ $scheduling->vehicle_id == $vehicle->id ? 'selected' : (old('vehicle_id') == $vehicle->id ? 'selected' : '') }}>
                     {{ $vehicle->plate }}
                   </option>
                 @endforeach
@@ -142,7 +178,8 @@
                 <select name="driver_id" class="form-control form-control-sm">
                   <option value="">-- Mantener conductor actual --</option>
                   @foreach($drivers as $driver)
-                    <option value="{{ $driver->id }}" {{ $selectedDriverId == $driver->id ? 'selected' : '' }}>
+                    <option value="{{ $driver->id }}" 
+                      {{ $selectedDriverId == $driver->id ? 'selected' : (old('driver_id') == $driver->id ? 'selected' : '') }}>
                       {{ $driver->lastnames }} {{ $driver->names }}
                     </option>
                   @endforeach
@@ -154,7 +191,8 @@
                 <select name="assistant1_id" class="form-control form-control-sm">
                   <option value="">-- Mantener ayudante 1 actual --</option>
                   @foreach($assistants as $assistant)
-                    <option value="{{ $assistant->id }}" {{ $selectedA1Id == $assistant->id ? 'selected' : '' }}>
+                    <option value="{{ $assistant->id }}" 
+                      {{ $selectedA1Id == $assistant->id ? 'selected' : (old('assistant1_id') == $assistant->id ? 'selected' : '') }}>
                       {{ $assistant->lastnames }} {{ $assistant->names }}
                     </option>
                   @endforeach
@@ -166,7 +204,8 @@
                 <select name="assistant2_id" class="form-control form-control-sm">
                   <option value="">-- Mantener ayudante 2 actual --</option>
                   @foreach($assistants as $assistant)
-                    <option value="{{ $assistant->id }}" {{ $selectedA2Id == $assistant->id ? 'selected' : '' }}>
+                    <option value="{{ $assistant->id }}" 
+                      {{ $selectedA2Id == $assistant->id ? 'selected' : (old('assistant2_id') == $assistant->id ? 'selected' : '') }}>
                       {{ $assistant->lastnames }} {{ $assistant->names }}
                     </option>
                   @endforeach
@@ -180,7 +219,7 @@
       <!-- Cambios Registrados -->
       <div class="card border-info mb-4">
         <div class="card-header bg-info text-white">
-          <strong>Cambios Registrados</strong>
+          <strong>Resumen de Cambios</strong>
         </div>
         <div class="card-body">
           <div class="table-responsive">
@@ -188,33 +227,51 @@
               <thead>
                 <tr class="bg-light">
                   <th>Tipo de Cambio</th>
-                  <th>Valor Anterior</th>
+                  <th>Valor Original del Grupo</th>
+                  <th>Valor Actual</th>
                   <th>Valor Nuevo</th>
-                  <th>Notas</th>
-                  <th>Análisis</th>
+                  <th>Estado</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td>Turno</td>
                   <td>{{ $scheduling->group->shift->name ?? '-' }}</td>
+                  <td>{{ $scheduling->shift->name ?? $scheduling->group->shift->name ?? '-' }}</td>
                   <td id="newShiftPreview">-</td>
-                  <td>Cambio de turno programado</td>
-                  <td><span class="badge badge-secondary">Pendiente</span></td>
+                  <td>
+                    @if($scheduling->shift_id && $scheduling->shift_id != $scheduling->group->shift_id)
+                      <span class="badge badge-warning">Modificado</span>
+                    @else
+                      <span class="badge badge-secondary">Original</span>
+                    @endif
+                  </td>
                 </tr>
                 <tr>
                   <td>Vehículo</td>
                   <td>{{ $scheduling->group->vehicle->plate ?? '-' }}</td>
+                  <td>{{ $scheduling->vehicle->plate ?? $scheduling->group->vehicle->plate ?? '-' }}</td>
                   <td id="newVehiclePreview">-</td>
-                  <td>Cambio de vehículo asignado</td>
-                  <td><span class="badge badge-secondary">Pendiente</span></td>
+                  <td>
+                    @if($scheduling->vehicle_id && $scheduling->vehicle_id != $scheduling->group->vehicle_id)
+                      <span class="badge badge-warning">Modificado</span>
+                    @else
+                      <span class="badge badge-secondary">Original</span>
+                    @endif
+                  </td>
                 </tr>
                 <tr>
                   <td>Personal</td>
+                  <td>{{ $scheduling->group->employees->count() ?? 0 }} trabajadores</td>
                   <td>{{ $scheduling->details->count() }} trabajadores</td>
                   <td id="newPersonnelPreview">-</td>
-                  <td>Reasignación de personal</td>
-                  <td><span class="badge badge-secondary">Pendiente</span></td>
+                  <td>
+                    @if($scheduling->details->count() > 0)
+                      <span class="badge badge-info">Asignado</span>
+                    @else
+                      <span class="badge badge-secondary">Sin personal</span>
+                    @endif
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -298,6 +355,15 @@
     driverSelect.addEventListener('change', updatePersonnelPreview);
     assistant1Select.addEventListener('change', updatePersonnelPreview);
     assistant2Select.addEventListener('change', updatePersonnelPreview);
+
+    // Inicializar vistas previas con valores actuales
+    if (shiftSelect.value) {
+      shiftSelect.dispatchEvent(new Event('change'));
+    }
+    if (vehicleSelect.value) {
+      vehicleSelect.dispatchEvent(new Event('change'));
+    }
+    updatePersonnelPreview();
   });
 </script>
 @stop
