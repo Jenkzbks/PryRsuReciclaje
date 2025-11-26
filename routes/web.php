@@ -8,6 +8,7 @@ use App\Http\Controllers\admin\RouteController;
 use App\Http\Controllers\admin\BrandController;
 use App\Http\Controllers\admin\BrandModelController;
 use App\Http\Controllers\admin\ShiftController;
+use App\Http\Controllers\admin\ZoneJController;
 use App\Http\Controllers\admin\VehicleTypeController;
 use App\Http\Controllers\admin\VehicleController;
 use App\Http\Controllers\admin\EmployeegroupController;
@@ -59,6 +60,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('vehicles', VehicleController::class);
     Route::resource('colors', ColorController::class);
     Route::resource('shifts', ShiftController::class);
+    
+        Route::get('zonesjenkz/map', [App\Http\Controllers\Admin\ZoneJController::class, 'map'])->name('zonesjenkz.map');
+    
      Route::get('schedulings/available-candidates', [SchedulingController::class, 'availableCandidates'])
     ->name('schedulings.available-candidates');
 
@@ -79,6 +83,24 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('api/zones-polygons', [ZoneController::class, 'getZonesPolygons'])->name('api.zones.polygons');
     // API para obtener modelos por marca (select dependiente)
     Route::get('api/models/{brand_id}', [VehicleController::class, 'modelsByBrand'])->name('api.models');
+
+    // ZONAS JENKZ
+
+
+    // Validación de polígono (AJAX)
+    Route::post('zonesjenkz/validate-polygon', [ZoneJController::class, 'validatePolygon'])->name('zonesjenkz.validatePolygon');
+
+    Route::resource('zonesjenkz', ZoneJController::class);
+
+    // API para selects dependientes de zonas_jenkz
+    Route::get('api/provinces', [ZoneJController::class, 'getProvinces'])->name('zonesjenkz.api.provinces');
+    Route::get('api/districts', [ZoneJController::class, 'getDistricts'])->name('zonesjenkz.api.districts');
+    // Endpoint para datos de distrito (lat/lng/zoom)
+    Route::get('api/district-data', [ZoneJController::class, 'getDistrictData']);
+    Route::get('zonesjenkz/{zone}/modal', [ZoneJController::class, 'show'])->name('zonesjenkz.show');
+
+
+    
 
     // ===================================
     // MÓDULO DE GESTIÓN DE PERSONAL

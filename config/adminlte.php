@@ -404,6 +404,11 @@ return [
                     'icon' => 'fas fa-fw fa-map-marked-alt',
                 ],
                 [
+                    'text' => 'Zonas',
+                    'route' => 'admin.zonesjenkz.index',
+                    'icon' => 'fas fa-fw fa-map-marked-alt',
+                ],
+                [
                     'text' => 'Rutas de Recolección',
                     'route' => 'admin.routes.index',
                     'icon' => 'fas fa-fw fa-route',
