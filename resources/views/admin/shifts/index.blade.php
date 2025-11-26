@@ -12,7 +12,7 @@
 @section('content')
     <div class="card">
         <div class="card-body">
-            <table class="table table-striped" id="shifts-table">
+            <table class="table table-striped table-bordered align-middle" id="shifts-table" style="width:100%">
                 <thead>
                     <tr>
                         <th>Nombre</th>
@@ -21,10 +21,11 @@
                         <th>Hora fin</th>
                         <th>Fecha creación</th>
                         <th>Fecha actualización</th>
-                        <th width="10px"></th>
-                        <th width="10px"></th>
+                        <th width="70px" class="text-center align-middle">Editar</th>
+                        <th width="70px" class="text-center align-middle">Eliminar</th>
                     </tr>
                 </thead>
+                <tbody></tbody>
             </table>
         </div>
     </div>
@@ -48,17 +49,61 @@
 @section('js')
 <script>
     $(document).ready(function() {
+        // Cargar moment.js si no está presente
+        if (typeof moment === 'undefined') {
+            var script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js';
+            document.head.appendChild(script);
+        }
         $('#shifts-table').DataTable({
             'ajax': '{{ route('admin.shifts.index') }}',
             'columns': [
                 { "data": "name" },
                 { "data": "description" },
-                { "data": "hora_in" },
-                { "data": "hora_out" },
-                { "data": "created_at" },
-                { "data": "updated_at" },
-                { "data": "edit", "orderable": false, "searchable": false },
-                { "data": "delete", "orderable": false, "searchable": false }
+                {
+                    "data": "hora_in",
+                    "render": function(data) {
+                        if (!data) return '';
+                        if (typeof moment !== 'undefined') {
+                            return moment(data, 'HH:mm:ss').format('hh:mm a');
+                        }
+                        return data;
+                    }
+                },
+                {
+                    "data": "hora_out",
+                    "render": function(data) {
+                        if (!data) return '';
+                        if (typeof moment !== 'undefined') {
+                            return moment(data, 'HH:mm:ss').format('hh:mm a');
+                        }
+                        return data;
+                    }
+                },
+                {
+                    "data": "created_at",
+                    "className": "align-middle",
+                    "render": function(data, type, row) {
+                        if (!data) return '';
+                        if (typeof moment !== 'undefined') {
+                            return moment(data).format('DD/MM/YYYY HH:mm');
+                        }
+                        return data;
+                    }
+                },
+                {
+                    "data": "updated_at",
+                    "className": "align-middle",
+                    "render": function(data, type, row) {
+                        if (!data) return '';
+                        if (typeof moment !== 'undefined') {
+                            return moment(data).format('DD/MM/YYYY HH:mm');
+                        }
+                        return data;
+                    }
+                },
+                { "data": "edit", "orderable": false, "searchable": false, "className": "text-center align-middle" },
+                { "data": "delete", "orderable": false, "searchable": false, "className": "text-center align-middle" }
             ],
             'language': {
                 "url": "https://cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json"

@@ -285,15 +285,7 @@
                         refreshTable();
                         Swal.fire({ title: "Proceso Exitoso!", text: response.message, icon: "success" });
                     },
-                    error: function(response) {
-                        var error = response.responseJSON;
-                        // Si el mensaje contiene una lista HTML, usar html: en lugar de text:
-                        if (error && error.message && error.message.startsWith('<ul')) {
-                            Swal.fire({ title: "Error!", html: error.message, icon: "error" });
-                        } else {
-                            Swal.fire({ title: "Error!", text: error.message, icon: "error" });
-                        }
-                    }
+                    error: function(response) { var error = response.responseJSON; Swal.fire({ title: "Error!", text: error.message, icon: "error" }); }
                 });
             });
         }
