@@ -60,6 +60,9 @@
                 <a href="{{ route('admin.schedulings.edit',$s) }}" class="btn btn-sm btn-outline-primary mr-2">
                   <i class="fas fa-edit"></i>
                 </a>
+                <button type="button" class="btn btn-sm btn-info mr-2 btnDetalle" data-id="{{ $s->id }}" title="Ver detalle">
+                  <i class="fas fa-users"></i>
+                </button>
                 <form method="POST" action="{{ route('admin.schedulings.destroy',$s) }}" onsubmit="return confirm('¿Eliminar programación?')">
                   @csrf @method('DELETE')
                   <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
@@ -76,4 +79,40 @@
     <div class="mt-3">{{ $schedulings->appends(request()->query())->links() }}</div>
   </div>
 </div>
+
+<div class="modal fade" id="modalDetalle" tabindex="-1" role="dialog" aria-labelledby="modalDetalleLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="modalDetalleLabel">Visualización de día programado e historial de cambios</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="detalleContenido">
+          <!-- Aquí se cargará el contenido por AJAX -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fas fa-times"></i> Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
 @stop
+
+@push('js')
+<script>
+$(function() {
+  $('.btnDetalle').click(function() {
+    var id = $(this).data('id');
+    $('#detalleContenido').html('<div class="text-center p-5"><i class="fas fa-spinner fa-spin fa-2x"></i> Cargando...</div>');
+    $('#modalDetalle').modal('show');
+    $.get("{{ url('admin/schedulings') }}/" + id + "/detalle", function(data) {
+      $('#detalleContenido').html(data);
+    });
+  });
+});
+</script>
+@endpush

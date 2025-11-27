@@ -429,7 +429,7 @@ return [
             'submenu' => [
                 [
                     'text' => 'Motivos',
-                    'route'  => 'admin.personnel.dashboard',
+                    'route'  => 'admin.reasons.index',
                     'icon' => 'fas fa-fw fa-clipboard-list',
                 ],
                 [
