@@ -6,6 +6,9 @@
 <div class="d-flex justify-content-between align-items-center">
   <h1>Programaciones</h1>
   <a href="{{ route('admin.schedulings.create') }}" class="btn btn-primary">
+    <i class="fas fa-plus"></i> Nueva Programación Masiva
+  </a>
+  <a href="{{ route('admin.schedulings.create') }}" class="btn btn-primary">
     <i class="fas fa-plus"></i> Nueva Programación
   </a>
 </div>
