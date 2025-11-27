@@ -3,10 +3,10 @@
 @section('title', 'Grupos de Personal')
 
 @section('content_header')
-    <button type="button" class="btn btn-success float-right" id="btnRegistrar">
+    <button type="button" class="btn btn-primary float-right" id="btnRegistrar">
         <i class="fas fa-plus"></i> Nuevo Grupo
     </button>
-    <h1>Lista de Grupos de Personal</h1>
+    <h1 class="h3 mb-1 font-weight-bold"><i class="fas fa-users"></i> Grupos de Personal</h1>
 @stop
 
 @section('content')

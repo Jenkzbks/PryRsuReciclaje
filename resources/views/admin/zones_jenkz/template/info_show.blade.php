@@ -1,4 +1,4 @@
-<div class="modal-header bg-info text-white">
+<div class="modal-header bg-primary text-white">
     <h5 class="modal-title">Detalles de la Zona</h5>
     <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
         <span aria-hidden="true">&times;</span>
