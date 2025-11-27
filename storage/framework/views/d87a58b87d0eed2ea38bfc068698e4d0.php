@@ -1,11 +1,11 @@
 <div class="row">
-    {{-- Columna Izquierda: Imágenes del Vehículo --}}
+    
     <div class="col-md-5">
         <h6>Imágenes</h6>
         <div class="mb-3">
             <label for="main_image" class="form-label">Imagen Principal</label>
-            {{-- Seleccionar explícitamente la imagen perfil y las de galería --}}
-            @php
+            
+            <?php
                 $mainImage = null;
                 $galleryCollection = collect();
                 if (isset($vehicle) && $vehicle->images->isNotEmpty()) {
@@ -16,14 +16,14 @@
                     }
                     $galleryCollection = $vehicle->images->where('profile', 0)->values();
                 }
-            @endphp
+            ?>
 
-            {{-- Vista previa de la imagen principal si ya existe (en modo edición) --}}
-            @if ($mainImage)
-                <img src="{{ asset('storage/' . $mainImage->image) }}" alt="Imagen principal" class="img-fluid rounded mb-2" id="image_preview">
-            @else
-                <img src="{{ asset('storage/vehicles/no-image.jpg') }}" alt="Imagen principal" class="img-fluid rounded mb-2" id="image_preview">
-            @endif
+            
+            <?php if($mainImage): ?>
+                <img src="<?php echo e(asset('storage/' . $mainImage->image)); ?>" alt="Imagen principal" class="img-fluid rounded mb-2" id="image_preview">
+            <?php else: ?>
+                <img src="<?php echo e(asset('storage/vehicles/no-image.jpg')); ?>" alt="Imagen principal" class="img-fluid rounded mb-2" id="image_preview">
+            <?php endif; ?>
             <input class="form-control" type="file" id="main_image" name="image" accept="image/*">
             <small class="text-muted">Sube la foto principal del vehículo.</small>
         </div>
@@ -31,22 +31,22 @@
         <hr>
         <h6>Galería (Opcional)</h6>
         <div class="row">
-            @for ($i = 0; $i < 3; $i++)
+            <?php for($i = 0; $i < 3; $i++): ?>
                 <div class="col-4 mb-2">
-                    @php
+                    <?php
                         $galleryImage = $galleryCollection->get($i) ?? null;
-                    @endphp
-                    <img src="{{ $galleryImage ? asset('storage/' . $galleryImage->image) : asset('storage/vehicles/no-image.jpg') }}"
+                    ?>
+                    <img src="<?php echo e($galleryImage ? asset('storage/' . $galleryImage->image) : asset('storage/vehicles/no-image.jpg')); ?>"
                          class="img-fluid rounded gallery-img"
-                         alt="Imagen de galería {{ $i + 1 }}"
-                         data-index="{{ $i }}">
-                    <input type="file" class="d-none" name="gallery_images[]" id="gallery_image_{{ $i }}" accept="image/*">
+                         alt="Imagen de galería <?php echo e($i + 1); ?>"
+                         data-index="<?php echo e($i); ?>">
+                    <input type="file" class="d-none" name="gallery_images[]" id="gallery_image_<?php echo e($i); ?>" accept="image/*">
                 </div>
-            @endfor
+            <?php endfor; ?>
         </div>
     </div>
 
-    {{-- Columna Derecha: Pestañas con la Información --}}
+    
     <div class="col-md-7">
         <ul class="nav nav-tabs" id="vehicleTab" role="tablist">
             <li class="nav-item" role="presentation">
@@ -59,95 +59,95 @@
 
         <div class="tab-content p-3 border border-top-0 rounded-bottom" id="vehicleTabContent">
 
-            {{-- Pestaña 1: Información General --}}
+            
             <div class="tab-pane fade show active" id="general-info" role="tabpanel" aria-labelledby="general-info-tab">
                 <div class="row">
                     <div class="col-md-12 form-group">
                         <label for="name">Nombre</label>
-                        <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $vehicle->name ?? '') }}" placeholder="Ej: Camioneta Hilux 4x4">
+                        <input type="text" name="name" id="name" class="form-control" value="<?php echo e(old('name', $vehicle->name ?? '')); ?>" placeholder="Ej: Camioneta Hilux 4x4">
                         <small class="text-muted">Ingresa un nombre para el vehículo.</small>
                     </div>
                     <div class="col-md-6 form-group">
                         <label for="code">Código</label>
-                        <input type="text" name="code" id="code" class="form-control" value="{{ old('code', $vehicle->code ?? '') }}" placeholder="Ej: VH-001">
+                        <input type="text" name="code" id="code" class="form-control" value="<?php echo e(old('code', $vehicle->code ?? '')); ?>" placeholder="Ej: VH-001">
                         <small class="text-muted">Ingresa el código del vehículo.</small>
                     </div>
                     <div class="col-md-6 form-group">
                         <label for="year">Año</label>
-                        <input type="number" name="year" id="year" class="form-control" value="{{ old('year', $vehicle->year ?? '') }}" placeholder="Ej: 2024">
+                        <input type="number" name="year" id="year" class="form-control" value="<?php echo e(old('year', $vehicle->year ?? '')); ?>" placeholder="Ej: 2024">
                         <small class="text-muted">Ingresa el año del vehículo.</small>
                     </div>
                     <div class="col-md-6 form-group">
                         <label for="plate">Placa</label>
-                        <input type="text" name="plate" id="plate" class="form-control" value="{{ old('plate', $vehicle->plate ?? '') }}" placeholder="Ej: ABC-123">
+                        <input type="text" name="plate" id="plate" class="form-control" value="<?php echo e(old('plate', $vehicle->plate ?? '')); ?>" placeholder="Ej: ABC-123">
                         <small class="text-muted">Ingresa la placa del vehículo.</small>
                     </div>
                     <div class="col-md-6 form-group">
                         <label for="status">Estado</label>
                         <select name="status" id="status" class="form-control">
-                            <option value="1" {{ old('status', $vehicle->status ?? '') == 1 ? 'selected' : '' }}>Activo</option>
-                            <option value="0" {{ old('status', $vehicle->status ?? '') == 0 ? 'selected' : '' }}>Inactivo</option>
+                            <option value="1" <?php echo e(old('status', $vehicle->status ?? '') == 1 ? 'selected' : ''); ?>>Activo</option>
+                            <option value="0" <?php echo e(old('status', $vehicle->status ?? '') == 0 ? 'selected' : ''); ?>>Inactivo</option>
                         </select>
                         <small class="text-muted">Seleccione un estado.</small>
                     </div>
                     <div class="col-md-12 form-group">
                         <label for="description">Descripción</label>
-                        <textarea name="description" id="description" class="form-control" rows="3">{{ old('description', $vehicle->description ?? '') }}</textarea>
+                        <textarea name="description" id="description" class="form-control" rows="3"><?php echo e(old('description', $vehicle->description ?? '')); ?></textarea>
                         <small class="text-muted">Ingresa una descripción para el vehículo.</small>
                     </div>
                 </div>
             </div>
 
-            {{-- Pestaña 2: Especificaciones --}}
+            
             <div class="tab-pane fade" id="specs" role="tabpanel" aria-labelledby="specs-tab">
                 <div class="row">
                     <div class="col-md-6 form-group">
                         <label for="brand_id">Marca</label>
                         <select name="brand_id" id="brand_id" class="form-control">
                             <option value="">Seleccione una marca</option>
-                            @foreach ($brands as $brand)
-                                <option value="{{ $brand->id }}" {{ old('brand_id', $vehicle->brand_id ?? '') == $brand->id ? 'selected' : '' }}>{{ $brand->name }}</option>
-                            @endforeach
+                            <?php $__currentLoopData = $brands; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $brand): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($brand->id); ?>" <?php echo e(old('brand_id', $vehicle->brand_id ?? '') == $brand->id ? 'selected' : ''); ?>><?php echo e($brand->name); ?></option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
                     </div>
                     <div class="col-md-6 form-group">
                         <label for="model_id">Modelo</label>
                         <select name="model_id" id="model_id" class="form-control">
                             <option value="">Seleccione un modelo</option>
-                            @foreach ($models as $model)
-                                <option value="{{ $model->id }}" {{ old('model_id', $vehicle->model_id ?? '') == $model->id ? 'selected' : '' }}>{{ $model->name }}</option>
-                            @endforeach
+                            <?php $__currentLoopData = $models; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $model): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($model->id); ?>" <?php echo e(old('model_id', $vehicle->model_id ?? '') == $model->id ? 'selected' : ''); ?>><?php echo e($model->name); ?></option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
                     </div>
                     <div class="col-md-6 form-group">
                         <label for="type_id">Tipo</label>
                         <select name="type_id" id="type_id" class="form-control">
                             <option value="">Seleccione un tipo</option>
-                            @foreach ($types as $type)
-                                <option value="{{ $type->id }}" {{ old('type_id', $vehicle->type_id ?? '') == $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
-                            @endforeach
+                            <?php $__currentLoopData = $types; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $type): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($type->id); ?>" <?php echo e(old('type_id', $vehicle->type_id ?? '') == $type->id ? 'selected' : ''); ?>><?php echo e($type->name); ?></option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
                     </div>
                     <div class="col-md-6 form-group">
                         <label for="color_id">Color</label>
                         <select name="color_id" id="color_id" class="form-control">
                             <option value="">Seleccione un color</option>
-                            @foreach ($colors as $color)
-                                <option value="{{ $color->id }}" {{ old('color_id', $vehicle->color_id ?? '') == $color->id ? 'selected' : '' }}>{{ $color->name }}</option>
-                            @endforeach
+                            <?php $__currentLoopData = $colors; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $color): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($color->id); ?>" <?php echo e(old('color_id', $vehicle->color_id ?? '') == $color->id ? 'selected' : ''); ?>><?php echo e($color->name); ?></option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
                     </div>
                     <div class="col-md-6 form-group">
                         <label for="load_capacity">Capacidad de Carga (Kg)</label>
-                        <input type="number" step="0.01" name="load_capacity" id="load_capacity" class="form-control" value="{{ old('load_capacity', $vehicle->load_capacity ?? '') }}" placeholder="Ej: 1500.50">
+                        <input type="number" step="0.01" name="load_capacity" id="load_capacity" class="form-control" value="<?php echo e(old('load_capacity', $vehicle->load_capacity ?? '')); ?>" placeholder="Ej: 1500.50">
                     </div>
                     <div class="col-md-6 form-group">
                         <label for="passengers">Cantidad de Pasajeros</label>
-                        <input type="number" name="passengers" id="passengers" class="form-control" value="{{ old('passengers', $vehicle->passengers ?? '') }}" placeholder="Ej: 5">
+                        <input type="number" name="passengers" id="passengers" class="form-control" value="<?php echo e(old('passengers', $vehicle->passengers ?? '')); ?>" placeholder="Ej: 5">
                     </div>
                     <div class="col-md-6 form-group">
                         <label for="fuel_capacity">Capacidad de Combustible (L)</label>
-                        <input type="number" step="0.01" name="fuel_capacity" id="fuel_capacity" class="form-control" value="{{ old('fuel_capacity', $vehicle->fuel_capacity ?? '') }}" placeholder="Ej: 50.0">
+                        <input type="number" step="0.01" name="fuel_capacity" id="fuel_capacity" class="form-control" value="<?php echo e(old('fuel_capacity', $vehicle->fuel_capacity ?? '')); ?>" placeholder="Ej: 50.0">
                     </div>
                 </div>
             </div>
@@ -175,8 +175,8 @@
     });
 
     // Manejar cambios en inputs de galería
-    @for ($i = 0; $i < 3; $i++)
-        document.getElementById('gallery_image_{{ $i }}').addEventListener('change', function(event) {
+    <?php for($i = 0; $i < 3; $i++): ?>
+        document.getElementById('gallery_image_<?php echo e($i); ?>').addEventListener('change', function(event) {
             if (event.target.files && event.target.files[0]) {
                 var reader = new FileReader();
                 var index = event.target.id.split('_')[2]; // gallery_image_0 -> 0
@@ -186,12 +186,12 @@
                 reader.readAsDataURL(event.target.files[0]);
             }
         });
-    @endfor
+    <?php endfor; ?>
 </script>
 <script>
     (function() {
         // Valor inicial (puede venir de old() o del vehículo en edición)
-        var initialModel = @json(old('model_id', $vehicle->model_id ?? null));
+        var initialModel = <?php echo json_encode(old('model_id', $vehicle->model_id ?? null), 512) ?>;
 
         function fillModels(models, selectedId) {
             var modelSelect = document.getElementById('model_id');
@@ -250,3 +250,4 @@
         });
     })();
 </script>
+<?php /**PATH C:\Users\crist\OneDrive\Escritorio\TADS\PryFinal\PryRsuReciclaje\resources\views/admin/vehicles/template/form.blade.php ENDPATH**/ ?>

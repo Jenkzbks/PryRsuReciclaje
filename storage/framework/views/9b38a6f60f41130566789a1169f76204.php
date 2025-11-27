@@ -1,127 +1,127 @@
-<form method="POST" action="{{ route('admin.schedulings.update',$scheduling) }}">
-@csrf @method('PUT')
+<form method="POST" action="<?php echo e(route('admin.schedulings.update',$scheduling)); ?>">
+<?php echo csrf_field(); ?> <?php echo method_field('PUT'); ?>
 
-<input type="hidden" id="current_shift" value="{{ $scheduling->turno_actual }}">
-<input type="hidden" id="current_vehicle" value="{{ $scheduling->vehiculo_actual }}">
-<input type="hidden" name="date" value="{{ $scheduling->date }}">
+<input type="hidden" id="current_shift" value="<?php echo e($scheduling->turno_actual); ?>">
+<input type="hidden" id="current_vehicle" value="<?php echo e($scheduling->vehiculo_actual); ?>">
+<input type="hidden" name="date" value="<?php echo e($scheduling->date); ?>">
 
 <div class="card shadow">
     <div class="card-body">
 
-        {{-- ===========================
-            CAMBIO DE TURNO Y VEHÍCULO
-        ============================ --}}
+        
         <h5 class="mb-3">Cambio de Turno y Vehículo</h5>
 
         <div class="row mb-3">
-            {{-- TURNO ACTUAL --}}
+            
             <div class="col-md-4">
                 <div class="form-group">
                     <label class="font-weight-bold">Turno Actual</label>
-                    <input type="text" class="form-control" value="{{ $scheduling->turno_actual }}" readonly>
+                    <input type="text" class="form-control" value="<?php echo e($scheduling->turno_actual); ?>" readonly>
                 </div>
             </div>
 
-            {{-- NUEVO TURNO --}}
+            
             <div class="col-md-4">
                 <div class="form-group">
                     <label class="font-weight-bold">Nuevo Turno</label>
                     <select name="shift_id" class="form-control" id="shift_select">
                         <option value="">Seleccione un nuevo turno</option>
-                        @foreach($shifts as $shift)
-                        <option value="{{ $shift->id }}" 
-                            {{ $scheduling->shift_id == $shift->id ? 'selected' : '' }}>
-                            {{ $shift->name }}
+                        <?php $__currentLoopData = $shifts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $shift): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($shift->id); ?>" 
+                            <?php echo e($scheduling->shift_id == $shift->id ? 'selected' : ''); ?>>
+                            <?php echo e($shift->name); ?>
+
                         </option>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
             </div>
 
-            {{-- BOTÓN + TURNO --}}
+            
             <div class="col-md-1 d-flex align-items-end">
                 <button type="button" class="btn btn-success w-100" id="add_shift_change">+</button>
             </div>
         </div>
 
         <div class="row mb-3">
-            {{-- VEHÍCULO ACTUAL --}}
+            
             <div class="col-md-4">
                 <div class="form-group">
                     <label class="font-weight-bold">Vehículo Actual</label>
-                    <input type="text" class="form-control" value="{{ $scheduling->vehiculo_actual }}" readonly>
+                    <input type="text" class="form-control" value="<?php echo e($scheduling->vehiculo_actual); ?>" readonly>
                 </div>
             </div>
 
-            {{-- NUEVO VEHÍCULO --}}
+            
             <div class="col-md-4">
                 <div class="form-group">
                     <label class="font-weight-bold">Nuevo Vehículo</label>
                     <select name="vehicle_id" class="form-control" id="vehicle_select">
                         <option value="">Seleccione un nuevo vehículo</option>
-                        @foreach($vehicles as $vehicle)
-                        <option value="{{ $vehicle->id }}"
-                            {{ $scheduling->vehicle_id == $vehicle->id ? 'selected' : '' }}>
-                            {{ $vehicle->plate }}
+                        <?php $__currentLoopData = $vehicles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $vehicle): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($vehicle->id); ?>"
+                            <?php echo e($scheduling->vehicle_id == $vehicle->id ? 'selected' : ''); ?>>
+                            <?php echo e($vehicle->plate); ?>
+
                         </option>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
             </div>
 
-            {{-- BOTÓN + VEHÍCULO --}}
+            
             <div class="col-md-1 d-flex align-items-end">
                 <button type="button" class="btn btn-success w-100" id="add_vehicle_change">+</button>
             </div>
         </div>
 
 
-        {{-- ===========================
-            CAMBIO DE PERSONAL
-        ============================ --}}
+        
         <h5 class="mt-4 mb-3">Cambio de Personal</h5>
 
         <div class="row">
 
-            {{-- PERSONAL ACTUAL --}}
+            
             <div class="col-md-4">
                 <div class="form-group">
                     <label class="font-weight-bold">Personal Actual</label>
                     <select class="form-control" id="personal_actual">
                         <option value="">Seleccione un personal</option>
-                        @foreach($scheduling->details as $detail)
-                            @if($detail->employee)
-                                @php
+                        <?php $__currentLoopData = $scheduling->details; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $detail): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php if($detail->employee): ?>
+                                <?php
                                     $role = 'Asistente';
                                     if ($detail->employee->id == $selectedDriverId) $role = 'Conductor';
                                     elseif ($detail->employee->id == $selectedA1Id) $role = 'Asistente 1';
                                     elseif ($detail->employee->id == $selectedA2Id) $role = 'Asistente 2';
-                                @endphp
-                                <option value="{{ $detail->employee->id }}" data-type="{{ $detail->employee->type_id }}">
-                                    {{ $role }}: {{ $detail->employee->names }} {{ $detail->employee->lastnames }}
+                                ?>
+                                <option value="<?php echo e($detail->employee->id); ?>" data-type="<?php echo e($detail->employee->type_id); ?>">
+                                    <?php echo e($role); ?>: <?php echo e($detail->employee->names); ?> <?php echo e($detail->employee->lastnames); ?>
+
                                 </option>
-                            @endif
-                        @endforeach
+                            <?php endif; ?>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
             </div>
 
-            {{-- NUEVO PERSONAL --}}
+            
             <div class="col-md-5">
                 <div class="form-group">
                     <label class="font-weight-bold">Nuevo Personal</label>
                     <select name="new_employee_id" class="form-control" id="nuevo_personal">
                         <option value="">Seleccione un nuevo personal</option>
-                        @foreach($employees as $emp)
-                            <option value="{{ $emp->id }}" data-type="{{ $emp->type_id }}" data-busy="{{ in_array($emp->id, $busyEmployeeIds ?? []) ? '1' : '0' }}" style="display: none;">
-                                {{ $emp->names }} {{ $emp->lastnames }}
+                        <?php $__currentLoopData = $employees; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $emp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($emp->id); ?>" data-type="<?php echo e($emp->type_id); ?>" data-busy="<?php echo e(in_array($emp->id, $busyEmployeeIds ?? []) ? '1' : '0'); ?>" style="display: none;">
+                                <?php echo e($emp->names); ?> <?php echo e($emp->lastnames); ?>
+
                             </option>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
             </div>
 
-            {{-- BOTÓN + PERSONAL --}}
+            
             <div class="col-md-1 d-flex align-items-end">
                 <button type="button" class="btn btn-success w-100" id="add_personal_change">+</button>
             </div>
@@ -129,9 +129,7 @@
         </div>
 
 
-        {{-- ===========================
-            TABLA DE CAMBIOS
-        ============================ --}}
+        
         <h5 class="mt-4">Cambios Registrados</h5>
 
         <div class="table-responsive mt-3">
@@ -146,7 +144,7 @@
                     </tr>
                 </thead>
                 <tbody id="tabla-cambios">
-                    {{-- Filas agregadas dinámicamente con JS --}}
+                    
                 </tbody>
             </table>
         </div>
@@ -164,4 +162,4 @@
     </div>
 </div>
 
-</form>
+</form><?php /**PATH C:\Users\crist\OneDrive\Escritorio\TADS\PryFinal\PryRsuReciclaje\resources\views/admin/edit_modal.blade.php ENDPATH**/ ?>

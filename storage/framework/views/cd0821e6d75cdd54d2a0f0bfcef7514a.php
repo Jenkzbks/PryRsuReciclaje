@@ -1,8 +1,6 @@
-@extends('adminlte::page')
+<?php $__env->startSection('title', 'Gestión de Vehículos'); ?>
 
-@section('title', 'Gestión de Vehículos')
-
-@section('content_header')
+<?php $__env->startSection('content_header'); ?>
     <div class="d-flex justify-content-between align-items-center">
         <div>
             <h1 class="h3 mb-1 font-weight-bold">Gestión de Vehículos</h1>
@@ -12,12 +10,12 @@
             <i class="fas fa-plus"></i> Agregar Vehículo
         </button>
     </div>
-@stop
-@section('content')
+<?php $__env->stopSection(); ?>
+<?php $__env->startSection('content'); ?>
 
 
     <div class="card-body">
-        {{-- Sección de filtros --}}
+        
         <div class="filters mb-4 p-3 border rounded">
             <div class="row">
                 <div class="col-12 col-md-3 mb-2">
@@ -28,27 +26,27 @@
                     <label for="selectMarca" class="form-label">Marca:</label>
                     <select class="form-control" id="selectMarca">
                         <option value="">Seleccione</option>
-                        @foreach($brands as $brand)
-                            <option value="{{ $brand->id }}">{{ $brand->name }}</option>
-                        @endforeach
+                        <?php $__currentLoopData = $brands; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $brand): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($brand->id); ?>"><?php echo e($brand->name); ?></option>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
                 <div class="col-12 col-md-2 mb-2">
                     <label for="selectModelo" class="form-label">Modelo:</label>
                     <select class="form-control" id="selectModelo">
                         <option value="">Seleccione</option>
-                        @foreach($models as $model)
-                            <option value="{{ $model->id }}">{{ $model->name }}</option>
-                        @endforeach
+                        <?php $__currentLoopData = $models; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $model): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($model->id); ?>"><?php echo e($model->name); ?></option>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
                 <div class="col-12 col-md-2 mb-2">
                     <label for="selectTipo" class="form-label">Tipo:</label>
                     <select class="form-control" id="selectTipo">
                         <option value="">Seleccione</option>
-                        @foreach($types as $type)
-                            <option value="{{ $type->id }}">{{ $type->name }}</option>
-                        @endforeach
+                        <?php $__currentLoopData = $types; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $type): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($type->id); ?>"><?php echo e($type->name); ?></option>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
                 <div class="col-12 col-md-2 mb-2">
@@ -62,16 +60,17 @@
             </div>
         </div>
 
-        {{-- Contenedor de la cuadrícula de vehículos --}}
+        
         <div id="vehicle-grid-container">
-            @include('admin.vehicles.partials.grid')
+            <?php echo $__env->make('admin.vehicles.partials.grid', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
         </div>
     </div>
 
     <div class="card-footer">
-        Mostrando {{ $vehicles->firstItem() }} a {{ $vehicles->lastItem() }} de {{ $vehicles->total() }} entradas
+        Mostrando <?php echo e($vehicles->firstItem()); ?> a <?php echo e($vehicles->lastItem()); ?> de <?php echo e($vehicles->total()); ?> entradas
         <div class="float-right">
-            {{ $vehicles->links() }}
+            <?php echo e($vehicles->links()); ?>
+
         </div>
     </div>
 
@@ -89,17 +88,17 @@
             </div>
         </div>
     </div>
-@stop
+<?php $__env->stopSection(); ?>
 
 
-@section('js')
+<?php $__env->startSection('js'); ?>
     <script>
         $(document).ready(function() {
 
             // --- Helpers para evitar múltiples handlers al recargar HTML dinámicamente ---
             $(document).off('click', '#btnNuevoVehiculo').on('click', '#btnNuevoVehiculo', function() {
                 $.ajax({
-                    url: "{{ route('admin.vehicles.create') }}",
+                    url: "<?php echo e(route('admin.vehicles.create')); ?>",
                     type: 'GET',
                     success: function(response) {
                         $('#vehicleModal .modal-body').html(response);
@@ -115,7 +114,7 @@
             // --- Lógica para abrir el modal de EDITAR un vehículo ---
             $(document).off('click', '.btnEditar').on('click', '.btnEditar', function() {
                 var vehicleId = $(this).attr('id');
-                var url = "{{ route('admin.vehicles.edit', ':id') }}".replace(':id', vehicleId);
+                var url = "<?php echo e(route('admin.vehicles.edit', ':id')); ?>".replace(':id', vehicleId);
 
                 $.ajax({
                     url: url,
@@ -228,9 +227,9 @@
                 $('#vehicle-grid-container').html(loadingHtml);
 
                 $.ajax({
-                    url: "{{ route('admin.vehicles.filter') }}",
+                    url: "<?php echo e(route('admin.vehicles.filter')); ?>",
                     type: 'POST',
-                    data: { ...filters, _token: '{{ csrf_token() }}' },
+                    data: { ...filters, _token: '<?php echo e(csrf_token()); ?>' },
                     success: function(response) {
                         // El response es el HTML de la vista parcial
                         $('#vehicle-grid-container').html(response);
@@ -304,9 +303,9 @@
 
         });
     </script>
-@stop
+<?php $__env->stopSection(); ?>
 
-@section('css')
+<?php $__env->startSection('css'); ?>
 <style>
     /* Badge personalizado para la placa (asegura que siempre quede encima de la imagen) */
     .vehicle-plate {
@@ -366,4 +365,6 @@
         gap: 0.5rem;
     }
 </style>
-@stop
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('adminlte::page', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\crist\OneDrive\Escritorio\TADS\PryFinal\PryRsuReciclaje\resources\views/admin/vehicles/index.blade.php ENDPATH**/ ?>

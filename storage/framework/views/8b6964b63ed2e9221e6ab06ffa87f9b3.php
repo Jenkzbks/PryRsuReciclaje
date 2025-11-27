@@ -1,32 +1,31 @@
-@extends('adminlte::page')
+<?php $__env->startSection('title', 'Programación'); ?>
 
-@section('title', 'Programación')
-
-@section('content_header')
+<?php $__env->startSection('content_header'); ?>
     <h1>Programación</h1>
-@stop
+<?php $__env->stopSection(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 
 <div class="card p-4">
 
-    {{-- FILTROS SUPERIORES --}}
-    <form method="GET" action="{{ route('admin.index') }}" id="filterForm">
+    
+    <form method="GET" action="<?php echo e(route('admin.index')); ?>" id="filterForm">
         <div class="row mb-4">
             <div class="col-md-4">
                 <label for="date">Seleccione una fecha:</label>
-                <input type="date" class="form-control" id="date" name="date" value="{{ request('date', date('Y-m-d')) }}">
+                <input type="date" class="form-control" id="date" name="date" value="<?php echo e(request('date', date('Y-m-d'))); ?>">
             </div>
 
             <div class="col-md-4">
                 <label for="shift_id">Seleccione un turno:</label>
                 <select class="form-control" id="shift_id" name="shift_id">
                     <option value="">Seleccione un turno</option>
-                    @foreach($shifts as $shift)
-                        <option value="{{ $shift->id }}" {{ request('shift_id') == $shift->id ? 'selected' : '' }}>
-                            {{ $shift->name }}
+                    <?php $__currentLoopData = $shifts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $shift): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($shift->id); ?>" <?php echo e(request('shift_id') == $shift->id ? 'selected' : ''); ?>>
+                            <?php echo e($shift->name); ?>
+
                         </option>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </select>
             </div>
 
@@ -39,19 +38,19 @@
     </form>
 
 
-    {{-- TARJETAS SUPERIORES --}}
+    
     <div class="row text-center mb-4">
 
         <div class="col-md-3">
             <div class="card shadow-sm p-3">
-                <h3><i class="fas fa-user"></i> <span id="attendances">{{ $totalAttendances ?? 0 }}</span></h3>
+                <h3><i class="fas fa-user"></i> <span id="attendances"><?php echo e($totalAttendances ?? 0); ?></span></h3>
                 <span>Asistencias</span>
             </div>
         </div>
 
         <div class="col-md-3">
             <div class="card shadow-sm p-3">
-                <h3><i class="fas fa-truck"></i> <span id="completeGroups">{{ $completeGroups ?? 0 }}</span></h3>
+                <h3><i class="fas fa-truck"></i> <span id="completeGroups"><?php echo e($completeGroups ?? 0); ?></span></h3>
                 <span>Grupos completos</span>
             </div>
         </div>
@@ -65,14 +64,14 @@
 
         <div class="col-md-3">
             <div class="card shadow-sm p-3">
-                <h3><i class="fas fa-times text-danger"></i> <span id="incompleteZones">{{ $incompleteZones ?? 0 }}</span></h3>
+                <h3><i class="fas fa-times text-danger"></i> <span id="incompleteZones"><?php echo e($incompleteZones ?? 0); ?></span></h3>
                 <span>Faltan</span>
             </div>
         </div>
 
     </div>
 
-    {{-- LEYENDA --}}
+    
     <div class="card p-3 mb-4">
         <h5>Leyenda de colores:</h5>
         <p><span class="badge bg-success">■</span> Grupo completo y listo para operar</p>
@@ -80,14 +79,14 @@
     </div>
 
 
-    {{-- ZONAS --}}
+    
     <div class="row" id="zonesContainer">
-        @include('admin.zones')
+        <?php echo $__env->make('admin.zones', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
     </div>
 
 </div>
 
-{{-- MODAL PARA EDITAR PROGRAMACIÓN --}}
+
 <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
@@ -104,17 +103,17 @@
     </div>
 </div>
 
-@stop
+<?php $__env->stopSection(); ?>
 
-@section('css')
+<?php $__env->startSection('css'); ?>
 <style>
     .card {
         border-radius: 12px !important;
     }
 </style>
-@stop
+<?php $__env->stopSection(); ?>
 
-@section('js')
+<?php $__env->startSection('js'); ?>
 <script>
 $(document).ready(function(){
     $('#filterForm').on('submit', function(e){
@@ -242,4 +241,6 @@ $(document).ready(function(){
     });
 });
 </script>
-@stop
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('adminlte::page', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\crist\OneDrive\Escritorio\TADS\PryFinal\PryRsuReciclaje\resources\views/admin/index.blade.php ENDPATH**/ ?>

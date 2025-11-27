@@ -43,6 +43,9 @@
                             @else
                                 <span class="badge bg-danger">Inactivo</span>
                             @endif
+                                                <div class="gap-2 text-muted small text-end">
+                        <div class="vehicle-year fw-bold">{{ $vehicle->year ?? '2025' }}</div>
+                    </div>
                         </div>
 
                         <div class="mb-1 text-muted small">Modelo: {{ $vehicle->model->brand->name ?? 'Marca' }} {{ $vehicle->model->name ?? 'Modelo' }}</div>
@@ -51,9 +54,7 @@
                     </div>
 
                     {{-- Derecha: año --}}
-                    <div class="text-end">
-                        <div class="vehicle-year fw-bold">{{ $vehicle->year ?? '2025' }}</div>
-                    </div>
+
                 </div>                            <div class="card-footer bg-white border-0 d-flex justify-content-end gap-2">
                     <form action="{{ route('admin.vehicles.destroy', $vehicle) }}" method="POST" class="frmDelete d-inline">
                         @csrf

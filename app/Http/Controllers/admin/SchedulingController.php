@@ -33,7 +33,28 @@ class SchedulingController extends Controller
 
         $schedulings = $query->paginate(25);
 
-        return view('schedulings.index', compact('schedulings','from','to'));
+        // Prepare lightweight data for the mass-change modal so the view can be included safely
+        $zones = \App\Models\Zone::orderBy('name')->get();
+        $drivers = \App\Models\Employee::where('status',1)->orderBy('lastnames')->get()->map(function($e){
+            return (object)[
+                'id' => $e->id,
+                'name' => trim(($e->lastnames ?? '').' '.($e->names ?? '')),
+                'document' => $e->document ?? '',
+                'contract_status' => $e->activeContract()->first()?->is_active ? 'Activo' : 'Sin contrato',
+            ];
+        });
+
+        $massiveChange = (object) [
+            'from' => old('from') ?? now()->toDateString(),
+            'to' => old('to') ?? now()->toDateString(),
+            'zones' => old('zones', []),
+            'type' => old('type', 'Cambio de Conductor'),
+            'old_driver' => old('old_driver', null),
+            'new_driver' => old('new_driver', null),
+            'reason' => old('reason', ''),
+        ];
+
+        return view('schedulings.index', compact('schedulings','from','to','zones','drivers','massiveChange'));
     }
 
     public function show(Scheduling $scheduling)
@@ -96,168 +117,235 @@ class SchedulingController extends Controller
 
         return view('schedulings.create-masive', compact('groups', 'drivers', 'assistants'));
     }
+    public function editMassive(\Illuminate\Http\Request $request)
+    {
+        // Cargar también los empleados del grupo para mostrar selects en la vista
+        $groups = Employeegroup::with(['shift','vehicle','zone','employees'])->orderBy('name')->get();
+        // Además traer listados completos por tipo para poblar selects (no solo miembros del grupo)
+        // Usar la misma lógica que EmployeegroupController: filtrar por contrato activo y position_id
+        $conductorTypeId = \App\Models\EmployeeType::where('name', 'like', '%conduc%')->orWhere('code', 'like', '%conduc%')->value('id');
+        $ayudanteTypeId = \App\Models\EmployeeType::where('name', 'like', '%ayud%')->orWhere('code', 'like', '%ayud%')->value('id');
+
+        $drivers = Employee::where('status', 1)
+            ->when($conductorTypeId, function($q) use ($conductorTypeId) {
+                $q->whereHas('activeContract', function($q2) use ($conductorTypeId) {
+                    $q2->where('position_id', $conductorTypeId);
+                });
+            })
+            ->orderBy('lastnames')
+            ->get()
+            ->map(function($e){
+                return (object)[
+                    'id' => $e->id,
+                    'name' => trim(($e->lastnames ?? '').' '.($e->names ?? '')),
+                    'document' => $e->document ?? '',
+                    'contract_status' => $e->activeContract()->first()?->is_active ? 'Activo' : 'Sin contrato',
+                ];
+            });
+
+        $assistants = Employee::where('status', 1)
+            ->when($ayudanteTypeId, function($q) use ($ayudanteTypeId) {
+                $q->whereHas('activeContract', function($q2) use ($ayudanteTypeId) {
+                    $q2->where('position_id', $ayudanteTypeId);
+                });
+            })
+            ->orderBy('lastnames')
+            ->get();
+
+        // Zones + a lightweight massiveChange object (so edit view works when loaded via AJAX)
+        $zones = \App\Models\Zone::orderBy('name')->get();
+
+        $massiveChange = (object) [
+            'from' => now()->toDateString(),
+            'to' => now()->toDateString(),
+            'zones' => [],
+            'type' => 'Cambio de Conductor',
+            'old_driver' => null,
+            'new_driver' => null,
+            'reason' => '',
+        ];
+
+        // Attach selected member ids per group from pivot table to make selection deterministic
+        $configRows = DB::table('configgroups')
+            ->whereIn('employeegroup_id', $groups->pluck('id')->all())
+            ->get()
+            ->groupBy('employeegroup_id');
+
+        foreach ($groups as $g) {
+            $rows = $configRows->get($g->id) ?? collect();
+            $byPos = $rows->keyBy('posicion')->map(fn($r) => $r->employee_id)->toArray();
+            $g->selected_driver_id = $byPos[1] ?? null;
+            $g->selected_assistant1_id = $byPos[2] ?? null;
+            $g->selected_assistant2_id = $byPos[3] ?? null;
+        }
+
+        // If it's an AJAX request, return only the form fragment so it can be injected
+        if ($request->ajax()) {
+            return view('schedulings._edit_massive_form', compact('groups','drivers','assistants','zones','massiveChange'));
+        }
+
+        return view('schedulings.edit-massive', compact('groups', 'drivers', 'assistants','zones','massiveChange'));
+    }
+    /**
+     * Return only the massive form fragment (for AJAX modal)
+     */
+    public function massiveForm()
+    {
+        $groups = Employeegroup::with(['shift','vehicle','zone','employees'])->orderBy('name')->get();
+
+        $conductorTypeId = \App\Models\EmployeeType::where('name', 'like', '%conduc%')->orWhere('code', 'like', '%conduc%')->value('id');
+        $ayudanteTypeId = \App\Models\EmployeeType::where('name', 'like', '%ayud%')->orWhere('code', 'like', '%ayud%')->value('id');
+
+        $drivers = Employee::where('status', 1)
+            ->when($conductorTypeId, function($q) use ($conductorTypeId) {
+                $q->whereHas('activeContract', function($q2) use ($conductorTypeId) {
+                    $q2->where('position_id', $conductorTypeId);
+                });
+            })
+            ->orderBy('lastnames')
+            ->get();
+
+        $assistants = Employee::where('status', 1)
+            ->when($ayudanteTypeId, function($q) use ($ayudanteTypeId) {
+                $q->whereHas('activeContract', function($q2) use ($ayudanteTypeId) {
+                    $q2->where('position_id', $ayudanteTypeId);
+                });
+            })
+            ->orderBy('lastnames')
+            ->get();
+
+        return view('schedulings._massive_form', compact('groups','drivers','assistants'));
+    }
 
     /* =========================
      * STORE (genera por rango + reemplazos por fecha)
      * ========================= */
-    public function store(Request $request)
+  public function store(Request $request)
     {
         $request->validate([
+            'group_id'  => 'required|exists:employeegroups,id',
             'from'      => 'required|date',
             'to'        => 'required|date|after_or_equal:from',
             'notes'     => 'nullable|string|max:120',
+            'additional_days' => 'nullable|array',
+            'additional_days.*' => 'in:lunes,martes,miércoles,miercoles,jueves,viernes,sábado,sabado,domingo',
         ]);
 
-        $from = Carbon::parse($request->from)->startOfDay();
-        $to   = Carbon::parse($request->to)->endOfDay();
+        // Grupo + miembros base
+        $group = Employeegroup::with(['shift','vehicle','zone','employees'])->findOrFail($request->group_id);
 
-        // Collect group_* inputs (each is an array: driver, assistant1, assistant2, removed)
-        $all = $request->all();
-        $groupInputs = collect($all)->filter(fn($v,$k) => Str::startsWith($k, 'group_'));
+        $members = $group->employees()
+            ->select('employee.*')
+            ->orderBy('configgroups.id')
+            ->get();
 
-        if ($groupInputs->isEmpty()) {
-            return back()->withErrors(['groups' => 'No se encontraron grupos para procesar.'])->withInput();
+        $driver     = $members->firstWhere('type_id', 2);
+        $assistants = $members->where('type_id', 4)->values();
+        $assistant1 = $assistants->get(0);
+        $assistant2 = $assistants->get(1);
+
+        $base = [
+            'driver'     => $driver?->id,
+            'assistant1' => $assistant1?->id,
+            'assistant2' => $assistant2?->id,
+        ];
+
+        // 🔥 COMBINAR DÍAS DEL GRUPO + DÍAS ADICIONALES
+        $baseGroupDays = $this->parseSpanishDays($group->days ?? '');
+        $additionalDays = $this->parseSpanishDays($request->input('additional_days_processed', ''));
+        
+        // Combinar y eliminar duplicados
+        $allWorkingDays = array_values(array_unique(array_merge($baseGroupDays, $additionalDays)));
+
+        // Fechas del rango que coinciden con los días combinados
+        $period = CarbonPeriod::create(Carbon::parse($request->from), Carbon::parse($request->to));
+        $dates  = [];
+        foreach ($period as $d) {
+            if (in_array($d->dayOfWeek, $allWorkingDays)) {
+                $dates[] = $d->toDateString();
+            }
+        }
+        
+        if (empty($dates)) {
+            return back()->withErrors(['range' => 'El rango no contiene días configurados para el grupo.'])->withInput();
         }
 
-        $planned = []; // list of planned assignments
-        $errors = [];
+        // Reemplazos que vienen del formulario (hidden inputs)
+        $replacements = $this->normalizeReplacements($request->input('replacements', []));
 
-        foreach ($groupInputs as $key => $data) {
-            // key: group_{id}
-            $id = (int) Str::after($key, 'group_');
-            if (!$id) continue;
-            $removed = isset($data['removed']) && (string)$data['removed'] === '1';
-            if ($removed) continue; // skip trashed groups
+        // Validar: si hay conflictos (contrato/vacaciones) NO cubiertos por reemplazo, bloquear
+        $uncovered = $this->uncoveredConflicts($group, $base, $dates, $replacements);
+        if (!empty($uncovered)) {
+            return back()->withErrors(['availability' => implode(' | ', $uncovered)])->withInput();
+        }
 
-            $group = Employeegroup::with(['shift','vehicle','zone','employees'])->find($id);
-            if (!$group) {
-                $errors[] = "Grupo {$id} no existe.";
-                continue;
-            }
-
-            // Determine assigned personnel: prefer submitted values, then selected_* from controller, then pivot/type fallbacks
-            $driverId = $data['driver'] ?? $group->selected_driver_id ?? optional($group->employees->firstWhere('pivot.posicion',1))->id ?? optional($group->employees->firstWhere('type_id',1))->id;
-            $assistant1Id = $data['assistant1'] ?? $group->selected_assistant1_id ?? optional($group->employees->firstWhere('pivot.posicion',2))->id;
-            $assistant2Id = $data['assistant2'] ?? $group->selected_assistant2_id ?? optional($group->employees->firstWhere('pivot.posicion',3))->id;
-
-            // Build dates for this group based on its days
-            $allowedDays = $this->parseSpanishDays($group->days ?? '');
-            $dates = [];
-            foreach (CarbonPeriod::create($from, $to) as $d) {
-                if (in_array($d->dayOfWeek, $allowedDays)) $dates[] = $d->toDateString();
-            }
-
-            if (empty($dates)) {
-                $errors[] = "El rango no contiene días válidos para el grupo {$group->name} (ID {$group->id}).";
-                continue;
-            }
-
-            // For each date, add planned assignment
+        // Crear programaciones día a día y snapshot en groupdetails
+        DB::transaction(function () use ($group, $dates, $base, $replacements, $request, $allWorkingDays) {
             foreach ($dates as $date) {
-                $planned[] = [
-                    'group_id' => $group->id,
-                    'group_name' => $group->name,
-                    'date' => $date,
-                    'shift_id' => $group->shift_id,
-                    'vehicle_id' => $group->vehicle_id,
-                    'zone_id' => $group->zone_id,
-                    'notes' => $request->notes ?? '',
-                    'driver' => $driverId ? (int)$driverId : null,
-                    'assistant1' => $assistant1Id ? (int)$assistant1Id : null,
-                    'assistant2' => $assistant2Id ? (int)$assistant2Id : null,
-                ];
-            }
-        }
-
-        if (!empty($errors)) {
-            return back()->withErrors(['validation' => implode(' | ', $errors)])->withInput();
-        }
-
-        // Validate conflicts: no empleado puede tener otra programación el mismo día y mismo turno
-        $conflicts = [];
-        foreach ($planned as $p) {
-            foreach (['driver','assistant1','assistant2'] as $role) {
-                $empId = $p[$role];
-                if (!$empId) continue;
-                $exists = Scheduling::join('groupdetails as gd', 'gd.scheduling_id', '=', 'schedulings.id')
-                    ->where('gd.emplooyee_id', $empId)
-                    ->whereDate('schedulings.date', $p['date'])
-                    ->where('schedulings.shift_id', $p['shift_id'])
+                // evita duplicados exactos mismo grupo/fecha
+                $exists = Scheduling::where('group_id', $group->id)
+                    ->whereDate('date', $date)
                     ->exists();
-                if ($exists) {
-                    $emp = Employee::find($empId);
-                    $conflicts[] = "{$emp->lastnames} {$emp->names} ya tiene programación el {$p['date']} en el mismo turno (grupo: {$p['group_name']}).";
-                }
-            }
-        }
-
-        if (!empty($conflicts)) {
-            return back()->withErrors(['conflicts' => implode(' | ', array_unique($conflicts))])->withInput();
-        }
-
-        // No conflicts -> create schedulings in transaction
-        DB::transaction(function () use ($planned) {
-            foreach ($planned as $p) {
-                // avoid duplicate scheduling same group+date
-                $exists = Scheduling::where('group_id', $p['group_id'])->whereDate('date', $p['date'])->exists();
                 if ($exists) continue;
 
+                // quién trabaja ese día (aplica reemplazo si cubre la fecha)
+                $assigned = [
+                    'driver'     => $this->employeeForDate('driver', $base, $replacements, $date),
+                    'assistant1' => $this->employeeForDate('assistant1', $base, $replacements, $date),
+                    'assistant2' => $this->employeeForDate('assistant2', $base, $replacements, $date),
+                ];
+
+                // scheduling
                 $s = Scheduling::create([
-                    'group_id' => $p['group_id'],
-                    'shift_id' => $p['shift_id'],
-                    'vehicle_id' => $p['vehicle_id'],
-                    'zone_id' => $p['zone_id'],
-                    'date' => $p['date'],
-                    'notes' => $p['notes'],
-                    'status' => 1,
+                    'group_id'   => $group->id,
+                    'shift_id'   => $group->shift_id,
+                    'vehicle_id' => $group->vehicle_id,
+                    'zone_id'    => $group->zone_id,
+                    'date'       => $date,
+                    'notes'      => $request->notes ?? '',
+                    'status'     => 1,
                 ]);
 
-                collect([$p['driver'],$p['assistant1'],$p['assistant2']])->filter()->unique()->values()->each(function ($empId) use ($s) {
+                // snapshot del personal ese día (evita repetir el mismo empleado dos veces)
+                collect($assigned)->filter()->unique()->values()->each(function ($empId) use ($s) {
                     Groupdetail::create([
                         'scheduling_id' => $s->id,
-                        'emplooyee_id' => $empId,
+                        'emplooyee_id'  => $empId, // (sic) columna
                     ]);
                 });
             }
         });
 
-        return redirect()->route('admin.schedulings.index', ['from' => request('from'), 'to' => request('to')])
-            ->with('success', 'Programaciones masivas registradas correctamente.');
+        $message = 'Programaciones generadas con reemplazos aplicados cuando correspondía.';
+        if (!empty($additionalDays)) {
+            $additionalCount = count($additionalDays);
+            $message .= " Se incluyeron {$additionalCount} día(s) adicional(es).";
+        }
+
+        return redirect()
+            ->route('admin.schedulings.index', ['from'=>$request->from,'to'=>$request->to])
+            ->with('success', $message);
     }
+
 
     /* =========================
      * EDITAR (si lo usas para cambios manuales)
      * ========================= */
-    public function edit(Request $request, Scheduling $scheduling)
+       public function edit(Scheduling $scheduling)
     {
-        $scheduling = Scheduling::with(['group.shift','group.vehicle','group.zone','details.employee'])->find($scheduling->id);
+        $scheduling->load(['group.shift','group.vehicle','group.zone','details.employee']);
 
-        $drivers    = Employee::where('status', 1)->where('type_id', 1)->orderBy('lastnames')->get();
-        $assistants = Employee::where('status', 1)->where('type_id', 2)->orderBy('lastnames')->get();
+        $drivers    = Employee::where('status', 1)->where('type_id', 2)->orderBy('lastnames')->get();
+        $assistants = Employee::where('status', 1)->where('type_id', 4)->orderBy('lastnames')->get();
         $shifts     = \App\Models\Shift::all();
         $vehicles   = \App\Models\Vehicle::all();
-        $employees  = Employee::where('status', 1)->orderBy('lastnames')->get();
 
-        $driverDetail = $scheduling->details->firstWhere('employee.type_id', 1);
-        $aDetails     = $scheduling->details->filter(fn($d) => optional($d->employee)->type_id == 2)->values();
+        $driverDetail = $scheduling->details->firstWhere('employee.type_id', 2);
+        $aDetails     = $scheduling->details->filter(fn($d) => optional($d->employee)->type_id == 4)->values();
 
         $selectedDriverId = $driverDetail?->employee?->id;
         $selectedA1Id     = $aDetails->get(0)?->employee?->id;
         $selectedA2Id     = $aDetails->get(1)?->employee?->id;
-
-        // Agregar turno y vehículo actuales
-        $scheduling->turno_actual = $scheduling->shift->name ?? 'N/A';
-        $scheduling->vehiculo_actual = $scheduling->vehicle->plate ?? 'N/A';
-
-        if ($request->ajax()) {
-            try {
-                return view('admin.edit_modal', compact(
-                    'scheduling', 'drivers', 'assistants', 'selectedDriverId', 'selectedA1Id', 'selectedA2Id', 'shifts', 'vehicles', 'employees'
-                ))->render();
-            } catch (\Exception $e) {
-                return 'Error rendering view: ' . $e->getMessage();
-            }
-        }
 
         return view('schedulings.edit', compact(
             'scheduling', 'drivers', 'assistants', 'selectedDriverId', 'selectedA1Id', 'selectedA2Id', 'shifts', 'vehicles'
@@ -357,7 +445,7 @@ class SchedulingController extends Controller
                 'id' => $emp->id,
                 'full_name' => trim(($emp->lastnames ?? '').' '.($emp->names ?? '')),
                 'type_id' => $emp->type_id,
-                'type_name' => $emp->type->name ?? ($emp->type_id == 1 ? 'Conductor' : 'Ayudante'),
+                'type_name' => $emp->type->name ?? ($emp->type_id == 2 ? 'Conductor' : 'Ayudante'),
                 'contract'  => $contract ? [
                     'start_date' => $contractStart,
                     'end_date'   => $contractEnd,
@@ -375,7 +463,7 @@ class SchedulingController extends Controller
         $allMembers = $members->map(function($member, $index) use ($buildPerson) {
             $personData = $buildPerson($member);
             $personData['position'] = $index + 1;
-            $personData['role'] = $member->type_id == 1 ? 'Conductor' : 'Ayudante ' . $index;
+            $personData['role'] = $member->type_id == 2 ? 'Conductor' : 'Ayudante ' . $index;
             return $personData;
         });
 

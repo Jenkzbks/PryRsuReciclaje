@@ -72,6 +72,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     
      Route::get('schedulings/available-candidates', [SchedulingController::class, 'availableCandidates'])
     ->name('schedulings.available-candidates');
+    Route::get('schedulings/massive-form', [SchedulingController::class, 'massiveForm'])->name('schedulings.massive-form');
+    Route::get('schedulings/edit-massive', [SchedulingController::class, 'editMassive'])->name('schedulings.edit-massive');
 
     // Registrar rutas específicas ANTES del resource para evitar que el route-model binding
     // de `admin/schedulings/{scheduling}` capture rutas como `create-masive`.

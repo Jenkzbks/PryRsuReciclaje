@@ -169,10 +169,10 @@
                                     <span class="badge badge-info"><?php echo e($contract->contract_type_name); ?></span>
                                 </td>
                                 <td><?php echo e($contract->position->name ?? 'No especificado'); ?></td>
-                                <td><?php echo e($contract->start_date->format('d/m/Y')); ?></td>
+                                <td><?php echo e($contract->start_date ? $contract->start_date->format('d/m/Y') : 'N/A'); ?></td>
                                 <td>
                                     <?php if($contract->end_date): ?>
-                                        <?php echo e($contract->end_date->format('d/m/Y')); ?>
+                                        <?php echo e($contract->end_date ? $contract->end_date->format('d/m/Y') : 'Indefinido'); ?>
 
                                         <?php if($contract->end_date->isPast()): ?>
                                             <span class="badge badge-warning">Vencido</span>

@@ -184,12 +184,14 @@
                 <select name="driver_id" class="form-control form-control-sm">
                   <option value="">-- Mantener conductor actual --</option>
                   <?php $__currentLoopData = $drivers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $driver): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <option value="<?php echo e($driver->id); ?>" 
-                      <?php echo e($selectedDriverId == $driver->id ? 'selected' : (old('driver_id') == $driver->id ? 'selected' : '')); ?>>
-                      <?php echo e($driver->lastnames); ?> <?php echo e($driver->names); ?>
+                      <?php if(optional($driver)->type_id == 1): ?>
+                      <option value="<?php echo e($driver->id); ?>" 
+                        <?php echo e($selectedDriverId == $driver->id ? 'selected' : (old('driver_id') == $driver->id ? 'selected' : '')); ?>>
+                        <?php echo e($driver->lastnames); ?> <?php echo e($driver->names); ?>
 
-                    </option>
-                  <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                      </option>
+                      <?php endif; ?>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </select>
               </div>
               
@@ -198,11 +200,13 @@
                 <select name="assistant1_id" class="form-control form-control-sm">
                   <option value="">-- Mantener ayudante 1 actual --</option>
                   <?php $__currentLoopData = $assistants; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $assistant): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php if(optional($assistant)->type_id == 2): ?>
                     <option value="<?php echo e($assistant->id); ?>" 
                       <?php echo e($selectedA1Id == $assistant->id ? 'selected' : (old('assistant1_id') == $assistant->id ? 'selected' : '')); ?>>
                       <?php echo e($assistant->lastnames); ?> <?php echo e($assistant->names); ?>
 
                     </option>
+                    <?php endif; ?>
                   <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </select>
               </div>
@@ -212,11 +216,13 @@
                 <select name="assistant2_id" class="form-control form-control-sm">
                   <option value="">-- Mantener ayudante 2 actual --</option>
                   <?php $__currentLoopData = $assistants; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $assistant): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php if(optional($assistant)->type_id == 2): ?>
                     <option value="<?php echo e($assistant->id); ?>" 
                       <?php echo e($selectedA2Id == $assistant->id ? 'selected' : (old('assistant2_id') == $assistant->id ? 'selected' : '')); ?>>
                       <?php echo e($assistant->lastnames); ?> <?php echo e($assistant->names); ?>
 
                     </option>
+                    <?php endif; ?>
                   <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </select>
               </div>

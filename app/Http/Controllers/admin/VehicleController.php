@@ -14,7 +14,9 @@ class VehicleController extends Controller
 {
     public function index(Request $request)
     {
-        if ($request->ajax()) {
+        // If it's an AJAX request but the caller explicitly asks for full HTML (full=1),
+        // fall through and return the full view. Otherwise for AJAX return JSON.
+        if ($request->ajax() && !$request->filled('full')) {
             $vehicles = Vehicle::with(['brand', 'model', 'type', 'color'])
                 ->where('status', 1) // Solo vehículos activos
                 ->get()

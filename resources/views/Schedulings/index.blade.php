@@ -7,7 +7,10 @@
   <h1 class="mb-0">Programaciones</h1>
 
   <div class="ml-auto d-flex align-items-center">
-    <a href="{{ route('admin.schedulings.create-masive') }}" class="btn btn-primary btn-sm">
+    <button type="button" id="btnOpenMassive" class="btn btn-secondary btn-sm">
+      <i class="fas fa-plus"></i> Cambio Masivo
+    </button>
+    <a href="{{ route('admin.schedulings.create-masive') }}" class="btn btn-primary btn-sm ml-2">
       <i class="fas fa-plus"></i> Nueva Programación Masiva
     </a>
     <a href="{{ route('admin.schedulings.create') }}" class="btn btn-primary btn-sm ml-2">
@@ -83,4 +86,52 @@
     <div class="mt-3">{{ $schedulings->appends(request()->query())->links() }}</div>
   </div>
 </div>
+    <!-- Shared modal wrapper (used for Editar / Cambio Masivo) -->
+    {{-- MODAL PARA EDITAR PROGRAMACIÓN --}}
+    <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editModalLabel">Cambio Masivo</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body" id="editModalBody">
+            <!-- Contenido cargado dinámicamente -->
+          </div>
+        </div>
+      </div>
+    </div>
+@stop
+
+@section('js')
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const btn = document.getElementById('btnOpenMassive');
+  const modalBody = document.getElementById('editModalBody');
+  if (!btn || !modalBody) return;
+
+  btn.addEventListener('click', async function () {
+    // Prevent duplicate load
+    if (modalBody.dataset.loaded === '1') {
+      try { $('#editModal').modal('show'); } catch(e) { console.warn(e); }
+      return;
+    }
+
+    try {
+      const res = await fetch("{{ route('admin.schedulings.edit-massive') }}", { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const text = await res.text();
+      // Inject the returned fragment into the shared modal body and show it
+      modalBody.innerHTML = text;
+      modalBody.dataset.loaded = '1';
+
+      try { $('#editModal').modal('show'); } catch(e) { console.warn(e); }
+    } catch (err) {
+      console.error(err);
+      alert('Error cargando contenido. Revisa la consola.');
+    }
+  });
+});
+</script>
 @stop

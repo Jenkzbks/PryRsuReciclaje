@@ -178,11 +178,13 @@
                 <select name="driver_id" class="form-control form-control-sm">
                   <option value="">-- Mantener conductor actual --</option>
                   @foreach($drivers as $driver)
-                    <option value="{{ $driver->id }}" 
-                      {{ $selectedDriverId == $driver->id ? 'selected' : (old('driver_id') == $driver->id ? 'selected' : '') }}>
-                      {{ $driver->lastnames }} {{ $driver->names }}
-                    </option>
-                  @endforeach
+                      @if(optional($driver)->type_id == 1)
+                      <option value="{{ $driver->id }}" 
+                        {{ $selectedDriverId == $driver->id ? 'selected' : (old('driver_id') == $driver->id ? 'selected' : '') }}>
+                        {{ $driver->lastnames }} {{ $driver->names }}
+                      </option>
+                      @endif
+                    @endforeach
                 </select>
               </div>
               
@@ -191,10 +193,12 @@
                 <select name="assistant1_id" class="form-control form-control-sm">
                   <option value="">-- Mantener ayudante 1 actual --</option>
                   @foreach($assistants as $assistant)
+                    @if(optional($assistant)->type_id == 2)
                     <option value="{{ $assistant->id }}" 
                       {{ $selectedA1Id == $assistant->id ? 'selected' : (old('assistant1_id') == $assistant->id ? 'selected' : '') }}>
                       {{ $assistant->lastnames }} {{ $assistant->names }}
                     </option>
+                    @endif
                   @endforeach
                 </select>
               </div>
@@ -204,10 +208,12 @@
                 <select name="assistant2_id" class="form-control form-control-sm">
                   <option value="">-- Mantener ayudante 2 actual --</option>
                   @foreach($assistants as $assistant)
+                    @if(optional($assistant)->type_id == 2)
                     <option value="{{ $assistant->id }}" 
                       {{ $selectedA2Id == $assistant->id ? 'selected' : (old('assistant2_id') == $assistant->id ? 'selected' : '') }}>
                       {{ $assistant->lastnames }} {{ $assistant->names }}
                     </option>
+                    @endif
                   @endforeach
                 </select>
               </div>

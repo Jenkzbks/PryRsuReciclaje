@@ -190,7 +190,7 @@
                                     <strong><?php echo e($employee->names); ?> <?php echo e($employee->lastnames); ?></strong>
                                     <br>
                                     <small class="text-muted">
-                                        Registrado: <?php echo e($employee->created_at->format('d/m/Y')); ?>
+                                        Registrado: <?php echo e($employee->created_at?->format('d/m/Y') ?? 'N/A'); ?>
 
                                     </small>
                                 </td>
