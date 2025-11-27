@@ -173,8 +173,13 @@ $(document).ready(function(){
         $('#add_shift_change').on('click', function(){
             var newShiftText = $('#shift_select option:selected').text();
             var currentShift = $('#current_shift').val();
+            var key = 'turno';
             if (newShiftText && newShiftText !== 'Seleccione un nuevo turno') {
-                addChangeRow('Turno', currentShift, newShiftText, '');
+                if ($('[name="motivos['+key+']"]').length) {
+                    alert('Ya existe un cambio de turno registrado.');
+                    return;
+                }
+                addChangeRow('Turno', currentShift, newShiftText, key);
             }
         });
 
@@ -182,17 +187,31 @@ $(document).ready(function(){
         $('#add_vehicle_change').on('click', function(){
             var newVehicleText = $('#vehicle_select option:selected').text();
             var currentVehicle = $('#current_vehicle').val();
+            var key = 'vehiculo';
             if (newVehicleText && newVehicleText !== 'Seleccione un nuevo vehículo') {
-                addChangeRow('Vehículo', currentVehicle, newVehicleText, '');
+                if ($('[name="motivos['+key+']"]').length) {
+                    alert('Ya existe un cambio de vehículo registrado.');
+                    return;
+                }
+                addChangeRow('Vehículo', currentVehicle, newVehicleText, key);
             }
         });
 
         // Agregar cambio de personal
         $('#add_personal_change').on('click', function(){
-            var currentEmpText = $('#personal_actual option:selected').text();
-            var newEmpText = $('#nuevo_personal option:selected').text();
+            var $selectedCurrent = $('#personal_actual option:selected');
+            var $selectedNew = $('#nuevo_personal option:selected');
+            var currentEmpText = $selectedCurrent.text();
+            var newEmpText = $selectedNew.text();
+            var roleKey = $selectedCurrent.data('role');
+            var motivoKey = roleKey ? ('personal-' + roleKey) : null;
+            var newEmpId = $selectedNew.val();
             if (currentEmpText && newEmpText && currentEmpText !== 'Seleccione un personal' && newEmpText !== 'Seleccione un nuevo personal') {
-                addChangeRow('Personal', currentEmpText, newEmpText, '');
+                if (motivoKey && $('[name="motivos['+motivoKey+']"]').length) {
+                    alert('Ya existe un cambio para este rol registrado.');
+                    return;
+                }
+                addChangeRow('Personal', currentEmpText, newEmpText, motivoKey, { role_field: roleKey, new_value_id: newEmpId });
             }
         });
 
@@ -224,20 +243,52 @@ $(document).ready(function(){
         });
     }
 
-    function addChangeRow(type, anterior, nuevo, notas) {
-        var row = '<tr>' +
-            '<td>' + type + '</td>' +
-            '<td>' + anterior + '</td>' +
-            '<td>' + nuevo + '</td>' +
-            '<td>' + notas + '</td>' +
-            '<td><button type="button" class="btn btn-danger btn-sm remove-change">Eliminar</button></td>' +
-            '</tr>';
-        $('#tabla-cambios').append(row);
+    function addChangeRow(type, anterior, nuevo, key, meta) {
+        // Build motivo select by cloning template inside modal
+        var $motivoTemplate = $('#editModalBody').find('#motivo_template select').first();
+        var $motivoSelect = $motivoTemplate.clone();
+        if (key) {
+            $motivoSelect.attr('name', 'motivos['+key+']');
+            $motivoSelect.attr('required', 'required');
+        }
+
+        var $nota = $('<textarea>').addClass('form-control form-control-sm mt-1').attr('rows',2);
+        if (key) {
+            $nota.attr('name', 'notas['+key+']');
+        }
+
+        var $notasContainer = $('<div>').append($motivoSelect).append($nota);
+
+        var $row = $('<tr>');
+        if (meta && meta.role_field) {
+            $row.attr('data-role-field', meta.role_field);
+        }
+        $row.append($('<td>').text(type));
+        $row.append($('<td>').text(anterior));
+        $row.append($('<td>').text(nuevo));
+        $row.append($('<td>').append($notasContainer));
+        $row.append($('<td>').html('<button type="button" class="btn btn-danger btn-sm remove-change">Eliminar</button>'));
+
+        $('#tabla-cambios').append($row);
+
+        // If meta includes a role_field and new_value_id, create hidden input to send the new personnel
+        if (meta && meta.role_field && meta.new_value_id) {
+            // Remove existing hidden input for this role if any
+            $('#editModal form').find('input[name="' + meta.role_field + '"]').remove();
+            var $hidden = $('<input>').attr('type','hidden').attr('name', meta.role_field).val(meta.new_value_id);
+            $('#editModal form').append($hidden);
+        }
     }
 
     // Event delegation para eliminar filas
     $(document).on('click', '.remove-change', function(){
-        $(this).closest('tr').remove();
+        var $tr = $(this).closest('tr');
+        var roleField = $tr.attr('data-role-field');
+        if (roleField) {
+            // Remove hidden input for this role
+            $('#editModal form').find('input[name="' + roleField + '"]').remove();
+        }
+        $tr.remove();
     });
 });
 </script>

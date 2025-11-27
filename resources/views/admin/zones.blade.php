@@ -32,7 +32,7 @@
                         {{ $isComplete ? 'Grupo completo y listo para operar' : 'Faltan integrantes por registrar asistencia' }}
                     </p>
                     @if(!$isComplete && $firstScheduling)
-                        <button class="btn btn-warning w-100 edit-scheduling-btn" data-url="{{ route('admin.schedulings.edit', $firstScheduling->id) }}">
+                        <button class="btn btn-warning w-100 edit-scheduling-btn" data-url="{{ route('admin.schedulings.edit-modal', $firstScheduling->id) }}">
                             <i class="fas fa-sync-alt"></i>
                         </button>
                     @endif
