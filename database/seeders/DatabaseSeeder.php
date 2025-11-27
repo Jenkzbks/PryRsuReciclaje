@@ -20,6 +20,25 @@ class DatabaseSeeder extends Seeder
             BrandModelSeeder::class,
             ColorSeeder::class,
             VehicleTypeSeeder::class,
+            UserSeeder::class,
+            ShiftSeeder::class,
+            ZoneSeeder::class,
+            VehicleSeeder::class,
+            SimplePersonnelSeeder::class,
+            EmployeeGroupSeeder::class,
+            SchedulingSeeder::class,
+            // Newly added seeders to cover remaining migrations
+            VehiclesImageSeeder::class,
+            ZoneCoordsSeeder::class,
+            ZoneVehicleSeeder::class,
+            ZoneShiftSeeder::class,
+            RoutesSeeder::class,
+            RouteCoordsSeeder::class,
+            MaintenancesSeeder::class,
+            MaintenanceSchedulesSeeder::class,
+            MaintenanceRecordsSeeder::class,
+            ConfigGroupsSeeder::class,
+            GroupDetailsSeeder::class,
         ]);
     }
 }
