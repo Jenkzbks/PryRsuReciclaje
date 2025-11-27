@@ -3,7 +3,7 @@
 @section('title', 'Mapa de Zonas')
 
 @section('content_header')
-    <h1>Mapa de Zonas</h1>
+    <h1 class="h3 mb-1 font-weight-bold"> <i class="fas fa-map-marker"></i> Mapa de Zonas</h1>
 @endsection
 
 @section('content')

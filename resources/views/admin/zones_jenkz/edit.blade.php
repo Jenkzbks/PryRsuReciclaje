@@ -5,10 +5,10 @@
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center">
         <div>
-            <h1 class="h3 mb-1 font-weight-bold">Editar Zona</h1>
+            <h1 class="h3 mb-1 font-weight-bold"><i class="fas fa-user-edit"></i> Editar Zona</h1>
             <p class="text-muted mb-0">Modifique los datos de la zona.</p>
         </div>
-        <a href="{{ route('admin.zonesjenkz.index') }}" class="btn btn-dark"><i class="fas fa-arrow-left"></i> Regresar</a>
+        <a href="{{ route('admin.zonesjenkz.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Regresar</a>
     </div>
 @endsection
 
