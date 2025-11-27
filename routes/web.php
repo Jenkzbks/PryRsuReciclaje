@@ -23,6 +23,10 @@ use App\Http\Controllers\EmployeeTypeController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\VacationController;
 use App\Http\Controllers\AttendanceController;
+// Controladores del módulo de mantenimiento
+use App\Http\Controllers\MaintenanceController;
+use App\Http\Controllers\MaintenanceScheduleController;
+use App\Http\Controllers\MaintenanceRecordController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
