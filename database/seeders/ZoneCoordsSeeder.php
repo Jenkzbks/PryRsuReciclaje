@@ -9,13 +9,20 @@ class ZoneCoordsSeeder extends Seeder
 {
     public function run(): void
     {
-        // Migration defines columns: id, latitude, longitude, zone_id, timestamps
-        DB::table('zonecoords')->insert([
-            ['zone_id' => 1, 'latitude' => -12.056, 'longitude' => -77.085, 'created_at' => now(), 'updated_at' => now()],
-            ['zone_id' => 1, 'latitude' => -12.057, 'longitude' => -77.086, 'created_at' => now(), 'updated_at' => now()],
-            ['zone_id' => 2, 'latitude' => -12.060, 'longitude' => -77.090, 'created_at' => now(), 'updated_at' => now()],
-            ['zone_id' => 2, 'latitude' => -12.061, 'longitude' => -77.091, 'created_at' => now(), 'updated_at' => now()],
-            ['zone_id' => 3, 'latitude' => -12.050, 'longitude' => -77.080, 'created_at' => now(), 'updated_at' => now()],
+        // Coordenadas aproximadas de Jose Leonardo Ortiz (Chiclayo, Perú)
+        DB::table('coords')->insert([
+            // Zona 1 (Norte)
+            ['zone_id' => 1, 'coord_index' => 1, 'latitude' => -6.7570, 'longitude' => -79.8400, 'created_at' => now(), 'updated_at' => now()],
+            ['zone_id' => 1, 'coord_index' => 2, 'latitude' => -6.7555, 'longitude' => -79.8350, 'created_at' => now(), 'updated_at' => now()],
+            ['zone_id' => 1, 'coord_index' => 3, 'latitude' => -6.7530, 'longitude' => -79.8380, 'created_at' => now(), 'updated_at' => now()],
+            // Zona 2 (Sur)
+            ['zone_id' => 2, 'coord_index' => 1, 'latitude' => -6.7650, 'longitude' => -79.8450, 'created_at' => now(), 'updated_at' => now()],
+            ['zone_id' => 2, 'coord_index' => 2, 'latitude' => -6.7630, 'longitude' => -79.8410, 'created_at' => now(), 'updated_at' => now()],
+            ['zone_id' => 2, 'coord_index' => 3, 'latitude' => -6.7610, 'longitude' => -79.8440, 'created_at' => now(), 'updated_at' => now()],
+            // Zona 3 (Centro)
+            ['zone_id' => 3, 'coord_index' => 1, 'latitude' => -6.7600, 'longitude' => -79.8370, 'created_at' => now(), 'updated_at' => now()],
+            ['zone_id' => 3, 'coord_index' => 2, 'latitude' => -6.7580, 'longitude' => -79.8340, 'created_at' => now(), 'updated_at' => now()],
+            ['zone_id' => 3, 'coord_index' => 3, 'latitude' => -6.7590, 'longitude' => -79.8320, 'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 }

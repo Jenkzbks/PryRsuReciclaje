@@ -9,16 +9,39 @@ class ConfigGroupsSeeder extends Seeder
 {
     public function run(): void
     {
-        // Migration columns: employeegroup_id, employee_id, posicion
-        $groupId = \App\Models\EmployeeGroup::first()?->id ?? 1;
-        $employeeId = \App\Models\Employee::first()?->id ?? 1;
-
-        DB::table('configgroups')->insert([
-            ['employeegroup_id' => $groupId, 'employee_id' => $employeeId, 'posicion' => 1, 'created_at' => now(), 'updated_at' => now()],
-            ['employeegroup_id' => $groupId, 'employee_id' => $employeeId, 'posicion' => 2, 'created_at' => now(), 'updated_at' => now()],
-            ['employeegroup_id' => $groupId, 'employee_id' => $employeeId, 'posicion' => 3, 'created_at' => now(), 'updated_at' => now()],
-            ['employeegroup_id' => $groupId, 'employee_id' => $employeeId, 'posicion' => 4, 'created_at' => now(), 'updated_at' => now()],
-            ['employeegroup_id' => $groupId, 'employee_id' => $employeeId, 'posicion' => 5, 'created_at' => now(), 'updated_at' => now()],
-        ]);
+        // Asignar empleados a todos los grupos según la capacidad de su vehículo
+        $groups = \App\Models\Employeegroup::all();
+        $conductores = \App\Models\Employee::whereHas('type', function($q){ $q->where('name', 'like', '%conduc%'); })->get();
+        $ayudantes = \App\Models\Employee::whereHas('type', function($q){ $q->where('name', 'like', '%ayud%'); })->get();
+        foreach ($groups as $group) {
+            $vehicle = \App\Models\Vehicle::find($group->vehicle_id);
+            $capacity = $vehicle->capacity ?? $vehicle->passengers ?? 4;
+            $data = [];
+            // Posición 1: conductor
+            $conductor = $conductores->shift();
+            if ($conductor) {
+                $data[] = [
+                    'employeegroup_id' => $group->id,
+                    'employee_id' => $conductor->id,
+                    'posicion' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+            // Siguientes posiciones: ayudantes
+            for ($i = 2; $i <= $capacity; $i++) {
+                $ayudante = $ayudantes->shift();
+                if ($ayudante) {
+                    $data[] = [
+                        'employeegroup_id' => $group->id,
+                        'employee_id' => $ayudante->id,
+                        'posicion' => $i,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+            }
+            DB::table('configgroups')->insert($data);
+        }
     }
 }

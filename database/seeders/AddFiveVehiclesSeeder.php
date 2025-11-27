@@ -88,7 +88,7 @@ class AddFiveVehiclesSeeder extends Seeder
                 'load_capacity' => 800,
                 'description' => 'Vehículo utilitario para logística',
                 'status' => 1,
-                'passengers' => 2,
+                'passengers' => 5,
                 'fuel_capacity' => 55,
                 'brand_id' => $brandId,
                 'model_id' => $modelId,

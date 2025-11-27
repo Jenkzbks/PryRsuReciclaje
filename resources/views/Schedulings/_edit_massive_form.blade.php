@@ -210,7 +210,20 @@
             {{-- Motivo --}}
             <div class="form-group mt-3">
                 <label>Motivo del Cambio Masivo *</label>
-                <textarea name="reason" class="form-control" rows="3" required>{{ $massiveChange->reason ?? '' }}</textarea>
+                <select name="reason_id" class="form-control" required>
+                    <option value="">-- Seleccione un motivo --</option>
+                    @if(isset($reasons))
+                        @foreach($reasons as $reason)
+                            <option value="{{ $reason->id }}" @selected(($massiveChange->reason_id ?? null) == $reason->id)>{{ $reason->name }}</option>
+                        @endforeach
+                    @endif
+                </select>
+            </div>
+
+            {{-- Notas --}}
+            <div class="form-group mt-3">
+                <label>Notas</label>
+                <textarea name="notes" class="form-control" rows="3">{{ $massiveChange->notes ?? '' }}</textarea>
             </div>
 
         </div>

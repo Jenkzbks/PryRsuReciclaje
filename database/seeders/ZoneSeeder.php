@@ -13,34 +13,34 @@ class ZoneSeeder extends Seeder
      */
     public function run(): void
     {
-        // Ensure we have a district
-        $district = District::first();
+        // Buscar el distrito 'Jose Leonardo Ortiz'
+        $district = District::where('name', 'like', '%jose leonardo ortiz%')->first();
         $districtId = $district ? $district->id : 1;
 
         DB::table('zones')->insert([
             [
                 'name' => 'Zona Norte',
-                'area' => 50.5,
-                'description' => 'Zona norte de la ciudad',
-                'polygon_coordinates' => json_encode([]),
+                'average_waste' => 12.5,
+                'description' => 'Zona norte de Jose Leonardo Ortiz',
+                'status' => 1,
                 'district_id' => $districtId,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
                 'name' => 'Zona Sur',
-                'area' => 45.2,
-                'description' => 'Zona sur de la ciudad',
-                'polygon_coordinates' => json_encode([]),
+                'average_waste' => 10.2,
+                'description' => 'Zona sur de Jose Leonardo Ortiz',
+                'status' => 1,
                 'district_id' => $districtId,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
                 'name' => 'Zona Centro',
-                'area' => 30.0,
-                'description' => 'Centro histórico',
-                'polygon_coordinates' => json_encode([]),
+                'average_waste' => 8.0,
+                'description' => 'Centro de Jose Leonardo Ortiz',
+                'status' => 1,
                 'district_id' => $districtId,
                 'created_at' => now(),
                 'updated_at' => now(),

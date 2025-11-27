@@ -70,7 +70,7 @@ class VehicleSeeder extends Seeder
                 'load_capacity' => 1000,
                 'description' => 'Vehículo para supervisores',
                 'status' => 1,
-                'passengers' => 5,
+                'passengers' => 3,
                 'fuel_capacity' => 60,
                 'brand_id' => $brandId,
                 'model_id' => $modelId,

@@ -16,6 +16,7 @@ class SchedulingChange extends Model
         'old_value',
         'new_value',
         'user_id',
+        'notes',
     ];
 
     public function scheduling()

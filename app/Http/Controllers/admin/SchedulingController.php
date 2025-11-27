@@ -181,12 +181,14 @@ class SchedulingController extends Controller
             $g->selected_assistant2_id = $byPos[3] ?? null;
         }
 
+        // Motivos activos
+        $reasons = \App\Models\Reason::where('active', 1)->orderBy('name')->get();
         // If it's an AJAX request, return only the form fragment so it can be injected
         if ($request->ajax()) {
-            return view('schedulings._edit_massive_form', compact('groups','drivers','assistants','zones','shifts','vehicles','massiveChange'));
+            return view('schedulings._edit_massive_form', compact('groups','drivers','assistants','zones','shifts','vehicles','massiveChange','reasons'));
         }
 
-        return view('schedulings.edit-massive', compact('groups', 'drivers', 'assistants','zones','shifts','vehicles','massiveChange'));
+        return view('schedulings.edit-massive', compact('groups', 'drivers', 'assistants','zones','shifts','vehicles','massiveChange','reasons'));
     }
     /**
      * Return only the massive form fragment (for AJAX modal)
@@ -231,7 +233,8 @@ class SchedulingController extends Controller
             'zones' => 'nullable|array',
             'zones.*' => 'exists:zones,id',
             'type' => 'required|string|in:Cambio de Conductor,Cambio de Ayudante,Cambio de Turno,Cambio de Vehiculo',
-            'reason' => 'required|string|max:255',
+            'reason_id' => 'required|exists:reasons,id',
+            'notes' => 'nullable|string|max:500',
 
             'old_driver' => 'nullable|exists:employee,id',
             'new_driver' => 'nullable|exists:employee,id',
@@ -263,13 +266,8 @@ class SchedulingController extends Controller
 
         DB::transaction(function() use (&$affected, $schedulings, $request) {
             $userId = auth()->id();
-
-            // Create or find the Reason for this massive change (so reason_id is not null)
-            $reasonName = trim($request->input('reason', ''));
-            $reason = \App\Models\Reason::firstOrCreate(
-                ['name' => $reasonName],
-                ['active' => 1]
-            );
+            $reasonId = $request->input('reason_id');
+            $notes = $request->input('notes');
             foreach ($schedulings as $s) {
                 $changed = false;
 
@@ -290,8 +288,8 @@ class SchedulingController extends Controller
                                 $newName = $newEmp ? ($newEmp->lastnames . ' ' . $newEmp->names) : null;
                                 \App\Models\SchedulingChange::create([
                                     'scheduling_id' => $s->id,
-                                    'reason_id' => $reason->id,
-                                    'notes' => null,
+                                    'reason_id' => $reasonId,
+                                    'notes' => $notes,
                                     'change_type' => 'personal',
                                     'old_value' => $oldName,
                                     'new_value' => $newName,
@@ -318,8 +316,8 @@ class SchedulingController extends Controller
                                 $newName = $newEmp ? ($newEmp->lastnames . ' ' . $newEmp->names) : null;
                                 \App\Models\SchedulingChange::create([
                                     'scheduling_id' => $s->id,
-                                    'reason_id' => null,
-                                    'notes' => null,
+                                    'reason_id' => $reasonId,
+                                    'notes' => $notes,
                                     'change_type' => 'personal',
                                     'old_value' => $oldName,
                                     'new_value' => $newName,
@@ -340,8 +338,8 @@ class SchedulingController extends Controller
                             $s->update(['shift_id' => $request->new_shift]);
                             \App\Models\SchedulingChange::create([
                                 'scheduling_id' => $s->id,
-                                'reason_id' => $reason->id,
-                                'notes' => null,
+                                'reason_id' => $reasonId,
+                                'notes' => $notes,
                                 'change_type' => 'turno',
                                 'old_value' => optional(\App\Models\Shift::find($oldShift))->name ?? null,
                                 'new_value' => optional(\App\Models\Shift::find($request->new_shift))->name ?? null,
@@ -361,8 +359,8 @@ class SchedulingController extends Controller
                             $s->update(['vehicle_id' => $request->new_vehicle]);
                             \App\Models\SchedulingChange::create([
                                 'scheduling_id' => $s->id,
-                                'reason_id' => $reason->id,
-                                'notes' => null,
+                                'reason_id' => $reasonId,
+                                'notes' => $notes,
                                 'change_type' => 'vehículo',
                                 'old_value' => optional(\App\Models\Vehicle::find($oldVehicle))->plate ?? null,
                                 'new_value' => optional(\App\Models\Vehicle::find($request->new_vehicle))->plate ?? null,
@@ -501,15 +499,31 @@ class SchedulingController extends Controller
      * ========================= */
        public function edit(Scheduling $scheduling)
     {
-        $scheduling->load(['group.shift','group.vehicle','group.zone','details.employee']);
+        $scheduling->load(['group.shift','group.vehicle','group.zone','details.employee.type']);
 
-        $drivers    = Employee::where('status', 1)->where('type_id', 2)->orderBy('lastnames')->get();
-        $assistants = Employee::where('status', 1)->where('type_id', 4)->orderBy('lastnames')->get();
-        $shifts     = \App\Models\Shift::all();
-        $vehicles   = \App\Models\Vehicle::all();
+        $drivers = Employee::where('status', 1)
+            ->whereHas('type', function($q) {
+                $q->where('name', 'Conductor');
+            })
+            ->orderBy('lastnames')
+            ->get();
 
-        $driverDetail = $scheduling->details->firstWhere('employee.type_id', 2);
-        $aDetails     = $scheduling->details->filter(fn($d) => optional($d->employee)->type_id == 4)->values();
+        $assistants = Employee::where('status', 1)
+            ->whereHas('type', function($q) {
+                $q->where('name', 'Ayudante');
+            })
+            ->orderBy('lastnames')
+            ->get();
+
+        $shifts   = \App\Models\Shift::all();
+        $vehicles = \App\Models\Vehicle::all();
+
+        $driverDetail = $scheduling->details->first(function($d) {
+            return optional($d->employee->type)->name === 'Conductor';
+        });
+        $aDetails = $scheduling->details->filter(function($d) {
+            return optional($d->employee->type)->name === 'Ayudante';
+        })->values();
 
         $selectedDriverId = $driverDetail?->employee?->id;
         $selectedA1Id     = $aDetails->get(0)?->employee?->id;
@@ -596,23 +610,26 @@ class SchedulingController extends Controller
                 'user_id'       => $userId,
             ]);
         }
-        // Cambios de personal
-        if ($oldPersonnel != $newPersonnel) {
-            $oldNames = collect($oldPersonnel)->map(function($id){
-                $e = \App\Models\Employee::find($id); return $e ? ($e->lastnames.' '.$e->names) : null;
-            })->filter()->implode(', ');
-            $newNames = collect($newPersonnel)->map(function($id){
-                $e = \App\Models\Employee::find($id); return $e ? ($e->lastnames.' '.$e->names) : null;
-            })->filter()->implode(', ');
-            \App\Models\SchedulingChange::create([
-                'scheduling_id' => $scheduling->id,
-                'reason_id'     => $motivos['personal'] ?? null,
-                'notes'         => $notas['personal'] ?? null,
-                'change_type'   => 'personal',
-                'old_value'     => $oldNames,
-                'new_value'     => $newNames,
-                'user_id'       => $userId,
-            ]);
+        // Cambios de personal: registrar un cambio por cada empleado modificado
+        $roles = ['driver_id' => 'Conductor', 'assistant1_id' => 'Ayudante 1', 'assistant2_id' => 'Ayudante 2'];
+        $oldIds = array_combine(array_keys($roles), array_values($oldPersonnel));
+        foreach ($roles as $field => $label) {
+            $oldId = $oldIds[$field] ?? null;
+            $newId = $request->$field ?? null;
+            if ($oldId != $newId) {
+                $oldEmp = $oldId ? \App\Models\Employee::find($oldId) : null;
+                $newEmp = $newId ? \App\Models\Employee::find($newId) : null;
+                $motivoKey = 'personal-' . $field;
+                \App\Models\SchedulingChange::create([
+                    'scheduling_id' => $scheduling->id,
+                    'reason_id'     => $motivos[$motivoKey] ?? null,
+                    'notes'         => $notas[$motivoKey] ?? null,
+                    'change_type'   => 'personal',
+                    'old_value'     => $oldEmp ? ($label.': '.$oldEmp->lastnames.' '.$oldEmp->names) : $label.': -',
+                    'new_value'     => $newEmp ? ($label.': '.$newEmp->lastnames.' '.$newEmp->names) : $label.': -',
+                    'user_id'       => $userId,
+                ]);
+            }
         }
 
         if ($request->ajax()) {

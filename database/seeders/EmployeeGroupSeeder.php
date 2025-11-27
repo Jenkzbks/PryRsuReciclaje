@@ -15,36 +15,36 @@ class EmployeeGroupSeeder extends Seeder
      */
     public function run(): void
     {
-        $zone = Zone::first();
-        $shift = Shift::first();
-        $vehicle = Vehicle::first();
+        $zones = Zone::all();
+        $shifts = Shift::all();
+        $vehicles = Vehicle::all();
 
-        // Fallbacks
-        $zoneId = $zone ? $zone->id : 1;
-        $shiftId = $shift ? $shift->id : 1;
-        $vehicleId = $vehicle ? $vehicle->id : 1;
+        $groups = [
+            [ 'name' => 'Grupo Alpha', 'days' => 'Lunes,Miércoles,Viernes' ],
+            [ 'name' => 'Grupo Beta', 'days' => 'Martes,Jueves,Sábado' ],
+            [ 'name' => 'Grupo Gamma', 'days' => 'Sábado' ],
+        ];
 
-        DB::table('employeegroups')->insert([
-            [
-                'name' => 'Grupo Alpha',
-                'zone_id' => $zoneId,
-                'shift_id' => $shiftId,
-                'vehicle_id' => $vehicleId,
-                'days' => 'Lunes, Miércoles, Viernes',
-                'status' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'name' => 'Grupo Beta',
-                'zone_id' => $zoneId,
-                'shift_id' => $shiftId,
-                'vehicle_id' => $vehicleId,
-                'days' => 'Martes, Jueves, Sábado',
-                'status' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ]);
+        foreach ($groups as $i => $group) {
+            $zone = $zones[$i] ?? $zones->first();
+            $vehicle = $vehicles[$i] ?? $vehicles->first();
+            $shift = $shifts[$i] ?? $shifts->first();
+            $vehicleId = $vehicle ? $vehicle->id : 1;
+            $shiftId = $shift ? $shift->id : 1;
+            // Capacidad: asume campo 'capacity' o 'passengers', si no existe, usa 4 por defecto
+            $capacity = $vehicle->capacity ?? $vehicle->passengers ?? 4;
+            DB::table('employeegroups')->insert([
+                [
+                    'name' => $group['name'],
+                    'zone_id' => $zone ? $zone->id : 1,
+                    'shift_id' => $shiftId,
+                    'vehicle_id' => $vehicleId,
+                    'days' => $group['days'],
+                    'status' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            ]);
+        }
     }
 }

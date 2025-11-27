@@ -164,20 +164,24 @@
             </div>
             <div class="card-body">
               @php
-                $driverDetail = $scheduling->details->firstWhere('employee.type_id', 1);
-                $assistantDetails = $scheduling->details->filter(fn($d) => optional($d->employee)->type_id == 2)->values();
+                $driverDetail = $scheduling->details->first(function($d) {
+                  return optional($d->employee->type)->name === 'Conductor';
+                });
+                $assistantDetails = $scheduling->details->filter(function($d) {
+                  return optional($d->employee->type)->name === 'Ayudante';
+                })->values();
               @endphp
-              
+
               <div class="mb-2">
                 <strong>Conductor:</strong><br>
                 {{ $driverDetail->employee->lastnames ?? '-' }} {{ $driverDetail->employee->names ?? '-' }}
               </div>
-              
+
               <div class="mb-2">
                 <strong>Ayudante 1:</strong><br>
                 {{ $assistantDetails->get(0)->employee->lastnames ?? '-' }} {{ $assistantDetails->get(0)->employee->names ?? '-' }}
               </div>
-              
+
               <div class="mb-0">
                 <strong>Ayudante 2:</strong><br>
                 {{ $assistantDetails->get(1)->employee->lastnames ?? '-' }} {{ $assistantDetails->get(1)->employee->names ?? '-' }}
@@ -196,13 +200,13 @@
                 <select name="driver_id" class="form-control form-control-sm">
                   <option value="">-- Mantener conductor actual --</option>
                   @foreach($drivers as $driver)
-                      @if(optional($driver)->type_id == 1)
+                    @if(!isset($driver->type) || (isset($driver->type) && optional($driver->type)->name === 'Conductor'))
                       <option value="{{ $driver->id }}" 
                         {{ $selectedDriverId == $driver->id ? 'selected' : (old('driver_id') == $driver->id ? 'selected' : '') }}>
-                        {{ $driver->lastnames }} {{ $driver->names }}
+                        {{ $driver->lastnames ?? $driver->name ?? '' }} {{ $driver->names ?? '' }}
                       </option>
-                      @endif
-                    @endforeach
+                    @endif
+                  @endforeach
                 </select>
               </div>
               
@@ -211,7 +215,7 @@
                 <select name="assistant1_id" class="form-control form-control-sm">
                   <option value="">-- Mantener ayudante 1 actual --</option>
                   @foreach($assistants as $assistant)
-                    @if(optional($assistant)->type_id == 2)
+                    @if(optional($assistant->type) && optional($assistant->type)->name === 'Ayudante')
                     <option value="{{ $assistant->id }}" 
                       {{ $selectedA1Id == $assistant->id ? 'selected' : (old('assistant1_id') == $assistant->id ? 'selected' : '') }}>
                       {{ $assistant->lastnames }} {{ $assistant->names }}
@@ -226,7 +230,7 @@
                 <select name="assistant2_id" class="form-control form-control-sm">
                   <option value="">-- Mantener ayudante 2 actual --</option>
                   @foreach($assistants as $assistant)
-                    @if(optional($assistant)->type_id == 2)
+                    @if(optional($assistant->type) && optional($assistant->type)->name === 'Ayudante')
                     <option value="{{ $assistant->id }}" 
                       {{ $selectedA2Id == $assistant->id ? 'selected' : (old('assistant2_id') == $assistant->id ? 'selected' : '') }}>
                       {{ $assistant->lastnames }} {{ $assistant->names }}
@@ -243,7 +247,7 @@
       <!-- Cambios Registrados (solo nuevos cambios de esta edición) -->
       <div id="changeSummaryCard" class="card border-info mb-4" style="display:none;">
         <div class="card-header bg-info text-white">
-          <strong>Resumen de Cambios (solo los que realices ahora)</strong>
+          <strong>Resumen de Cambios</strong>
         </div>
         <div class="card-body">
           <div class="table-responsive">
@@ -338,6 +342,16 @@
 
     // Detectar cambios y renderizar tabla (mostrar cualquier acción, incluso si vuelve al original)
     function renderChangeSummary() {
+      // Guardar motivos y notas actuales antes de recargar
+      const motivoValues = {};
+      const notasValues = {};
+      document.querySelectorAll('.motivo-select').forEach(sel => {
+        motivoValues[sel.name] = sel.value;
+      });
+      document.querySelectorAll('textarea[name^="notas["]').forEach(txt => {
+        notasValues[txt.name] = txt.value;
+      });
+
       let rows = '';
       let hasChange = false;
 
@@ -367,43 +381,59 @@
           <td>${eliminarBtnHtml('vehiculo')}</td>
         </tr>`;
       }
-      // Personal (cualquier cambio en conductor o ayudantes)
-      let personalChanged = false;
-      if (
-        (driverSelect.value && driverSelect.value !== '{{ $selectedDriverId ?? '' }}') ||
-        (assistant1Select.value && assistant1Select.value !== '{{ $selectedA1Id ?? '' }}') ||
-        (assistant2Select.value && assistant2Select.value !== '{{ $selectedA2Id ?? '' }}')
-      ) {
-        personalChanged = true;
-        hasChange = true;
-      }
-      if (personalChanged) {
-        let nuevoPersonal = [];
-        if (driverSelect.value) {
-          const d = driverSelect.options[driverSelect.selectedIndex].text;
-          nuevoPersonal.push('Conductor: ' + d);
+      // Personal: generar una fila por cada cambio individual
+      const personalRoles = [
+        {
+          key: 'driver_id',
+          label: 'Conductor',
+          origId: '{{ $selectedDriverId ?? '' }}',
+          origName: originalNames.driver || '-',
+          select: driverSelect
+        },
+        {
+          key: 'assistant1_id',
+          label: 'Ayudante 1',
+          origId: '{{ $selectedA1Id ?? '' }}',
+          origName: originalNames.assistant1 || '-',
+          select: assistant1Select
+        },
+        {
+          key: 'assistant2_id',
+          label: 'Ayudante 2',
+          origId: '{{ $selectedA2Id ?? '' }}',
+          origName: originalNames.assistant2 || '-',
+          select: assistant2Select
         }
-        if (assistant1Select.value) {
-          const a1 = assistant1Select.options[assistant1Select.selectedIndex].text;
-          nuevoPersonal.push('Ayudante 1: ' + a1);
+      ];
+      personalRoles.forEach(role => {
+        const newId = role.select.value;
+        if (newId !== role.origId) {
+          hasChange = true;
+          const newName = role.select.options[role.select.selectedIndex]?.text || '-';
+          // Clave única para motivo y nota
+          const motivoKey = `personal-${role.key}`;
+          rows += `<tr data-tipo=\"${motivoKey}\">
+            <td>Personal</td>
+            <td>${role.label}: ${role.origName}</td>
+            <td>${role.label}: ${role.origName}</td>
+            <td>${role.label}: ${newName}</td>
+            <td>${motivoSelectHtml(motivoKey)}</td>
+            <td>${notasTextareaHtml(motivoKey)}</td>
+            <td>${eliminarBtnHtml(motivoKey)}</td>
+          </tr>`;
         }
-        if (assistant2Select.value) {
-          const a2 = assistant2Select.options[assistant2Select.selectedIndex].text;
-          nuevoPersonal.push('Ayudante 2: ' + a2);
-        }
-        rows += `<tr data-tipo="personal">
-          <td>Personal</td>
-          <td>-</td>
-          <td>-</td>
-          <td>${nuevoPersonal.length ? nuevoPersonal.join('<br>') : '-'}</td>
-          <td>${motivoSelectHtml('personal')}</td>
-          <td>${notasTextareaHtml('personal')}</td>
-          <td>${eliminarBtnHtml('personal')}</td>
-        </tr>`;
-      }
+      });
 
       changeSummaryTable.innerHTML = rows;
       changeSummaryCard.style.display = hasChange ? '' : 'none';
+
+      // Restaurar valores de motivos y notas
+      document.querySelectorAll('.motivo-select').forEach(sel => {
+        if (motivoValues[sel.name]) sel.value = motivoValues[sel.name];
+      });
+      document.querySelectorAll('textarea[name^="notas["]').forEach(txt => {
+        if (notasValues[txt.name]) txt.value = notasValues[txt.name];
+      });
 
       // Asignar eventos a los botones eliminar
       document.querySelectorAll('.eliminar-cambio').forEach(btn => {
@@ -415,13 +445,18 @@
           } else if (tipo === 'vehiculo') {
             vehicleSelect.value = '{{ $scheduling->vehicle_id ?? '' }}';
             vehicleSelect.dispatchEvent(new Event('change'));
-          } else if (tipo === 'personal') {
-            driverSelect.value = '{{ $selectedDriverId ?? '' }}';
-            assistant1Select.value = '{{ $selectedA1Id ?? '' }}';
-            assistant2Select.value = '{{ $selectedA2Id ?? '' }}';
-            driverSelect.dispatchEvent(new Event('change'));
-            assistant1Select.dispatchEvent(new Event('change'));
-            assistant2Select.dispatchEvent(new Event('change'));
+          } else if (tipo.startsWith('personal')) {
+            // Solo limpiar el campo correspondiente
+            if (tipo === 'personal-driver_id') {
+              driverSelect.value = '{{ $selectedDriverId ?? '' }}';
+              driverSelect.dispatchEvent(new Event('change'));
+            } else if (tipo === 'personal-assistant1_id') {
+              assistant1Select.value = '{{ $selectedA1Id ?? '' }}';
+              assistant1Select.dispatchEvent(new Event('change'));
+            } else if (tipo === 'personal-assistant2_id') {
+              assistant2Select.value = '{{ $selectedA2Id ?? '' }}';
+              assistant2Select.dispatchEvent(new Event('change'));
+            }
           }
         });
       });
