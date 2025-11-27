@@ -673,11 +673,11 @@ return [
                     'route'  => 'admin.reasons.index',
                     'icon' => 'fas fa-fw fa-clipboard-list',
                 ],
-                // [
-                //     'text' => 'Cambios',
-                //     'route'  => 'admin.personnel.attendances.dashboard',
-                //     'icon' => 'fas fa-fw fa-retweet',
-                // ],
+                [
+                     'text' => 'Cambios',
+                     'route'  => 'admin.scheduling-changes.index',
+                     'icon' => 'fas fa-fw fa-retweet',
+                ],
             ],
         ],
         [

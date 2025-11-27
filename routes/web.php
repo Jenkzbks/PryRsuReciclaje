@@ -17,7 +17,7 @@ use App\Http\Controllers\admin\SchedulingController;
 use App\Http\Controllers\admin\MaintenancesController;
 use App\Http\Controllers\admin\MaintenanceShedulesController;
 use App\Http\Controllers\admin\MaintenanceRecordsController;
-
+use App\Http\Controllers\SchedulingChangeController;
 // Controladores del módulo de personal
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeTypeController;
@@ -71,7 +71,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('reasons', ReasonController::class);
     
         Route::get('zonesjenkz/map', [App\Http\Controllers\Admin\ZoneJController::class, 'map'])->name('zonesjenkz.map');
-    
+    Route::get('scheduling-changes', [SchedulingChangeController::class, 'index'])->name('scheduling-changes.index');
+    Route::get('scheduling-changes/data', [SchedulingChangeController::class, 'data'])->name('scheduling-changes.data');
      Route::get('schedulings/available-candidates', [SchedulingController::class, 'availableCandidates'])
     ->name('schedulings.available-candidates');
     Route::get('schedulings/massive-form', [SchedulingController::class, 'massiveForm'])->name('schedulings.massive-form');
