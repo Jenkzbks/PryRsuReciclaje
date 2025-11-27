@@ -140,16 +140,16 @@ class DistrictSeeder extends Seeder
             ['name' => 'Tambo Grande', 'code' => '05', 'department_id' => $piura_dept->id, 'province_id' => $piura_prov->id],
 
             // CHICLAYO - Provincia Chiclayo
-            ['name' => 'Chiclayo', 'code' => '01', 'department_id' => $lambayeque_dept->id, 'province_id' => $chiclayo_prov->id],
-            ['name' => 'Chongoyape', 'code' => '02', 'department_id' => $lambayeque_dept->id, 'province_id' => $chiclayo_prov->id],
-            ['name' => 'Eten', 'code' => '03', 'department_id' => $lambayeque_dept->id, 'province_id' => $chiclayo_prov->id],
-            ['name' => 'Eten Puerto', 'code' => '04', 'department_id' => $lambayeque_dept->id, 'province_id' => $chiclayo_prov->id],
-            ['name' => 'José Leonardo Ortiz', 'code' => '05', 'department_id' => $lambayeque_dept->id, 'province_id' => $chiclayo_prov->id],
-            ['name' => 'La Victoria', 'code' => '06', 'department_id' => $lambayeque_dept->id, 'province_id' => $chiclayo_prov->id],
-            ['name' => 'Monsefú', 'code' => '07', 'department_id' => $lambayeque_dept->id, 'province_id' => $chiclayo_prov->id],
-            ['name' => 'Pimentel', 'code' => '08', 'department_id' => $lambayeque_dept->id, 'province_id' => $chiclayo_prov->id],
-            ['name' => 'Reque', 'code' => '09', 'department_id' => $lambayeque_dept->id, 'province_id' => $chiclayo_prov->id],
-            ['name' => 'Santa Rosa', 'code' => '10', 'department_id' => $lambayeque_dept->id, 'province_id' => $chiclayo_prov->id],
+            ['name' => 'Chiclayo', 'code' => '01', 'department_id' => $lambayeque_dept->id, 'province_id' => $chiclayo_prov->id, 'latitude' => -6.771806255800692, 'longitude' => -79.8451783503486, 'zoom' => 13], 
+            ['name' => 'Chongoyape', 'code' => '02', 'department_id' => $lambayeque_dept->id, 'province_id' => $chiclayo_prov->id, 'latitude' => -6.637560846559337, 'longitude' => -79.38896659829602, 'zoom' => 13],
+            ['name' => 'Eten', 'code' => '03', 'department_id' => $lambayeque_dept->id, 'province_id' => $chiclayo_prov->id, 'latitude' => -6.9078517971087985, 'longitude' => -79.86350310054874, 'zoom' => 14],
+            ['name' => 'Eten Puerto', 'code' => '04', 'department_id' => $lambayeque_dept->id, 'province_id' => $chiclayo_prov->id, 'latitude' => -6.926181771906959, 'longitude' => -79.86442570579582, 'zoom' => 15], 
+            ['name' => 'José Leonardo Ortiz', 'code' => '05', 'department_id' => $lambayeque_dept->id, 'province_id' => $chiclayo_prov->id, 'latitude' => -6.748363950124329, 'longitude' => -79.84773721515673, 'zoom' => 14], 
+            ['name' => 'La Victoria', 'code' => '06', 'department_id' => $lambayeque_dept->id, 'province_id' => $chiclayo_prov->id, 'latitude' => -12.073941180649626, 'longitude' => -77.01588450672878, 'zoom' => 14],  
+            ['name' => 'Monsefú', 'code' => '07', 'department_id' => $lambayeque_dept->id, 'province_id' => $chiclayo_prov->id, 'latitude' => -6.880146176206402, 'longitude' => -79.87137020040177, 'zoom' => 14],
+            ['name' => 'Pimentel', 'code' => '08', 'department_id' => $lambayeque_dept->id, 'province_id' => $chiclayo_prov->id, 'latitude' => -6.830337570218703, 'longitude' => -79.92817655175196, 'zoom' => 14],
+            ['name' => 'Reque', 'code' => '09', 'department_id' => $lambayeque_dept->id, 'province_id' => $chiclayo_prov->id, 'latitude' => -6.863445773037328, 'longitude' => -79.81603874372219, 'zoom' => 14],
+            ['name' => 'Santa Rosa', 'code' => '10', 'department_id' => $lambayeque_dept->id, 'province_id' => $chiclayo_prov->id, 'latitude' => -6.875982839844746, 'longitude' => -79.92304809888347, 'zoom' => 15],
         ];
 
         foreach ($districts as $district) {

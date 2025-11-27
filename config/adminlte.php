@@ -63,9 +63,9 @@ return [
     |
     */
 
-    'logo' => '<b>Proyecto</b>RSU',
-    'logo_img' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
-    'logo_img_class' => 'brand-image img-circle elevation-3',
+    'logo' => '',
+    'logo_img' => 'images/logo-muni-jlo.png',
+    'logo_img_class' => 'brand-image',
     'logo_img_xl' => null,
     'logo_img_xl_class' => 'brand-image-xs',
     'logo_img_alt' => 'Admin Logo',
@@ -84,10 +84,10 @@ return [
     */
 
     'auth_logo' => [
-        'enabled' => false,
+        'enabled' => true,
         'img' => [
-            'path' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
-            'alt' => 'Auth Logo',
+            'path' => 'images/logo-muni-jlo.png',
+            'alt' => 'Logo RSU',
             'class' => '',
             'width' => 50,
             'height' => 50,
@@ -113,11 +113,11 @@ return [
         'enabled' => true,
         'mode' => 'fullscreen',
         'img' => [
-            'path' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
-            'alt' => 'AdminLTE Preloader Image',
-            'effect' => 'animation__shake',
-            'width' => 60,
-            'height' => 60,
+            'path' => 'images/logo-muni-jlo.png',
+            'alt' => 'Logo Municipalidad JLO',
+            'effect' => 'animation__pulse',
+            'width' => 160,
+            'height' => 90,
         ],
     ],
 
@@ -180,6 +180,248 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Custom CSS
+    |--------------------------------------------------------------------------
+    |
+    | Custom CSS styles for the project color scheme
+    |
+    */
+    'injected_css' => '
+        :root {
+            --primary-color: #002b5a;
+            --secondary-color: #0086cd;
+            --primary-hover: #001a3a;
+            --secondary-hover: #006ba3;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-hover) !important;
+            border-color: var(--primary-hover) !important;
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color) !important;
+            border-color: var(--secondary-color) !important;
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--secondary-hover) !important;
+            border-color: var(--secondary-hover) !important;
+        }
+        
+        .btn-info {
+            background-color: var(--secondary-color) !important;
+            border-color: var(--secondary-color) !important;
+        }
+        
+        .btn-info:hover {
+            background-color: var(--secondary-hover) !important;
+            border-color: var(--secondary-hover) !important;
+        }
+        
+        .bg-primary {
+            background-color: var(--primary-color) !important;
+        }
+        
+        .bg-secondary {
+            background-color: var(--secondary-color) !important;
+        }
+        
+        .text-primary {
+            color: var(--primary-color) !important;
+        }
+        
+        .text-secondary {
+            color: var(--secondary-color) !important;
+        }
+        
+        .sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link.active {
+            background-color: var(--primary-color) !important;
+        }
+        
+        .navbar-primary {
+            background-color: var(--primary-color) !important;
+        }
+        
+        .navbar-secondary {
+            background-color: var(--secondary-color) !important;
+        }
+        
+        /* Dropdown items override - Máxima prioridad */
+        .dropdown-item:hover,
+        .dropdown-item:focus,
+        .dropdown-item.active {
+            background-color: #0086cd !important;
+            color: #ffffff !important;
+        }
+        
+        .dropdown-item {
+            color: #002b5a !important;
+            background-color: #ffffff !important;
+        }
+        
+        /* Sidebar nav-treeview active items override */
+        [class*=sidebar-dark-] .nav-treeview>.nav-item>.nav-link.active,
+        [class*=sidebar-dark-] .nav-treeview>.nav-item>.nav-link.active:focus,
+        [class*=sidebar-dark-] .nav-treeview>.nav-item>.nav-link.active:hover {
+            background-color: #0086cd !important;
+            color: #ffffff !important;
+        }
+        
+        .card-primary .card-header {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+        }
+        
+        .card-secondary .card-header {
+            background-color: var(--secondary-color) !important;
+            border-color: var(--secondary-color) !important;
+        }
+        
+        .small-box.bg-primary {
+            background-color: var(--primary-color) !important;
+        }
+        
+        .small-box.bg-info {
+            background-color: var(--secondary-color) !important;
+        }
+        
+        .badge-primary {
+            background-color: var(--primary-color) !important;
+        }
+        
+        .badge-secondary {
+            background-color: var(--secondary-color) !important;
+        }
+        
+        .border-primary {
+            border-color: var(--primary-color) !important;
+        }
+        
+        .border-secondary {
+            border-color: var(--secondary-color) !important;
+        }
+        
+        a {
+            color: var(--primary-color);
+        }
+        
+        a:hover {
+            color: var(--primary-hover);
+        }
+        
+        .form-control:focus {
+            border-color: var(--secondary-color) !important;
+            box-shadow: 0 0 0 0.2rem rgba(0, 134, 205, 0.25) !important;
+        }
+        
+        .page-item.active .page-link {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+        }
+        
+        /* FUERZA BRUTA - OVERRIDE ABSOLUTO */
+        html body .dropdown-item:hover,
+        html body .dropdown-item:focus,
+        html body .dropdown-item.active,
+        html body .navbar .dropdown-item:hover,
+        html body .navbar .dropdown-item:focus {
+            background-color: #0086cd !important;
+            color: #ffffff !important;
+        }
+        
+        html body .dropdown-item {
+            color: #002b5a !important;
+            background-color: #ffffff !important;
+        }
+        
+        html body [class*=sidebar-dark-] .nav-treeview>.nav-item>.nav-link.active,
+        html body [class*=sidebar-dark-] .nav-treeview>.nav-item>.nav-link.active:focus,
+        html body [class*=sidebar-dark-] .nav-treeview>.nav-item>.nav-link.active:hover {
+            background-color: #0086cd !important;
+            color: #ffffff !important;
+        }
+        
+        /* Override específico para sidebar-dark submenu */
+        html body .main-sidebar.sidebar-dark-primary .nav-treeview .nav-item .nav-link.active,
+        html body .sidebar-dark .nav-treeview .nav-item .nav-link.active,
+        html body .sidebar-dark-primary .nav-treeview .nav-item .nav-link.active {
+            background-color: #0086cd !important;
+            color: #ffffff !important;
+        }
+        
+        /* Override ultra específico para cualquier submenu activo */
+        html body .nav-treeview .nav-link.active {
+            background-color: #0086cd !important;
+            color: #ffffff !important;
+        }
+        
+        /* OVERRIDE EXACTO DEL SELECTOR PROBLEMÁTICO */
+        html body [class*=sidebar-dark-] .nav-treeview>.nav-item>.nav-link.active,
+        html body [class*=sidebar-dark-] .nav-treeview>.nav-item>.nav-link.active:focus,
+        html body [class*=sidebar-dark-] .nav-treeview>.nav-item>.nav-link.active:hover {
+            background-color: #0086cd !important;
+            color: #ffffff !important;
+        }
+    ',
+
+    /*
+    |--------------------------------------------------------------------------
+    | JavaScript Injection
+    |--------------------------------------------------------------------------
+    */
+    
+    'injected_js' => '
+        document.addEventListener("DOMContentLoaded", function() {
+            // Crear múltiples estilos para asegurar override
+            const style1 = document.createElement("style");
+            style1.setAttribute("id", "force-override-adminlte");
+            style1.innerHTML = `
+                [class*=sidebar-dark-] .nav-treeview>.nav-item>.nav-link.active,
+                [class*=sidebar-dark-] .nav-treeview>.nav-item>.nav-link.active:focus,
+                [class*=sidebar-dark-] .nav-treeview>.nav-item>.nav-link.active:hover {
+                    background-color: #0086cd !important;
+                    color: #ffffff !important;
+                }
+                .dropdown-item:hover,
+                .dropdown-item:focus,
+                .dropdown-item.active {
+                    background-color: #0086cd !important;
+                    color: #ffffff !important;
+                }
+            `;
+            document.head.appendChild(style1);
+            
+            // Agregar CSS con mayor especificidad
+            const style2 = document.createElement("style");
+            style2.innerHTML = `
+                html body .main-sidebar [class*=sidebar-dark-] .nav-treeview>.nav-item>.nav-link.active,
+                html body .main-sidebar [class*=sidebar-dark-] .nav-treeview>.nav-item>.nav-link.active:focus,
+                html body .main-sidebar [class*=sidebar-dark-] .nav-treeview>.nav-item>.nav-link.active:hover {
+                    background-color: #0086cd !important;
+                    color: #ffffff !important;
+                }
+            `;
+            document.head.appendChild(style2);
+            
+            // Fuerza bruta con setTimeout para asegurar que se aplique al final
+            setTimeout(function() {
+                const elements = document.querySelectorAll("[class*=sidebar-dark-] .nav-treeview .nav-item .nav-link.active");
+                elements.forEach(function(el) {
+                    el.style.setProperty("background-color", "#0086cd", "important");
+                    el.style.setProperty("color", "#ffffff", "important");
+                });
+            }, 100);
+        });
+    ',
+
+    /*
+    |--------------------------------------------------------------------------
     | Admin Panel Classes
     |--------------------------------------------------------------------------
     |
@@ -198,7 +440,8 @@ return [
     'classes_content' => '',
     'classes_sidebar' => 'sidebar-dark-primary elevation-4',
     'classes_sidebar_nav' => '',
-    'classes_topnav' => 'navbar-white navbar-light',
+    'classes_topnav' => 'navbar-primary navbar-dark',
+    'classes_brand' => 'navbar-primary',
     'classes_topnav_nav' => 'navbar-expand',
     'classes_topnav_container' => 'container',
 
@@ -301,20 +544,11 @@ return [
     'menu' => [
         // Navbar items:
         [
-            'type' => 'navbar-search',
-            'text' => 'search',
-            'topnav_right' => true,
-        ],
-        [
             'type' => 'fullscreen-widget',
             'topnav_right' => true,
         ],
 
         // Sidebar items:
-        [
-            'type' => 'sidebar-menu-search',
-            'text' => 'search',
-        ],
 
         ['header' => 'DASHBOARD'],
         [
@@ -390,6 +624,11 @@ return [
             ],
         ],
         [
+            'text'    => 'BORREN ESTA MRD MAMAÑEMAS, ES MI EXAMEN',
+            'icon'    => 'fas fa-tools',
+            'route'   => 'admin.maintenance.index',
+        ],
+        [
             'text'    => 'Programación',
             'icon'    => 'fas fa-fw fa-calendar-alt',
             'submenu' => [
@@ -400,14 +639,14 @@ return [
                 ],
                 [
                     'text' => 'Zonas',
-                    'route' => 'admin.zones.index',
+                    'route' => 'admin.zonesjenkz.index',
                     'icon' => 'fas fa-fw fa-map-marked-alt',
                 ],
-                [
-                    'text' => 'Rutas de Recolección',
-                    'route' => 'admin.routes.index',
-                    'icon' => 'fas fa-fw fa-route',
-                ],
+                // [
+                //     'text' => 'Rutas de Recolección',
+                //     'route' => 'admin.routes.index',
+                //     'icon' => 'fas fa-fw fa-route',
+                // ],
                 [
                     'text' => 'Grupo de Personal',
                     'route' => 'admin.personnel.employeegroups.index',
@@ -504,7 +743,6 @@ return [
     'filters' => [
         JeroenNoten\LaravelAdminLte\Menu\Filters\GateFilter::class,
         JeroenNoten\LaravelAdminLte\Menu\Filters\HrefFilter::class,
-        JeroenNoten\LaravelAdminLte\Menu\Filters\SearchFilter::class,
         JeroenNoten\LaravelAdminLte\Menu\Filters\ActiveFilter::class,
         JeroenNoten\LaravelAdminLte\Menu\Filters\ClassesFilter::class,
         JeroenNoten\LaravelAdminLte\Menu\Filters\LangFilter::class,
@@ -524,6 +762,26 @@ return [
     */
 
     'plugins' => [
+        'CustomTheme' => [
+            'active' => true,
+            'files' => [
+                [
+                    'type' => 'css',
+                    'asset' => true,
+                    'location' => 'css/custom-theme.css',
+                ],
+            ],
+        ],
+        'AdminLTEOverride' => [
+            'active' => true,
+            'files' => [
+                [
+                    'type' => 'css',
+                    'asset' => true,
+                    'location' => 'css/adminlte-override.css',
+                ],
+            ],
+        ],
         'Datatables' => [
             'active' => true,
             'files' => [

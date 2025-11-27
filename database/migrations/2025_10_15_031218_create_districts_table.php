@@ -19,6 +19,9 @@ return new class extends Migration
             $table->foreign('department_id')->references('id')->on('departments');
             $table->unsignedBigInteger('province_id');
             $table->foreign('province_id')->references('id')->on('provinces');
+            $table->decimal('latitude', 11, 8)->nullable();
+            $table->decimal('longitude', 11, 8)->nullable();
+            $table->integer('zoom')->nullable();
             $table->timestamps();
         });
     }

@@ -58,13 +58,13 @@ class AttendanceController extends Controller
         }
 
         // Ordenamiento
-        $sortField = $request->get('sort', 'date');
-        $sortDirection = $request->get('direction', 'desc');
+        $sortField = $request->get('sort', 'id');
+        $sortDirection = $request->get('direction', 'asc');
         
-        if (in_array($sortField, ['date', 'check_in', 'check_out', 'status', 'created_at'])) {
+        if (in_array($sortField, ['id', 'date', 'check_in', 'check_out', 'status', 'created_at'])) {
             $query->orderBy($sortField, $sortDirection);
         } else {
-            $query->orderBy('date', 'desc');
+            $query->orderBy('id', 'asc');
         }
 
         $attendances = $query->paginate(20)->withQueryString();

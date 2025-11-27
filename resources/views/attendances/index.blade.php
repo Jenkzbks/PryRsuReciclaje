@@ -28,21 +28,43 @@
                     <tr>
                         <th>#</th>
                         <th>Empleado</th>
-                        <th>Tipo</th>
-                        <th>Fecha/Hora</th>
+                        <th>Fecha</th>
+                        <th>Entrada</th>
+                        <th>Salida</th>
+                        <th>Estado</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($attendances as $attendance)
                         <tr>
                             <td>{{ $attendance->id }}</td>
-                            <td>{{ $attendance->employee->name ?? 'N/A' }} {{ $attendance->employee->lastname ?? '' }}</td>
-                            <td>{{ $attendance->type }}</td>
-                            <td>{{ $attendance->check_in ? $attendance->check_in->format('d/m/Y H:i:s') : 'N/A' }}</td>
+                            <td>{{ $attendance->employee->names ?? 'N/A' }} {{ $attendance->employee->lastnames ?? '' }}</td>
+                            <td>{{ $attendance->date ? $attendance->date->format('d/m/Y') : 'N/A' }}</td>
+                            <td>{{ $attendance->check_in ? $attendance->check_in->format('H:i:s') : 'N/A' }}</td>
+                            <td>{{ $attendance->check_out ? $attendance->check_out->format('H:i:s') : 'N/A' }}</td>
+                            <td>
+                                @php
+                                    $statusColors = [
+                                        'present' => 'success',
+                                        'late' => 'warning', 
+                                        'absent' => 'danger',
+                                        'half_day' => 'info'
+                                    ];
+                                    $statusLabels = [
+                                        'present' => 'Presente',
+                                        'late' => 'Tarde',
+                                        'absent' => 'Ausente', 
+                                        'half_day' => 'Medio Día'
+                                    ];
+                                    $color = $statusColors[$attendance->status] ?? 'secondary';
+                                    $label = $statusLabels[$attendance->status] ?? $attendance->status;
+                                @endphp
+                                <span class="badge badge-{{ $color }}">{{ $label }}</span>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="text-center">No hay registros</td>
+                            <td colspan="6" class="text-center">No hay registros</td>
                         </tr>
                     @endforelse
                 </tbody>

@@ -37,11 +37,6 @@ class EmployeeController extends Controller
             $query->where('type_id', $request->employee_type_id);
         }
 
-        // Filtro por departamento (comentado - columna no existe en employee)
-        // if ($request->filled('department_id')) {
-        //     $query->where('department_id', $request->department_id);
-        // }
-
         // Filtro por estado
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -63,6 +58,26 @@ class EmployeeController extends Controller
             $query->orderBy($sortField, $sortDirection);
         } else {
             $query->orderBy('names', 'asc');
+        }
+
+        // Si es una solicitud AJAX
+        if ($request->ajax()) {
+            $employees = $query->where('status', 1)
+                ->get()
+                ->map(function($employee) {
+                    return [
+                        'id' => $employee->id,
+                        'names' => $employee->names,
+                        'lastnames' => $employee->lastnames,
+                        'dni' => $employee->dni,
+                        'name' => "{$employee->names} {$employee->lastnames}"
+                    ];
+                });
+            
+            return response()->json([
+                'success' => true,
+                'data' => $employees
+            ]);
         }
 
         $employees = $query->paginate(15)->withQueryString();
@@ -276,13 +291,13 @@ class EmployeeController extends Controller
     public function getActiveEmployees(Request $request)
     {
         $query = Employee::where('status', 1)
-            ->select('id', 'name', 'lastname', 'dni');
+            ->select('id', 'names', 'lastnames', 'dni');
 
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('lastname', 'like', "%{$search}%")
+                $q->where('names', 'like', "%{$search}%")
+                  ->orWhere('lastnames', 'like', "%{$search}%")
                   ->orWhere('dni', 'like', "%{$search}%");
             });
         }
@@ -294,13 +309,16 @@ class EmployeeController extends Controller
                 return [
                     'id' => $employee->id,
                     'text' => "{$employee->names} {$employee->lastnames} - {$employee->dni}",
-                    'name' => $employee->names,
-                    'lastname' => $employee->lastnames,
+                    'names' => $employee->names,
+                    'lastnames' => $employee->lastnames,
                     'dni' => $employee->dni
                 ];
             });
 
-        return response()->json($employees);
+        return response()->json([
+            'success' => true,
+            'data' => $employees
+        ]);
     }
 
     /**
@@ -339,7 +357,7 @@ class EmployeeController extends Controller
                     'Tipo' => $employee->employeeType?->name,
                     'Departamento' => $employee->department?->name,
                     'Estado' => $employee->status,
-                    'Fecha Registro' => $employee->created_at->format('d/m/Y')
+                    'Fecha Registro' => $employee->created_at?->format('d/m/Y') ?? 'N/A'
                 ];
             });
 

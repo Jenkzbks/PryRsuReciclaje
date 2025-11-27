@@ -205,7 +205,7 @@
                                     <strong>{{ $employee->names }} {{ $employee->lastnames }}</strong>
                                     <br>
                                     <small class="text-muted">
-                                        Registrado: {{ $employee->created_at->format('d/m/Y') }}
+                                        Registrado: {{ $employee->created_at?->format('d/m/Y') ?? 'N/A' }}
                                     </small>
                                 </td>
                                 <td>

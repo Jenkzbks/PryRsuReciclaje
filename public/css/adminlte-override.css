@@ -1,0 +1,41 @@
+/* OVERRIDE DEFINITIVO PARA ADMINLTE.MIN.CSS */
+
+/* Sobrescribir variables CSS de Bootstrap */
+:root {
+    --gray-dark: #0086cd !important;
+    --dark: #0086cd !important;
+}
+
+/* Sobrescribir directamente el selector específico que nos está causando problemas */
+[class*=sidebar-dark-] .nav-treeview>.nav-item>.nav-link.active,
+[class*=sidebar-dark-] .nav-treeview>.nav-item>.nav-link.active:focus, 
+[class*=sidebar-dark-] .nav-treeview>.nav-item>.nav-link.active:hover {
+    background-color: #0086cd !important;
+    color: #ffffff !important;
+}
+
+/* Dropdown items */
+.dropdown-item:hover,
+.dropdown-item:focus,
+.dropdown-item.active {
+    background-color: #0086cd !important;
+    color: #ffffff !important;
+}
+
+/* Sobrescribir todos los usos de #343a40 */
+.bg-dark {
+    background-color: #0086cd !important;
+}
+
+.text-dark {
+    color: #002b5a !important;
+}
+
+.border-dark {
+    border-color: #0086cd !important;
+}
+
+.btn-dark {
+    background-color: #0086cd !important;
+    border-color: #0086cd !important;
+}

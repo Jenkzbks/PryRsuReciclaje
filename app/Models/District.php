@@ -14,6 +14,15 @@ class District extends Model
         'code',
         'department_id',
         'province_id',
+        'latitude',
+        'longitude',
+        'zoom',
+    ];
+
+    protected $casts = [
+        'latitude' => 'float',
+        'longitude' => 'float',
+        'zoom' => 'int',
     ];
 
     public function department()

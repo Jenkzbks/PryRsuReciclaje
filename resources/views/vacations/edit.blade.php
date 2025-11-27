@@ -189,10 +189,10 @@
                                     <h6><i class="fas fa-info-circle"></i> Información de Auditoría</h6>
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <small><strong>Creado:</strong> {{ $vacation->created_at->format('d/m/Y H:i:s') }}</small>
+                                            <small><strong>Creado:</strong> {{ $vacation->created_at?->format('d/m/Y H:i:s') ?? 'N/A' }}</small>
                                         </div>
                                         <div class="col-md-6">
-                                            <small><strong>Última modificación:</strong> {{ $vacation->updated_at->format('d/m/Y H:i:s') }}</small>
+                                            <small><strong>Última modificación:</strong> {{ $vacation->updated_at?->format('d/m/Y H:i:s') ?? 'N/A' }}</small>
                                         </div>
                                     </div>
                                     @if($vacation->approved_at)

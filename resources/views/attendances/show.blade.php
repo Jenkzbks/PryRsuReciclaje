@@ -185,11 +185,11 @@
                                                 </tr>
                                                 <tr>
                                                     <td><strong>Registrado:</strong></td>
-                                                    <td>{{ $attendance->created_at->format('d/m/Y H:i:s') }}</td>
+                                                    <td>{{ $attendance->created_at?->format('d/m/Y H:i:s') ?? 'N/A' }}</td>
                                                 </tr>
                                                 <tr>
                                                     <td><strong>Actualizado:</strong></td>
-                                                    <td>{{ $attendance->updated_at->format('d/m/Y H:i:s') }}</td>
+                                                    <td>{{ $attendance->updated_at?->format('d/m/Y H:i:s') ?? 'N/A' }}</td>
                                                 </tr>
                                             </table>
                                         </div>

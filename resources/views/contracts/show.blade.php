@@ -216,7 +216,7 @@
                                             @if($isProbationActive)
                                                 <br><small class="text-warning">
                                                     <i class="fas fa-hourglass-half"></i>
-                                                    En período de prueba hasta {{ $probationEnd->format('d/m/Y') }}
+                                                    En período de prueba hasta {{ $probationEnd ? $probationEnd->format('d/m/Y') : 'N/A' }}
                                                 </small>
                                             @else
                                                 <br><small class="text-success">

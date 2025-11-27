@@ -168,10 +168,10 @@
                                     <span class="badge badge-info">{{ $contract->contract_type_name }}</span>
                                 </td>
                                 <td>{{ $contract->position->name ?? 'No especificado' }}</td>
-                                <td>{{ $contract->start_date->format('d/m/Y') }}</td>
+                                <td>{{ $contract->start_date ? $contract->start_date->format('d/m/Y') : 'N/A' }}</td>
                                 <td>
                                     @if($contract->end_date)
-                                        {{ $contract->end_date->format('d/m/Y') }}
+                                        {{ $contract->end_date ? $contract->end_date->format('d/m/Y') : 'Indefinido' }}
                                         @if($contract->end_date->isPast())
                                             <span class="badge badge-warning">Vencido</span>
                                         @elseif($contract->end_date->diffInDays(now()) <= 30)
