@@ -37,23 +37,41 @@
 
       <!-- Información del Grupo (solo lectura) -->
       <div class="row mb-4">
-        <div class="col-md-12">
-          <div class="alert alert-info py-2">
-            <div class="row">
-              <div class="col-md-3">
-                <strong>Grupo:</strong> {{ $scheduling->group->name ?? '-' }}
-              </div>
-              <div class="col-md-3">
-                <strong>Zona:</strong> {{ $scheduling->group->zone->name ?? '-' }}
-              </div>
-              <div class="col-md-3">
-                <strong>Días del grupo:</strong> {{ $scheduling->group->days ?? '-' }}
-              </div>
-              <div class="col-md-3">
-                <strong>Configuración original</strong>
+        <div class="col-md-3 mb-2">
+            <div class="d-flex align-items-center bg-light rounded border p-2 h-100">
+              <span class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mr-2" style="width:32px;height:32px;"><i class="fas fa-users"></i></span>
+              <div>
+                <small class="text-muted">Nombre</small><br>
+                <span class="fw-bold">{{ $scheduling->group->name ?? '-' }}</span>
               </div>
             </div>
-          </div>
+        </div>
+        <div class="col-md-3 mb-2">
+            <div class="d-flex align-items-center bg-light rounded border p-2 h-100">
+              <span class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center mr-2" style="width:32px;height:32px;"><i class="fas fa-map-marked-alt"></i></span>
+              <div>
+                <small class="text-muted">Zona</small><br>
+                <span class="fw-bold">{{ $scheduling->group->zone->name ?? '-' }}</span>
+              </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-2">
+            <div class="d-flex align-items-center bg-light rounded border p-2 h-100">
+              <span class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center mr-2" style="width:32px;height:32px;"><i class="fas fa-calendar-alt"></i></span>
+              <div>
+                <small class="text-muted">Días del grupo</small><br>
+                <span class="fw-bold">{{ $scheduling->group->days ?? '-' }}</span>
+              </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-2">
+            <div class="d-flex align-items-center bg-light rounded border p-2 h-100">
+              <span class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center mr-2" style="width:32px;height:32px;"><i class="fas fa-cogs"></i></span>
+              <div>
+                <small class="text-muted">Configuración original</small><br>
+                <span class="fw-bold">&nbsp;</span>
+              </div>
+            </div>
         </div>
       </div>
 
@@ -222,63 +240,27 @@
         </div>
       </div>
 
-      <!-- Cambios Registrados -->
-      <div class="card border-info mb-4">
+      <!-- Cambios Registrados (solo nuevos cambios de esta edición) -->
+      <div id="changeSummaryCard" class="card border-info mb-4" style="display:none;">
         <div class="card-header bg-info text-white">
-          <strong>Resumen de Cambios</strong>
+          <strong>Resumen de Cambios (solo los que realices ahora)</strong>
         </div>
         <div class="card-body">
           <div class="table-responsive">
-            <table class="table table-sm table-bordered">
+            <table class="table table-sm table-bordered" id="changeSummaryTable">
               <thead>
                 <tr class="bg-light">
                   <th>Tipo de Cambio</th>
                   <th>Valor Original del Grupo</th>
                   <th>Valor Actual</th>
                   <th>Valor Nuevo</th>
-                  <th>Estado</th>
+                  <th>Motivo del Cambio <span class="text-danger">*</span></th>
+                  <th>Notas</th>
+                  <th>Acción</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>Turno</td>
-                  <td>{{ $scheduling->group->shift->name ?? '-' }}</td>
-                  <td>{{ $scheduling->shift->name ?? $scheduling->group->shift->name ?? '-' }}</td>
-                  <td id="newShiftPreview">-</td>
-                  <td>
-                    @if($scheduling->shift_id && $scheduling->shift_id != $scheduling->group->shift_id)
-                      <span class="badge badge-warning">Modificado</span>
-                    @else
-                      <span class="badge badge-secondary">Original</span>
-                    @endif
-                  </td>
-                </tr>
-                <tr>
-                  <td>Vehículo</td>
-                  <td>{{ $scheduling->group->vehicle->plate ?? '-' }}</td>
-                  <td>{{ $scheduling->vehicle->plate ?? $scheduling->group->vehicle->plate ?? '-' }}</td>
-                  <td id="newVehiclePreview">-</td>
-                  <td>
-                    @if($scheduling->vehicle_id && $scheduling->vehicle_id != $scheduling->group->vehicle_id)
-                      <span class="badge badge-warning">Modificado</span>
-                    @else
-                      <span class="badge badge-secondary">Original</span>
-                    @endif
-                  </td>
-                </tr>
-                <tr>
-                  <td>Personal</td>
-                  <td>{{ $scheduling->group->employees->count() ?? 0 }} trabajadores</td>
-                  <td>{{ $scheduling->details->count() }} trabajadores</td>
-                  <td id="newPersonnelPreview">-</td>
-                  <td>
-                    @if($scheduling->details->count() > 0)
-                      <span class="badge badge-info">Asignado</span>
-                    @else
-                      <span class="badge badge-secondary">Sin personal</span>
-                    @endif
-                  </td>
-                </tr>
+                <!-- Filas generadas por JS (solo cambios nuevos) -->
               </tbody>
             </table>
           </div>
@@ -300,76 +282,160 @@
 
 @section('js')
 <script>
-  // Actualizar vista previa de cambios
+  
+  // Motivos desde backend (pasar como $reasons)
+  const reasons = @json($reasons ?? []);
+
   document.addEventListener('DOMContentLoaded', function() {
-    // Vista previa para turno
+    // Selectores
     const shiftSelect = document.querySelector('select[name="shift_id"]');
-    const newShiftPreview = document.getElementById('newShiftPreview');
-    
-    shiftSelect.addEventListener('change', function() {
-      if (this.value) {
-        newShiftPreview.textContent = this.options[this.selectedIndex].text;
-        newShiftPreview.className = 'text-warning font-weight-bold';
-      } else {
-        newShiftPreview.textContent = '-';
-        newShiftPreview.className = '';
-      }
-    });
-
-    // Vista previa para vehículo
     const vehicleSelect = document.querySelector('select[name="vehicle_id"]');
-    const newVehiclePreview = document.getElementById('newVehiclePreview');
-    
-    vehicleSelect.addEventListener('change', function() {
-      if (this.value) {
-        newVehiclePreview.textContent = this.options[this.selectedIndex].text;
-        newVehiclePreview.className = 'text-warning font-weight-bold';
-      } else {
-        newVehiclePreview.textContent = '-';
-        newVehiclePreview.className = '';
-      }
-    });
-
-    // Vista previa para personal
     const driverSelect = document.querySelector('select[name="driver_id"]');
     const assistant1Select = document.querySelector('select[name="assistant1_id"]');
     const assistant2Select = document.querySelector('select[name="assistant2_id"]');
-    const newPersonnelPreview = document.getElementById('newPersonnelPreview');
+    const changeSummaryCard = document.getElementById('changeSummaryCard');
+    const changeSummaryTable = document.getElementById('changeSummaryTable').querySelector('tbody');
 
-    function updatePersonnelPreview() {
-      const changes = [];
-      
-      if (driverSelect.value) {
-        changes.push('Nuevo conductor');
+    // Valores originales
+    const original = {
+      shift_id: '{{ $scheduling->group->shift_id ?? '' }}',
+      vehicle_id: '{{ $scheduling->group->vehicle_id ?? '' }}',
+      driver_id: '{{ $selectedDriverId ?? '' }}',
+      assistant1_id: '{{ $selectedA1Id ?? '' }}',
+      assistant2_id: '{{ $selectedA2Id ?? '' }}',
+    };
+
+    // Nombres originales
+    const originalNames = {
+      shift: `{{ $scheduling->group->shift->name ?? '-' }}`,
+      vehicle: `{{ $scheduling->group->vehicle->plate ?? '-' }}`,
+      driver: `{{ $drivers->firstWhere('id', $selectedDriverId)->lastnames ?? '-' }} {{ $drivers->firstWhere('id', $selectedDriverId)->names ?? '' }}`,
+      assistant1: `{{ $assistants->firstWhere('id', $selectedA1Id)->lastnames ?? '-' }} {{ $assistants->firstWhere('id', $selectedA1Id)->names ?? '' }}`,
+      assistant2: `{{ $assistants->firstWhere('id', $selectedA2Id)->lastnames ?? '-' }} {{ $assistants->firstWhere('id', $selectedA2Id)->names ?? '' }}`
+    };
+
+    
+    // Helper para crear select de motivo
+    function motivoSelectHtml(tipo) {
+      let html = `<select name="motivos[${tipo}]" class="form-control form-control-sm motivo-select" required><option value="">Seleccione motivo</option>`;
+      for (const r of reasons) {
+        html += `<option value="${r.id}">${r.name}</option>`;
       }
-      if (assistant1Select.value) {
-        changes.push('Nuevo ayudante 1');
-      }
-      if (assistant2Select.value) {
-        changes.push('Nuevo ayudante 2');
-      }
-      
-      if (changes.length > 0) {
-        newPersonnelPreview.textContent = changes.join(', ');
-        newPersonnelPreview.className = 'text-warning font-weight-bold';
-      } else {
-        newPersonnelPreview.textContent = '-';
-        newPersonnelPreview.className = '';
-      }
+      html += '</select>';
+      return html;
     }
 
-    driverSelect.addEventListener('change', updatePersonnelPreview);
-    assistant1Select.addEventListener('change', updatePersonnelPreview);
-    assistant2Select.addEventListener('change', updatePersonnelPreview);
+    // Helper para crear textarea de notas
+    function notasTextareaHtml(tipo) {
+      return `<textarea name="notas[${tipo}]" class="form-control form-control-sm" rows="1" placeholder="Notas del cambio..."></textarea>`;
+    }
 
-    // Inicializar vistas previas con valores actuales
-    if (shiftSelect.value) {
-      shiftSelect.dispatchEvent(new Event('change'));
+    // Helper para crear botón eliminar
+    function eliminarBtnHtml(tipo) {
+      return `<button type="button" class="btn btn-danger btn-sm eliminar-cambio" data-tipo="${tipo}"><i class="fas fa-times"></i></button>`;
     }
-    if (vehicleSelect.value) {
-      vehicleSelect.dispatchEvent(new Event('change'));
+
+
+    // Detectar cambios y renderizar tabla (mostrar cualquier acción, incluso si vuelve al original)
+    function renderChangeSummary() {
+      let rows = '';
+      let hasChange = false;
+
+      // Turno
+      if (shiftSelect.value && shiftSelect.value !== '{{ $scheduling->shift_id ?? '' }}') {
+        hasChange = true;
+        rows += `<tr data-tipo="turno">
+          <td>Turno</td>
+          <td>{{ $scheduling->shift->name ?? $scheduling->group->shift->name ?? '-' }}</td>
+          <td>{{ $scheduling->shift->name ?? $scheduling->group->shift->name ?? '-' }}</td>
+          <td>${shiftSelect.options[shiftSelect.selectedIndex].text}</td>
+          <td>${motivoSelectHtml('turno')}</td>
+          <td>${notasTextareaHtml('turno')}</td>
+          <td>${eliminarBtnHtml('turno')}</td>
+        </tr>`;
+      }
+      // Vehículo
+      if (vehicleSelect.value && vehicleSelect.value !== '{{ $scheduling->vehicle_id ?? '' }}') {
+        hasChange = true;
+        rows += `<tr data-tipo="vehiculo">
+          <td>Vehículo</td>
+          <td>{{ $scheduling->vehicle->plate ?? $scheduling->group->vehicle->plate ?? '-' }}</td>
+          <td>{{ $scheduling->vehicle->plate ?? $scheduling->group->vehicle->plate ?? '-' }}</td>
+          <td>${vehicleSelect.options[vehicleSelect.selectedIndex].text}</td>
+          <td>${motivoSelectHtml('vehiculo')}</td>
+          <td>${notasTextareaHtml('vehiculo')}</td>
+          <td>${eliminarBtnHtml('vehiculo')}</td>
+        </tr>`;
+      }
+      // Personal (cualquier cambio en conductor o ayudantes)
+      let personalChanged = false;
+      if (
+        (driverSelect.value && driverSelect.value !== '{{ $selectedDriverId ?? '' }}') ||
+        (assistant1Select.value && assistant1Select.value !== '{{ $selectedA1Id ?? '' }}') ||
+        (assistant2Select.value && assistant2Select.value !== '{{ $selectedA2Id ?? '' }}')
+      ) {
+        personalChanged = true;
+        hasChange = true;
+      }
+      if (personalChanged) {
+        let nuevoPersonal = [];
+        if (driverSelect.value) {
+          const d = driverSelect.options[driverSelect.selectedIndex].text;
+          nuevoPersonal.push('Conductor: ' + d);
+        }
+        if (assistant1Select.value) {
+          const a1 = assistant1Select.options[assistant1Select.selectedIndex].text;
+          nuevoPersonal.push('Ayudante 1: ' + a1);
+        }
+        if (assistant2Select.value) {
+          const a2 = assistant2Select.options[assistant2Select.selectedIndex].text;
+          nuevoPersonal.push('Ayudante 2: ' + a2);
+        }
+        rows += `<tr data-tipo="personal">
+          <td>Personal</td>
+          <td>-</td>
+          <td>-</td>
+          <td>${nuevoPersonal.length ? nuevoPersonal.join('<br>') : '-'}</td>
+          <td>${motivoSelectHtml('personal')}</td>
+          <td>${notasTextareaHtml('personal')}</td>
+          <td>${eliminarBtnHtml('personal')}</td>
+        </tr>`;
+      }
+
+      changeSummaryTable.innerHTML = rows;
+      changeSummaryCard.style.display = hasChange ? '' : 'none';
+
+      // Asignar eventos a los botones eliminar
+      document.querySelectorAll('.eliminar-cambio').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const tipo = this.getAttribute('data-tipo');
+          if (tipo === 'turno') {
+            shiftSelect.value = '{{ $scheduling->shift_id ?? '' }}';
+            shiftSelect.dispatchEvent(new Event('change'));
+          } else if (tipo === 'vehiculo') {
+            vehicleSelect.value = '{{ $scheduling->vehicle_id ?? '' }}';
+            vehicleSelect.dispatchEvent(new Event('change'));
+          } else if (tipo === 'personal') {
+            driverSelect.value = '{{ $selectedDriverId ?? '' }}';
+            assistant1Select.value = '{{ $selectedA1Id ?? '' }}';
+            assistant2Select.value = '{{ $selectedA2Id ?? '' }}';
+            driverSelect.dispatchEvent(new Event('change'));
+            assistant1Select.dispatchEvent(new Event('change'));
+            assistant2Select.dispatchEvent(new Event('change'));
+          }
+        });
+      });
     }
-    updatePersonnelPreview();
+
+    // Listeners
+    shiftSelect.addEventListener('change', renderChangeSummary);
+    vehicleSelect.addEventListener('change', renderChangeSummary);
+    driverSelect.addEventListener('change', renderChangeSummary);
+    assistant1Select.addEventListener('change', renderChangeSummary);
+    assistant2Select.addEventListener('change', renderChangeSummary);
+
+    // Inicializar
+    renderChangeSummary();
   });
 </script>
 @stop

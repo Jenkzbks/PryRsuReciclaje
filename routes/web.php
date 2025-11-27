@@ -8,6 +8,7 @@ use App\Http\Controllers\admin\RouteController;
 use App\Http\Controllers\admin\BrandController;
 use App\Http\Controllers\admin\BrandModelController;
 use App\Http\Controllers\admin\ShiftController;
+use App\Http\Controllers\admin\ReasonController;
 use App\Http\Controllers\admin\ZoneJController;
 use App\Http\Controllers\admin\VehicleTypeController;
 use App\Http\Controllers\admin\VehicleController;
@@ -67,6 +68,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('vehicles', VehicleController::class);
     Route::resource('colors', ColorController::class);
     Route::resource('shifts', ShiftController::class);
+    Route::resource('reasons', ReasonController::class);
     
         Route::get('zonesjenkz/map', [App\Http\Controllers\Admin\ZoneJController::class, 'map'])->name('zonesjenkz.map');
     
@@ -87,7 +89,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('schedulings/check-availability', [\App\Http\Controllers\admin\SchedulingController::class, 'checkAvailability'])
     ->name('schedulings.check-availability');
 
-   
+    Route::get('schedulings/{scheduling}/detalle', [SchedulingController::class, 'detalle'])->name('schedulings.detalle');
 
     // API routes para selects dependientes
     Route::get('api/provinces/{department_id}', [ZoneController::class, 'getProvinces'])->name('api.provinces');

@@ -347,8 +347,11 @@ class SchedulingController extends Controller
         $selectedA1Id     = $aDetails->get(0)?->employee?->id;
         $selectedA2Id     = $aDetails->get(1)?->employee?->id;
 
+        // Motivos activos
+        $reasons = \App\Models\Reason::where('active', 1)->orderBy('name')->get();
+
         return view('schedulings.edit', compact(
-            'scheduling', 'drivers', 'assistants', 'selectedDriverId', 'selectedA1Id', 'selectedA2Id', 'shifts', 'vehicles'
+            'scheduling', 'drivers', 'assistants', 'selectedDriverId', 'selectedA1Id', 'selectedA2Id', 'shifts', 'vehicles', 'reasons'
         ));
     }
 
@@ -366,24 +369,82 @@ class SchedulingController extends Controller
             'different' => 'No puede repetir el mismo trabajador en más de un rol.'
         ]);
 
-        // Actualizar campos básicos
+        // Detectar cambios y registrar en scheduling_changes
+        $userId = auth()->id();
+        $oldShift = $scheduling->shift_id;
+        $oldVehicle = $scheduling->vehicle_id;
+        $oldPersonnel = $scheduling->details->pluck('emplooyee_id')->sort()->values()->toArray();
+
+        $newStatus = $scheduling->status;
+        if ($scheduling->status == 1) {
+            $newStatus = 2; // Si estaba programado, pasa a reprogramado
+        }
         $scheduling->update([
             'date'       => $request->date,
             'notes'      => $request->notes ?? '',
             'shift_id'   => $request->shift_id ?? $scheduling->shift_id,
             'vehicle_id' => $request->vehicle_id ?? $scheduling->vehicle_id,
+            'status'     => $request->status ?? $newStatus,
         ]);
 
         // Actualizar personal
         $scheduling->details()->delete();
-
+        $newPersonnel = [];
         foreach (['driver_id', 'assistant1_id', 'assistant2_id'] as $field) {
             if ($request->$field) {
                 Groupdetail::create([
                     'scheduling_id' => $scheduling->id,
                     'emplooyee_id'  => $request->$field,
                 ]);
+                $newPersonnel[] = $request->$field;
             }
+        }
+        sort($newPersonnel);
+
+        $motivos = $request->input('motivos', []);
+        $notas   = $request->input('notas', []);
+
+        // Cambios de turno
+        if ($request->shift_id && $request->shift_id != $oldShift) {
+            \App\Models\SchedulingChange::create([
+                'scheduling_id' => $scheduling->id,
+                'reason_id'     => $motivos['turno'] ?? null,
+                'notes'         => $notas['turno'] ?? null,
+                'change_type'   => 'turno',
+                'old_value'     => optional(\App\Models\Shift::find($oldShift))->name,
+                'new_value'     => optional(\App\Models\Shift::find($request->shift_id))->name,
+                'user_id'       => $userId,
+            ]);
+        }
+        // Cambios de vehículo
+        if ($request->vehicle_id && $request->vehicle_id != $oldVehicle) {
+            \App\Models\SchedulingChange::create([
+                'scheduling_id' => $scheduling->id,
+                'reason_id'     => $motivos['vehiculo'] ?? null,
+                'notes'         => $notas['vehiculo'] ?? null,
+                'change_type'   => 'vehículo',
+                'old_value'     => optional(\App\Models\Vehicle::find($oldVehicle))->plate,
+                'new_value'     => optional(\App\Models\Vehicle::find($request->vehicle_id))->plate,
+                'user_id'       => $userId,
+            ]);
+        }
+        // Cambios de personal
+        if ($oldPersonnel != $newPersonnel) {
+            $oldNames = collect($oldPersonnel)->map(function($id){
+                $e = \App\Models\Employee::find($id); return $e ? ($e->lastnames.' '.$e->names) : null;
+            })->filter()->implode(', ');
+            $newNames = collect($newPersonnel)->map(function($id){
+                $e = \App\Models\Employee::find($id); return $e ? ($e->lastnames.' '.$e->names) : null;
+            })->filter()->implode(', ');
+            \App\Models\SchedulingChange::create([
+                'scheduling_id' => $scheduling->id,
+                'reason_id'     => $motivos['personal'] ?? null,
+                'notes'         => $notas['personal'] ?? null,
+                'change_type'   => 'personal',
+                'old_value'     => $oldNames,
+                'new_value'     => $newNames,
+                'user_id'       => $userId,
+            ]);
         }
 
         if ($request->ajax()) {
@@ -567,6 +628,16 @@ class SchedulingController extends Controller
             ]);
 
         return response()->json($candidates);
+    }
+
+    /**
+     * Muestra el detalle del día programado e historial de cambios (AJAX)
+     */
+    public function detalle(Scheduling $scheduling)
+    {
+        $scheduling->load(['group.zone', 'shift', 'vehicle', 'details.employee']);
+        $changes = $scheduling->changes()->with('reason', 'user')->orderBy('created_at', 'desc')->get();
+        return view('schedulings.partials.detalle', compact('scheduling', 'changes'));
     }
 
     /* =========================

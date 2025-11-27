@@ -20,5 +20,9 @@ class Scheduling extends Model
 {
     return $this->hasMany(\App\Models\Groupdetail::class, 'scheduling_id');
 }
+public function changes()
+    {
+        return $this->hasMany(\App\Models\SchedulingChange::class, 'scheduling_id');
+    }
 
 }

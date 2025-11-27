@@ -70,6 +70,9 @@
                 <a href="{{ route('admin.schedulings.edit',$s) }}" class="btn btn-sm btn-outline-primary mr-2">
                   <i class="fas fa-edit"></i>
                 </a>
+                <button type="button" class="btn btn-sm btn-info mr-2 btnDetalle" data-id="{{ $s->id }}" title="Ver detalle">
+                  <i class="fas fa-users"></i>
+                </button>
                 <form method="POST" action="{{ route('admin.schedulings.destroy',$s) }}" onsubmit="return confirm('¿Eliminar programación?')">
                   @csrf @method('DELETE')
                   <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
@@ -135,3 +138,18 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 </script>
 @stop
+
+@push('js')
+<script>
+$(function() {
+  $('.btnDetalle').click(function() {
+    var id = $(this).data('id');
+    $('#detalleContenido').html('<div class="text-center p-5"><i class="fas fa-spinner fa-spin fa-2x"></i> Cargando...</div>');
+    $('#modalDetalle').modal('show');
+    $.get("{{ url('admin/schedulings') }}/" + id + "/detalle", function(data) {
+      $('#detalleContenido').html(data);
+    });
+  });
+});
+</script>
+@endpush
