@@ -274,7 +274,7 @@ class SchedulingController extends Controller
                 switch ($request->type) {
                     case 'Cambio de Conductor':
                         $driverDetail = $s->details->first(function($d){
-                            return optional($d->employee)->type_id == 2;
+                            return optional($d->employee)->type_id == 1;
                         });
                         if ($driverDetail) {
                             $apply = true;
@@ -302,7 +302,7 @@ class SchedulingController extends Controller
 
                     case 'Cambio de Ayudante':
                         $assistantDetails = $s->details->filter(function($d){
-                            return optional($d->employee)->type_id == 4;
+                            return optional($d->employee)->type_id == 2;
                         });
                         foreach ($assistantDetails as $ad) {
                             $apply = true;
@@ -389,7 +389,9 @@ class SchedulingController extends Controller
   public function store(Request $request)
     {
         $request->validate([
-            'group_id'  => 'required|exists:employeegroups,id',
+            'group_ids' => 'required_without:group_id|array',
+            'group_ids.*' => 'exists:employeegroups,id',
+            'group_id'  => 'required_without:group_ids|exists:employeegroups,id',
             'from'      => 'required|date',
             'to'        => 'required|date|after_or_equal:from',
             'notes'     => 'nullable|string|max:120',
@@ -397,95 +399,110 @@ class SchedulingController extends Controller
             'additional_days.*' => 'in:lunes,martes,miércoles,miercoles,jueves,viernes,sábado,sabado,domingo',
         ]);
 
-        // Grupo + miembros base
-        $group = Employeegroup::with(['shift','vehicle','zone','employees'])->findOrFail($request->group_id);
-
-        $members = $group->employees()
-            ->select('employee.*')
-            ->orderBy('configgroups.id')
-            ->get();
-
-        $driver     = $members->firstWhere('type_id', 2);
-        $assistants = $members->where('type_id', 4)->values();
-        $assistant1 = $assistants->get(0);
-        $assistant2 = $assistants->get(1);
-
-        $base = [
-            'driver'     => $driver?->id,
-            'assistant1' => $assistant1?->id,
-            'assistant2' => $assistant2?->id,
-        ];
-
-        // 🔥 COMBINAR DÍAS DEL GRUPO + DÍAS ADICIONALES
-        $baseGroupDays = $this->parseSpanishDays($group->days ?? '');
-        $additionalDays = $this->parseSpanishDays($request->input('additional_days_processed', ''));
-        
-        // Combinar y eliminar duplicados
-        $allWorkingDays = array_values(array_unique(array_merge($baseGroupDays, $additionalDays)));
-
-        // Fechas del rango que coinciden con los días combinados
-        $period = CarbonPeriod::create(Carbon::parse($request->from), Carbon::parse($request->to));
-        $dates  = [];
-        foreach ($period as $d) {
-            if (in_array($d->dayOfWeek, $allWorkingDays)) {
-                $dates[] = $d->toDateString();
-            }
-        }
-        
-        if (empty($dates)) {
-            return back()->withErrors(['range' => 'El rango no contiene días configurados para el grupo.'])->withInput();
+        // Determine list of group ids to process
+        $groupIds = $request->input('group_ids') ?? ($request->filled('group_id') ? [$request->input('group_id')] : []);
+        if (empty($groupIds)) {
+            return back()->withErrors(['group_id' => 'Seleccione al menos un grupo'])->withInput();
         }
 
-        // Reemplazos que vienen del formulario (hidden inputs)
+        $totalAffected = 0;
+        $totalAdditionalDays = 0;
+
+        // Replacements common for the request
         $replacements = $this->normalizeReplacements($request->input('replacements', []));
 
-        // Validar: si hay conflictos (contrato/vacaciones) NO cubiertos por reemplazo, bloquear
-        $uncovered = $this->uncoveredConflicts($group, $base, $dates, $replacements);
-        if (!empty($uncovered)) {
-            return back()->withErrors(['availability' => implode(' | ', $uncovered)])->withInput();
-        }
+        DB::transaction(function () use ($groupIds, $request, &$totalAffected, &$totalAdditionalDays, $replacements) {
+            foreach ($groupIds as $gid) {
+                // Grupo + miembros base
+                $group = Employeegroup::with(['shift','vehicle','zone','employees'])->findOrFail($gid);
 
-        // Crear programaciones día a día y snapshot en groupdetails
-        DB::transaction(function () use ($group, $dates, $base, $replacements, $request, $allWorkingDays) {
-            foreach ($dates as $date) {
-                // evita duplicados exactos mismo grupo/fecha
-                $exists = Scheduling::where('group_id', $group->id)
-                    ->whereDate('date', $date)
-                    ->exists();
-                if ($exists) continue;
+                $members = $group->employees()
+                    ->select('employee.*')
+                    ->orderBy('configgroups.id')
+                    ->get();
 
-                // quién trabaja ese día (aplica reemplazo si cubre la fecha)
-                $assigned = [
-                    'driver'     => $this->employeeForDate('driver', $base, $replacements, $date),
-                    'assistant1' => $this->employeeForDate('assistant1', $base, $replacements, $date),
-                    'assistant2' => $this->employeeForDate('assistant2', $base, $replacements, $date),
+                $driver     = $members->firstWhere('type_id', 1);
+                $assistants = $members->where('type_id', 2)->values();
+                $assistant1 = $assistants->get(0);
+                $assistant2 = $assistants->get(1);
+
+                $base = [
+                    'driver'     => $driver?->id,
+                    'assistant1' => $assistant1?->id,
+                    'assistant2' => $assistant2?->id,
                 ];
 
-                // scheduling
-                $s = Scheduling::create([
-                    'group_id'   => $group->id,
-                    'shift_id'   => $group->shift_id,
-                    'vehicle_id' => $group->vehicle_id,
-                    'zone_id'    => $group->zone_id,
-                    'date'       => $date,
-                    'notes'      => $request->notes ?? '',
-                    'status'     => 1,
-                ]);
+                // Combinar días del grupo + adicionales
+                $baseGroupDays = $this->parseSpanishDays($group->days ?? '');
+                $additionalDays = $this->parseSpanishDays($request->input('additional_days_processed', ''));
+                $allWorkingDays = array_values(array_unique(array_merge($baseGroupDays, $additionalDays)));
 
-                // snapshot del personal ese día (evita repetir el mismo empleado dos veces)
-                collect($assigned)->filter()->unique()->values()->each(function ($empId) use ($s) {
-                    Groupdetail::create([
-                        'scheduling_id' => $s->id,
-                        'emplooyee_id'  => $empId, // (sic) columna
+                // Fechas del rango que coinciden con los días combinados
+                $period = CarbonPeriod::create(Carbon::parse($request->from), Carbon::parse($request->to));
+                $dates  = [];
+                foreach ($period as $d) {
+                    if (in_array($d->dayOfWeek, $allWorkingDays)) {
+                        $dates[] = $d->toDateString();
+                    }
+                }
+
+                if (empty($dates)) {
+                    // No crear nada para este grupo si no hay fechas
+                    continue;
+                }
+
+                // Validar conflictos uncovered solo para este grupo
+                $uncovered = $this->uncoveredConflicts($group, $base, $dates, $replacements);
+                if (!empty($uncovered)) {
+                    // Si hay conflictos abortamos toda la transacción y devolvemos mensaje
+                    throw new \Illuminate\Validation\ValidationException(\Illuminate\Support\Facades\Validator::make([], []), response()->json(['errors' => ['availability' => implode(' | ', $uncovered)]], 422));
+                }
+
+                foreach ($dates as $date) {
+                    // evita duplicados exactos mismo grupo/fecha
+                    $exists = Scheduling::where('group_id', $group->id)
+                        ->whereDate('date', $date)
+                        ->exists();
+                    if ($exists) continue;
+
+                    // quién trabaja ese día (aplica reemplazo si cubre la fecha)
+                    $assigned = [
+                        'driver'     => $this->employeeForDate('driver', $base, $replacements, $date),
+                        'assistant1' => $this->employeeForDate('assistant1', $base, $replacements, $date),
+                        'assistant2' => $this->employeeForDate('assistant2', $base, $replacements, $date),
+                    ];
+
+                    // scheduling
+                    $s = Scheduling::create([
+                        'group_id'   => $group->id,
+                        'shift_id'   => $group->shift_id,
+                        'vehicle_id' => $group->vehicle_id,
+                        'zone_id'    => $group->zone_id,
+                        'date'       => $date,
+                        'notes'      => $request->notes ?? '',
+                        'status'     => 1,
                     ]);
-                });
+
+                    // snapshot del personal ese día (evita repetir el mismo empleado dos veces)
+                    collect($assigned)->filter()->unique()->values()->each(function ($empId) use ($s) {
+                        Groupdetail::create([
+                            'scheduling_id' => $s->id,
+                            'emplooyee_id'  => $empId, // (sic) columna
+                        ]);
+                    });
+
+                    $totalAffected++;
+                }
+
+                if (!empty($additionalDays)) {
+                    $totalAdditionalDays = max($totalAdditionalDays, count($additionalDays));
+                }
             }
         });
 
-        $message = 'Programaciones generadas con reemplazos aplicados cuando correspondía.';
-        if (!empty($additionalDays)) {
-            $additionalCount = count($additionalDays);
-            $message .= " Se incluyeron {$additionalCount} día(s) adicional(es).";
+        $message = "Programaciones generadas con reemplazos aplicados cuando correspondía. Programaciones afectadas: {$totalAffected}.";
+        if ($totalAdditionalDays > 0) {
+            $message .= " Se incluyeron {$totalAdditionalDays} día(s) adicional(es).";
         }
 
         return redirect()

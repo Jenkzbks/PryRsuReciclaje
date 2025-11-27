@@ -100,8 +100,11 @@ document.addEventListener('DOMContentLoaded', function(){
                 @forelse($groups as $group)
                 <div class="col-md-4 mb-3">
                     <div class="card shadow">
-                        <div class="card-header bg-light d-flex justify-content-between">
-                            <strong>{{ $group->name }}</strong>
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <input type="checkbox" name="group_ids[]" value="{{ $group->id }}" class="mr-2" />
+                                <strong class="ml-2">{{ $group->name }}</strong>
+                            </div>
                             <button type="button" class="btn btn-sm btn-outline-danger btn-trash-group" data-group-id="{{ $group->id }}"><i class="fas fa-trash"></i></button>
                         </div>
 

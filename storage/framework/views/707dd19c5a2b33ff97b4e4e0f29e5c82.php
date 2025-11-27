@@ -164,22 +164,26 @@
             </div>
             <div class="card-body">
               <?php
-                $driverDetail = $scheduling->details->firstWhere('employee.type_id', 1);
-                $assistantDetails = $scheduling->details->filter(fn($d) => optional($d->employee)->type_id == 2)->values();
+                $driverDetail = $scheduling->details->first(function($d) {
+                  return optional($d->employee->type)->name === 'Conductor';
+                });
+                $assistantDetails = $scheduling->details->filter(function($d) {
+                  return optional($d->employee->type)->name === 'Ayudante';
+                })->values();
               ?>
-              
+
               <div class="mb-2">
                 <strong>Conductor:</strong><br>
                 <?php echo e($driverDetail->employee->lastnames ?? '-'); ?> <?php echo e($driverDetail->employee->names ?? '-'); ?>
 
               </div>
-              
+
               <div class="mb-2">
                 <strong>Ayudante 1:</strong><br>
                 <?php echo e($assistantDetails->get(0)->employee->lastnames ?? '-'); ?> <?php echo e($assistantDetails->get(0)->employee->names ?? '-'); ?>
 
               </div>
-              
+
               <div class="mb-0">
                 <strong>Ayudante 2:</strong><br>
                 <?php echo e($assistantDetails->get(1)->employee->lastnames ?? '-'); ?> <?php echo e($assistantDetails->get(1)->employee->names ?? '-'); ?>
@@ -199,14 +203,14 @@
                 <select name="driver_id" class="form-control form-control-sm">
                   <option value="">-- Mantener conductor actual --</option>
                   <?php $__currentLoopData = $drivers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $driver): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                      <?php if(optional($driver)->type_id == 1): ?>
+                    <?php if(!isset($driver->type) || (isset($driver->type) && optional($driver->type)->name === 'Conductor')): ?>
                       <option value="<?php echo e($driver->id); ?>" 
                         <?php echo e($selectedDriverId == $driver->id ? 'selected' : (old('driver_id') == $driver->id ? 'selected' : '')); ?>>
-                        <?php echo e($driver->lastnames); ?> <?php echo e($driver->names); ?>
+                        <?php echo e($driver->lastnames ?? $driver->name ?? ''); ?> <?php echo e($driver->names ?? ''); ?>
 
                       </option>
-                      <?php endif; ?>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    <?php endif; ?>
+                  <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </select>
               </div>
               
@@ -215,7 +219,7 @@
                 <select name="assistant1_id" class="form-control form-control-sm">
                   <option value="">-- Mantener ayudante 1 actual --</option>
                   <?php $__currentLoopData = $assistants; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $assistant): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <?php if(optional($assistant)->type_id == 2): ?>
+                    <?php if(optional($assistant->type) && optional($assistant->type)->name === 'Ayudante'): ?>
                     <option value="<?php echo e($assistant->id); ?>" 
                       <?php echo e($selectedA1Id == $assistant->id ? 'selected' : (old('assistant1_id') == $assistant->id ? 'selected' : '')); ?>>
                       <?php echo e($assistant->lastnames); ?> <?php echo e($assistant->names); ?>
@@ -231,7 +235,7 @@
                 <select name="assistant2_id" class="form-control form-control-sm">
                   <option value="">-- Mantener ayudante 2 actual --</option>
                   <?php $__currentLoopData = $assistants; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $assistant): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <?php if(optional($assistant)->type_id == 2): ?>
+                    <?php if(optional($assistant->type) && optional($assistant->type)->name === 'Ayudante'): ?>
                     <option value="<?php echo e($assistant->id); ?>" 
                       <?php echo e($selectedA2Id == $assistant->id ? 'selected' : (old('assistant2_id') == $assistant->id ? 'selected' : '')); ?>>
                       <?php echo e($assistant->lastnames); ?> <?php echo e($assistant->names); ?>
@@ -249,7 +253,7 @@
       <!-- Cambios Registrados (solo nuevos cambios de esta edición) -->
       <div id="changeSummaryCard" class="card border-info mb-4" style="display:none;">
         <div class="card-header bg-info text-white">
-          <strong>Resumen de Cambios (solo los que realices ahora)</strong>
+          <strong>Resumen de Cambios</strong>
         </div>
         <div class="card-body">
           <div class="table-responsive">
@@ -344,6 +348,16 @@
 
     // Detectar cambios y renderizar tabla (mostrar cualquier acción, incluso si vuelve al original)
     function renderChangeSummary() {
+      // Guardar motivos y notas actuales antes de recargar
+      const motivoValues = {};
+      const notasValues = {};
+      document.querySelectorAll('.motivo-select').forEach(sel => {
+        motivoValues[sel.name] = sel.value;
+      });
+      document.querySelectorAll('textarea[name^="notas["]').forEach(txt => {
+        notasValues[txt.name] = txt.value;
+      });
+
       let rows = '';
       let hasChange = false;
 
@@ -373,43 +387,59 @@
           <td>${eliminarBtnHtml('vehiculo')}</td>
         </tr>`;
       }
-      // Personal (cualquier cambio en conductor o ayudantes)
-      let personalChanged = false;
-      if (
-        (driverSelect.value && driverSelect.value !== '<?php echo e($selectedDriverId ?? ''); ?>') ||
-        (assistant1Select.value && assistant1Select.value !== '<?php echo e($selectedA1Id ?? ''); ?>') ||
-        (assistant2Select.value && assistant2Select.value !== '<?php echo e($selectedA2Id ?? ''); ?>')
-      ) {
-        personalChanged = true;
-        hasChange = true;
-      }
-      if (personalChanged) {
-        let nuevoPersonal = [];
-        if (driverSelect.value) {
-          const d = driverSelect.options[driverSelect.selectedIndex].text;
-          nuevoPersonal.push('Conductor: ' + d);
+      // Personal: generar una fila por cada cambio individual
+      const personalRoles = [
+        {
+          key: 'driver_id',
+          label: 'Conductor',
+          origId: '<?php echo e($selectedDriverId ?? ''); ?>',
+          origName: originalNames.driver || '-',
+          select: driverSelect
+        },
+        {
+          key: 'assistant1_id',
+          label: 'Ayudante 1',
+          origId: '<?php echo e($selectedA1Id ?? ''); ?>',
+          origName: originalNames.assistant1 || '-',
+          select: assistant1Select
+        },
+        {
+          key: 'assistant2_id',
+          label: 'Ayudante 2',
+          origId: '<?php echo e($selectedA2Id ?? ''); ?>',
+          origName: originalNames.assistant2 || '-',
+          select: assistant2Select
         }
-        if (assistant1Select.value) {
-          const a1 = assistant1Select.options[assistant1Select.selectedIndex].text;
-          nuevoPersonal.push('Ayudante 1: ' + a1);
+      ];
+      personalRoles.forEach(role => {
+        const newId = role.select.value;
+        if (newId !== role.origId) {
+          hasChange = true;
+          const newName = role.select.options[role.select.selectedIndex]?.text || '-';
+          // Clave única para motivo y nota
+          const motivoKey = `personal-${role.key}`;
+          rows += `<tr data-tipo=\"${motivoKey}\">
+            <td>Personal</td>
+            <td>${role.label}: ${role.origName}</td>
+            <td>${role.label}: ${role.origName}</td>
+            <td>${role.label}: ${newName}</td>
+            <td>${motivoSelectHtml(motivoKey)}</td>
+            <td>${notasTextareaHtml(motivoKey)}</td>
+            <td>${eliminarBtnHtml(motivoKey)}</td>
+          </tr>`;
         }
-        if (assistant2Select.value) {
-          const a2 = assistant2Select.options[assistant2Select.selectedIndex].text;
-          nuevoPersonal.push('Ayudante 2: ' + a2);
-        }
-        rows += `<tr data-tipo="personal">
-          <td>Personal</td>
-          <td>-</td>
-          <td>-</td>
-          <td>${nuevoPersonal.length ? nuevoPersonal.join('<br>') : '-'}</td>
-          <td>${motivoSelectHtml('personal')}</td>
-          <td>${notasTextareaHtml('personal')}</td>
-          <td>${eliminarBtnHtml('personal')}</td>
-        </tr>`;
-      }
+      });
 
       changeSummaryTable.innerHTML = rows;
       changeSummaryCard.style.display = hasChange ? '' : 'none';
+
+      // Restaurar valores de motivos y notas
+      document.querySelectorAll('.motivo-select').forEach(sel => {
+        if (motivoValues[sel.name]) sel.value = motivoValues[sel.name];
+      });
+      document.querySelectorAll('textarea[name^="notas["]').forEach(txt => {
+        if (notasValues[txt.name]) txt.value = notasValues[txt.name];
+      });
 
       // Asignar eventos a los botones eliminar
       document.querySelectorAll('.eliminar-cambio').forEach(btn => {
@@ -421,13 +451,18 @@
           } else if (tipo === 'vehiculo') {
             vehicleSelect.value = '<?php echo e($scheduling->vehicle_id ?? ''); ?>';
             vehicleSelect.dispatchEvent(new Event('change'));
-          } else if (tipo === 'personal') {
-            driverSelect.value = '<?php echo e($selectedDriverId ?? ''); ?>';
-            assistant1Select.value = '<?php echo e($selectedA1Id ?? ''); ?>';
-            assistant2Select.value = '<?php echo e($selectedA2Id ?? ''); ?>';
-            driverSelect.dispatchEvent(new Event('change'));
-            assistant1Select.dispatchEvent(new Event('change'));
-            assistant2Select.dispatchEvent(new Event('change'));
+          } else if (tipo.startsWith('personal')) {
+            // Solo limpiar el campo correspondiente
+            if (tipo === 'personal-driver_id') {
+              driverSelect.value = '<?php echo e($selectedDriverId ?? ''); ?>';
+              driverSelect.dispatchEvent(new Event('change'));
+            } else if (tipo === 'personal-assistant1_id') {
+              assistant1Select.value = '<?php echo e($selectedA1Id ?? ''); ?>';
+              assistant1Select.dispatchEvent(new Event('change'));
+            } else if (tipo === 'personal-assistant2_id') {
+              assistant2Select.value = '<?php echo e($selectedA2Id ?? ''); ?>';
+              assistant2Select.dispatchEvent(new Event('change'));
+            }
           }
         });
       });

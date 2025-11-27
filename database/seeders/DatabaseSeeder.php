@@ -25,7 +25,6 @@ class DatabaseSeeder extends Seeder
             ZoneSeeder::class,
             VehicleSeeder::class,
             AddFiveVehiclesSeeder::class,
-            SimplePersonnelSeeder::class,
             TenEmployeesAndGroupsSeeder::class,
             EmployeeGroupSeeder::class,
             //SchedulingSeeder::class,
@@ -42,7 +41,6 @@ class DatabaseSeeder extends Seeder
             ConfigGroupsSeeder::class,
             //GroupDetailsSeeder::class,
             // Personal seeders
-            PersonnelTestSeeder::class,
             ContractSeeder::class,
             AddFiveVehiclesSeeder::class,
             ReasonSeeder::class

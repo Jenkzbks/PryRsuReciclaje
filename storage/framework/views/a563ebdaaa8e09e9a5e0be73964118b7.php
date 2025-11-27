@@ -1,10 +1,10 @@
 <?php $__env->startSection('title', 'Grupos de Personal'); ?>
 
 <?php $__env->startSection('content_header'); ?>
-    <button type="button" class="btn btn-success float-right" id="btnRegistrar">
+    <button type="button" class="btn btn-primary float-right" id="btnRegistrar">
         <i class="fas fa-plus"></i> Nuevo Grupo
     </button>
-    <h1>Lista de Grupos de Personal</h1>
+    <h1 class="h3 mb-1 font-weight-bold"><i class="fas fa-users"></i> Grupos de Personal</h1>
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('content'); ?>
@@ -49,7 +49,7 @@
                 <div class="modal fade" id="modalViewEmployees" tabindex="-1" role="dialog" aria-labelledby="modalViewEmployeesLabel" aria-hidden="true">
                     <div class="modal-dialog" role="document">
                         <div class="modal-content">
-                            <div class="modal-header bg-info text-white">
+                            <div class="modal-header bg-primary text-white">
                                 <h5 class="modal-title" id="modalViewEmployeesLabel">Empleados del Grupo</h5>
                                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                     <span aria-hidden="true">&times;</span>

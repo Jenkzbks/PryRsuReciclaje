@@ -1,10 +1,10 @@
 <?php $__env->startSection('title', 'Proyecto RSU'); ?>
 
 <?php $__env->startSection('content_header'); ?>
-    <button type="button" class="btn btn-success float-right" id="btnRegistrar">
+    <button type="button" class="btn btn-primary float-right" id="btnRegistrar">
         <i class="fas fa-plus"></i> Nuevo turno
     </button>
-    <h1>Lista de Turnos</h1>
+    <h1 class="h3 mb-1 font-weight-bold"><i class="fas fa-clock"></i> Gestión de Turnos</h1>
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('content'); ?>
@@ -31,7 +31,7 @@
     <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
-               <div class="modal-header text-white" style="background:#072d3f;">
+               <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="exampleModalLabel">Formulario de turnos</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>

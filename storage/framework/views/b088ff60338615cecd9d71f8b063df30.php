@@ -3,7 +3,8 @@
 <?php $__env->startSection('content_header'); ?>
     <div class="d-flex justify-content-between align-items-center">
         <div>
-            <h1 class="h3 mb-1 font-weight-bold">Gestión de Zonas</h1>
+            
+            <h1 class="h3 mb-1 font-weight-bold"> <i class="fas fa-map"></i> Gestión de Zonas</h1>
             <p class="text-muted mb-0">Registro y administración de zonas geográficas.</p>
         </div>
         <div class="d-flex align-items-center gap-2">

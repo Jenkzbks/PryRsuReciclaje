@@ -211,7 +211,20 @@
             
             <div class="form-group mt-3">
                 <label>Motivo del Cambio Masivo *</label>
-                <textarea name="reason" class="form-control" rows="3" required><?php echo e($massiveChange->reason ?? ''); ?></textarea>
+                <select name="reason_id" class="form-control" required>
+                    <option value="">-- Seleccione un motivo --</option>
+                    <?php if(isset($reasons)): ?>
+                        <?php $__currentLoopData = $reasons; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $reason): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($reason->id); ?>" <?php if(($massiveChange->reason_id ?? null) == $reason->id): echo 'selected'; endif; ?>><?php echo e($reason->name); ?></option>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    <?php endif; ?>
+                </select>
+            </div>
+
+            
+            <div class="form-group mt-3">
+                <label>Notas</label>
+                <textarea name="notes" class="form-control" rows="3"><?php echo e($massiveChange->notes ?? ''); ?></textarea>
             </div>
 
         </div>

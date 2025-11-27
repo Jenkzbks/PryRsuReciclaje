@@ -100,8 +100,11 @@ document.addEventListener('DOMContentLoaded', function(){
                 <?php $__empty_1 = true; $__currentLoopData = $groups; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $group): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                 <div class="col-md-4 mb-3">
                     <div class="card shadow">
-                        <div class="card-header bg-light d-flex justify-content-between">
-                            <strong><?php echo e($group->name); ?></strong>
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <input type="checkbox" name="group_ids[]" value="<?php echo e($group->id); ?>" class="mr-2" />
+                                <strong class="ml-2"><?php echo e($group->name); ?></strong>
+                            </div>
                             <button type="button" class="btn btn-sm btn-outline-danger btn-trash-group" data-group-id="<?php echo e($group->id); ?>"><i class="fas fa-trash"></i></button>
                         </div>
 

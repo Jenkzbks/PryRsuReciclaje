@@ -34,7 +34,7 @@
         </tr>
         <?php $__currentLoopData = $scheduling->details; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $d): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
             <tr>
-                <td><?php echo e($d->employee->type_id == 1 ? 'Conductor' : 'Ayudante'); ?></td>
+                <td><?php echo e($d->employee->type->name ?? '-'); ?></td>
                 <td><?php echo e($d->employee->lastnames); ?> <?php echo e($d->employee->names); ?></td>
             </tr>
         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
