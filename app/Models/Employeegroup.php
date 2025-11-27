@@ -37,7 +37,8 @@ class Employeegroup extends Model
             'configgroups',           // tabla pivote
             'employeegroup_id',       // FK al grupo
             'employee_id'             // FK al empleado
-        )->withTimestamps();          // si tu pivote tiene created_at y updated_at
+        )->withPivot('posicion')
+        ->withTimestamps();          // si tu pivote tiene created_at y updated_at
     }
 
 

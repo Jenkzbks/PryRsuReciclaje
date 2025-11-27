@@ -62,6 +62,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
      Route::get('schedulings/available-candidates', [SchedulingController::class, 'availableCandidates'])
     ->name('schedulings.available-candidates');
 
+    // Registrar rutas específicas ANTES del resource para evitar que el route-model binding
+    // de `admin/schedulings/{scheduling}` capture rutas como `create-masive`.
+    Route::get('schedulings/create-masive', [SchedulingController::class, 'createMasive'])->name('schedulings.create-masive');
+
     Route::resource('schedulings', SchedulingController::class);
 
     Route::get('schedulings/group-info/{group}', [\App\Http\Controllers\admin\SchedulingController::class, 'groupInfo'])

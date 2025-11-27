@@ -3,14 +3,18 @@
 @section('title', 'Programaciones')
 
 @section('content_header')
-<div class="d-flex justify-content-between align-items-center">
-  <h1>Programaciones</h1>
-  <a href="{{ route('admin.schedulings.create') }}" class="btn btn-primary">
-    <i class="fas fa-plus"></i> Nueva Programación Masiva
-  </a>
-  <a href="{{ route('admin.schedulings.create') }}" class="btn btn-primary">
-    <i class="fas fa-plus"></i> Nueva Programación
-  </a>
+<div class="d-flex align-items-center">
+  <h1 class="mb-0">Programaciones</h1>
+
+  <div class="ml-auto d-flex align-items-center">
+    <a href="{{ route('admin.schedulings.create-masive') }}" class="btn btn-primary btn-sm">
+      <i class="fas fa-plus"></i> Nueva Programación Masiva
+    </a>
+    <a href="{{ route('admin.schedulings.create') }}" class="btn btn-primary btn-sm ml-2">
+      <i class="fas fa-plus"></i> Nueva Programación
+    </a>
+  </div>
+
 </div>
 @stop
 

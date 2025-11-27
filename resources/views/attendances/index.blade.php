@@ -38,7 +38,7 @@
                             <td>{{ $attendance->id }}</td>
                             <td>{{ $attendance->employee->name ?? 'N/A' }} {{ $attendance->employee->lastname ?? '' }}</td>
                             <td>{{ $attendance->type }}</td>
-                            <td>{{ $attendance->datetime->format('d/m/Y H:i:s') }}</td>
+                            <td>{{ $attendance->check_in ? $attendance->check_in->format('d/m/Y H:i:s') : 'N/A' }}</td>
                         </tr>
                     @empty
                         <tr>

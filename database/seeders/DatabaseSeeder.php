@@ -24,7 +24,9 @@ class DatabaseSeeder extends Seeder
             ShiftSeeder::class,
             ZoneSeeder::class,
             VehicleSeeder::class,
+            AddFiveVehiclesSeeder::class,
             SimplePersonnelSeeder::class,
+            TenEmployeesAndGroupsSeeder::class,
             EmployeeGroupSeeder::class,
             SchedulingSeeder::class,
             // Newly added seeders to cover remaining migrations
@@ -39,6 +41,10 @@ class DatabaseSeeder extends Seeder
             MaintenanceRecordsSeeder::class,
             ConfigGroupsSeeder::class,
             GroupDetailsSeeder::class,
+            // Personal seeders
+            PersonnelTestSeeder::class,
+            ContractSeeder::class,
+            AddFiveVehiclesSeeder::class
         ]);
     }
 }
