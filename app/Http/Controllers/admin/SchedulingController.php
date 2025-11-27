@@ -514,33 +514,17 @@ class SchedulingController extends Controller
     /* =========================
      * EDITAR (si lo usas para cambios manuales)
      * ========================= */
-       public function edit(Scheduling $scheduling)
+    public function edit(Scheduling $scheduling)
     {
-        $scheduling->load(['group.shift','group.vehicle','group.zone','details.employee.type']);
+        $scheduling->load(['group.shift','group.vehicle','group.zone','details.employee']);
 
-        $drivers = Employee::where('status', 1)
-            ->whereHas('type', function($q) {
-                $q->where('name', 'Conductor');
-            })
-            ->orderBy('lastnames')
-            ->get();
+        $drivers    = Employee::where('status', 1)->where('type_id', 1)->orderBy('lastnames')->get();
+        $assistants = Employee::where('status', 1)->where('type_id', 2)->orderBy('lastnames')->get();
+        $shifts     = \App\Models\Shift::all();
+        $vehicles   = \App\Models\Vehicle::all();
 
-        $assistants = Employee::where('status', 1)
-            ->whereHas('type', function($q) {
-                $q->where('name', 'Ayudante');
-            })
-            ->orderBy('lastnames')
-            ->get();
-
-        $shifts   = \App\Models\Shift::all();
-        $vehicles = \App\Models\Vehicle::all();
-
-        $driverDetail = $scheduling->details->first(function($d) {
-            return optional($d->employee->type)->name === 'Conductor';
-        });
-        $aDetails = $scheduling->details->filter(function($d) {
-            return optional($d->employee->type)->name === 'Ayudante';
-        })->values();
+        $driverDetail = $scheduling->details->firstWhere('employee.type_id', 1);
+        $aDetails     = $scheduling->details->filter(fn($d) => optional($d->employee)->type_id == 2)->values();
 
         $selectedDriverId = $driverDetail?->employee?->id;
         $selectedA1Id     = $aDetails->get(0)?->employee?->id;
@@ -708,7 +692,7 @@ class SchedulingController extends Controller
                 'id' => $emp->id,
                 'full_name' => trim(($emp->lastnames ?? '').' '.($emp->names ?? '')),
                 'type_id' => $emp->type_id,
-                'type_name' => $emp->type->name ?? ($emp->type_id == 2 ? 'Conductor' : 'Ayudante'),
+                'type_name' => $emp->type->name ?? ($emp->type_id == 1 ? 'Conductor' : 'Ayudante'), // 🔥 CORREGIDO
                 'contract'  => $contract ? [
                     'start_date' => $contractStart,
                     'end_date'   => $contractEnd,
@@ -726,7 +710,7 @@ class SchedulingController extends Controller
         $allMembers = $members->map(function($member, $index) use ($buildPerson) {
             $personData = $buildPerson($member);
             $personData['position'] = $index + 1;
-            $personData['role'] = $member->type_id == 2 ? 'Conductor' : 'Ayudante ' . $index;
+            $personData['role'] = $member->type_id == 1 ? 'Conductor' : 'Ayudante ' . $index; // 🔥 CORREGIDO
             return $personData;
         });
 
