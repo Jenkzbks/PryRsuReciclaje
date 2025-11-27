@@ -9,7 +9,7 @@
             <a href="{{ route('admin.maintenances.index') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Volver
             </a>
-            <button type="button" class="btn btn-success ml-2" id="btnRegistrar">
+            <button type="button" class="btn btn-primary ml-2" id="btnRegistrar">
                 <i class="fas fa-plus"></i> Nuevo horario
             </button>
         </div>

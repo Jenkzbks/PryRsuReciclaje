@@ -173,8 +173,15 @@ class MaintenancesController extends Controller
             $maintenance = Maintenances::findOrFail($id);
             $maintenance->delete();
             return response()->json(['message' => 'Mantenimiento eliminado correctamente'], 200);
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ($e->getCode() == 23000) {
+                return response()->json([
+                    'message' => 'No se puede eliminar el mantenimiento porque tiene registros asociados. Elimine primero los registros dependientes.'
+                ], 400);
+            }
+            return response()->json(['message' => 'Error al eliminar el mantenimiento.'], 500);
         } catch (\Throwable $th) {
-            return response()->json(['message' => 'Error al eliminar el mantenimiento: ' . $th->getMessage()], 500);
+            return response()->json(['message' => 'Error al eliminar el mantenimiento.'], 500);
         }
     }
 }

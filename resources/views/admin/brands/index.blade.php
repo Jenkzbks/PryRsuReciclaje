@@ -3,7 +3,7 @@
 @section('title', 'Proyecto RSU')
 
 @section('content_header')
-    <button type="button" class="btn btn-success float-right" id="btnRegistrar">
+    <button type="button" class="btn btn-primary float-right" id="btnRegistrar">
         <i class="fas fa-plus"></i> Nueva marca
     </button>
     <h1>Lista de Marcas</h1>

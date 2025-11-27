@@ -11,7 +11,7 @@
             <a href="{{ route('admin.maintenance_shedules.index', ['maintenance' => $maintenance->id]) }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Volver
             </a>
-            <button type="button" class="btn btn-success ml-2" id="btnRegistrar">
+            <button type="button" class="btn btn-primary ml-2" id="btnRegistrar">
                 <i class="fas fa-plus"></i> Nueva fecha
             </button>
         </div>
