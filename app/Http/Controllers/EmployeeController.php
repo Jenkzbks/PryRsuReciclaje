@@ -357,7 +357,7 @@ class EmployeeController extends Controller
                     'Tipo' => $employee->employeeType?->name,
                     'Departamento' => $employee->department?->name,
                     'Estado' => $employee->status,
-                    'Fecha Registro' => $employee->created_at->format('d/m/Y')
+                    'Fecha Registro' => $employee->created_at?->format('d/m/Y') ?? 'N/A'
                 ];
             });
 

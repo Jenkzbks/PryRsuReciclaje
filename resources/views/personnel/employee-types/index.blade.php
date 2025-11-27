@@ -57,7 +57,7 @@
                                         <span class="badge badge-success">Normal</span>
                                     @endif
                                 </td>
-                                <td>{{ $type->created_at->format('d/m/Y') }}</td>
+                                <td>{{ $type->created_at?->format('d/m/Y') ?? 'N/A' }}</td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
                                         <a href="{{ route('personnel.employee-types.show', $type) }}" 

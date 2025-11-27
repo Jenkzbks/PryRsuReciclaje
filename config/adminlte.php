@@ -624,7 +624,7 @@ return [
             ],
         ],
         [
-            'text'    => 'MANTENIMIENTO',
+            'text'    => 'BORREN ESTA MRD MAMAÑEMAS, ES MI EXAMEN',
             'icon'    => 'fas fa-tools',
             'route'   => 'admin.maintenance.index',
         ],

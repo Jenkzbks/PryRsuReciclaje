@@ -286,11 +286,11 @@
                         <table class="table table-sm table-borderless">
                             <tr>
                                 <td class="text-muted">Creado:</td>
-                                <td>{{ $contract->created_at->format('d/m/Y H:i') }}</td>
+                                <td>{{ $contract->created_at?->format('d/m/Y H:i') ?? 'N/A' }}</td>
                             </tr>
                             <tr>
                                 <td class="text-muted">Última modificación:</td>
-                                <td>{{ $contract->updated_at->format('d/m/Y H:i') }}</td>
+                                <td>{{ $contract->updated_at?->format('d/m/Y H:i') ?? 'N/A' }}</td>
                             </tr>
                         </table>
                     </div>

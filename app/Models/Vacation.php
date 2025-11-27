@@ -114,6 +114,12 @@ class Vacation extends Model
         }
     }
 
+    // Accessor para mantener compatibilidad con el campo 'days'
+    public function getDaysAttribute()
+    {
+        return $this->requested_days ?? 0;
+    }
+
     // Scopes
     public function scopeByStatus($query, $status)
     {

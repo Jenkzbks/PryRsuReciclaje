@@ -59,7 +59,7 @@
                                 <label class="info-label">Fecha de Nacimiento:</label>
                                 <p class="info-value">
                                     @if($employee->birthday)
-                                        {{ $employee->birthday->format('d/m/Y') }}
+                                        {{ $employee->birthday ? $employee->birthday->format('d/m/Y') : 'No especificado' }}
                                         <small class="text-muted">({{ $employee->birthday->age }} años)</small>
                                     @else
                                         <span class="text-muted">No especificado</span>
@@ -321,11 +321,11 @@
                     </div>
                     <div class="info-item">
                         <strong>Fecha de Registro:</strong><br>
-                        <span class="text-muted">{{ $employee->created_at->format('d/m/Y H:i') }}</span>
+                        <span class="text-muted">{{ $employee->created_at?->format('d/m/Y H:i') ?? 'N/A' }}</span>
                     </div>
                     <div class="info-item">
                         <strong>Última Actualización:</strong><br>
-                        <span class="text-muted">{{ $employee->updated_at->format('d/m/Y H:i') }}</span>
+                        <span class="text-muted">{{ $employee->updated_at?->format('d/m/Y H:i') ?? 'N/A' }}</span>
                     </div>
                     <div class="info-item">
                         <strong>Actualizado por:</strong><br>

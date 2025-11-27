@@ -342,11 +342,11 @@
                     <div class="card-body">
                         <div class="info-item mb-2">
                             <strong>Creado:</strong><br>
-                            <span class="text-muted">{{ $employee->created_at->format('d/m/Y H:i') }}</span>
+                            <span class="text-muted">{{ $employee->created_at?->format('d/m/Y H:i') ?? 'N/A' }}</span>
                         </div>
                         <div class="info-item mb-2">
                             <strong>Última actualización:</strong><br>
-                            <span class="text-muted">{{ $employee->updated_at->format('d/m/Y H:i') }}</span>
+                            <span class="text-muted">{{ $employee->updated_at?->format('d/m/Y H:i') ?? 'N/A' }}</span>
                         </div>
                         @if($employee->hire_date)
                         <div class="info-item mb-2">

@@ -157,11 +157,11 @@
                                                 @endif
                                                 <tr>
                                                     <td><strong>Fecha de Solicitud:</strong></td>
-                                                    <td>{{ $vacation->created_at->format('d/m/Y H:i') }}</td>
+                                                    <td>{{ $vacation->created_at?->format('d/m/Y H:i') ?? 'N/A' }}</td>
                                                 </tr>
                                                 <tr>
                                                     <td><strong>Última Actualización:</strong></td>
-                                                    <td>{{ $vacation->updated_at->format('d/m/Y H:i') }}</td>
+                                                    <td>{{ $vacation->updated_at?->format('d/m/Y H:i') ?? 'N/A' }}</td>
                                                 </tr>
                                             </table>
                                         </div>

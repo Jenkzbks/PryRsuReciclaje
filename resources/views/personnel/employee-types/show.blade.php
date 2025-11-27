@@ -149,7 +149,7 @@
                                                     {{ $employee->status == 1 ? 'Activo' : 'Inactivo' }}
                                                 </span>
                                             </td>
-                                            <td>{{ $employee->created_at->format('d/m/Y') }}</td>
+                                            <td>{{ $employee->created_at?->format('d/m/Y') ?? 'N/A' }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -233,11 +233,11 @@
                     </div>
                     <div class="info-item">
                         <strong>Creado:</strong><br>
-                        <span class="text-muted">{{ $employeeType->created_at->format('d/m/Y H:i') }}</span>
+                        <span class="text-muted">{{ $employeeType->created_at?->format('d/m/Y H:i') ?? 'N/A' }}</span>
                     </div>
                     <div class="info-item">
                         <strong>Última Actualización:</strong><br>
-                        <span class="text-muted">{{ $employeeType->updated_at->format('d/m/Y H:i') }}</span>
+                        <span class="text-muted">{{ $employeeType->updated_at?->format('d/m/Y H:i') ?? 'N/A' }}</span>
                     </div>
                     <div class="info-item">
                         <strong>Estado:</strong><br>

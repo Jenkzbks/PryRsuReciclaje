@@ -1,21 +1,19 @@
-@extends('adminlte::page')
+<?php $__env->startSection('title', 'Asistencias'); ?>
 
-@section('title', 'Asistencias')
-
-@section('content_header')
+<?php $__env->startSection('content_header'); ?>
     <h1 class="m-0">Asistencias</h1>
-@stop
+<?php $__env->stopSection(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="card">
         <div class="card-body">
             <form method="GET" class="mb-3">
                 <div class="form-row">
                     <div class="col">
-                        <input type="text" name="search" class="form-control" placeholder="Buscar empleado" value="{{ request('search') }}">
+                        <input type="text" name="search" class="form-control" placeholder="Buscar empleado" value="<?php echo e(request('search')); ?>">
                     </div>
                     <div class="col">
-                        <input type="date" name="date" class="form-control" value="{{ request('date') }}">
+                        <input type="date" name="date" class="form-control" value="<?php echo e(request('date')); ?>">
                     </div>
                     <div class="col-auto">
                         <button class="btn btn-primary">Filtrar</button>
@@ -35,15 +33,15 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($attendances as $attendance)
+                    <?php $__empty_1 = true; $__currentLoopData = $attendances; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $attendance): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                         <tr>
-                            <td>{{ $attendance->id }}</td>
-                            <td>{{ $attendance->employee->names ?? 'N/A' }} {{ $attendance->employee->lastnames ?? '' }}</td>
-                            <td>{{ $attendance->date ? $attendance->date->format('d/m/Y') : 'N/A' }}</td>
-                            <td>{{ $attendance->check_in ? $attendance->check_in->format('H:i:s') : 'N/A' }}</td>
-                            <td>{{ $attendance->check_out ? $attendance->check_out->format('H:i:s') : 'N/A' }}</td>
+                            <td><?php echo e($attendance->id); ?></td>
+                            <td><?php echo e($attendance->employee->names ?? 'N/A'); ?> <?php echo e($attendance->employee->lastnames ?? ''); ?></td>
+                            <td><?php echo e($attendance->date ? $attendance->date->format('d/m/Y') : 'N/A'); ?></td>
+                            <td><?php echo e($attendance->check_in ? $attendance->check_in->format('H:i:s') : 'N/A'); ?></td>
+                            <td><?php echo e($attendance->check_out ? $attendance->check_out->format('H:i:s') : 'N/A'); ?></td>
                             <td>
-                                @php
+                                <?php
                                     $statusColors = [
                                         'present' => 'success',
                                         'late' => 'warning', 
@@ -58,19 +56,22 @@
                                     ];
                                     $color = $statusColors[$attendance->status] ?? 'secondary';
                                     $label = $statusLabels[$attendance->status] ?? $attendance->status;
-                                @endphp
-                                <span class="badge badge-{{ $color }}">{{ $label }}</span>
+                                ?>
+                                <span class="badge badge-<?php echo e($color); ?>"><?php echo e($label); ?></span>
                             </td>
                         </tr>
-                    @empty
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <tr>
                             <td colspan="6" class="text-center">No hay registros</td>
                         </tr>
-                    @endforelse
+                    <?php endif; ?>
                 </tbody>
             </table>
 
-            {{ $attendances->links() }}
+            <?php echo e($attendances->links()); ?>
+
         </div>
     </div>
-@stop
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('adminlte::page', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\Pc\Documents\PryRsuReciclaje\resources\views/attendances/index.blade.php ENDPATH**/ ?>
