@@ -34,7 +34,7 @@
         </tr>
         @foreach($scheduling->details as $d)
             <tr>
-                <td>{{ $d->employee->type_id == 1 ? 'Conductor' : 'Ayudante' }}</td>
+                <td>{{ $d->employee->type->name ?? '-' }}</td>
                 <td>{{ $d->employee->lastnames }} {{ $d->employee->names }}</td>
             </tr>
         @endforeach
