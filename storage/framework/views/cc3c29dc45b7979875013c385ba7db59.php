@@ -34,4 +34,4 @@
     <?php endif; ?>
 
 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-<?php /**PATH C:\Users\Operador\Documents\PryRsuReciclaje\vendor\jeroennoten\laravel-adminlte\src/../resources/views/plugins.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\Users\Pc\Documents\PryRsuReciclaje\vendor\jeroennoten\laravel-adminlte\src/../resources/views/plugins.blade.php ENDPATH**/ ?>

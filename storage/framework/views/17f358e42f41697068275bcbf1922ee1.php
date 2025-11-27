@@ -26,4 +26,4 @@
     <?php echo $__env->make('adminlte::partials.sidebar.menu-item-link', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
 
 <?php endif; ?>
-<?php /**PATH C:\Users\Operador\Documents\PryRsuReciclaje\vendor\jeroennoten\laravel-adminlte\src/../resources/views/partials/sidebar/menu-item.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\Users\Pc\Documents\PryRsuReciclaje\vendor\jeroennoten\laravel-adminlte\src/../resources/views/partials/sidebar/menu-item.blade.php ENDPATH**/ ?>
