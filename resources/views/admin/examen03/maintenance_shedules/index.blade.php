@@ -1,28 +1,36 @@
 @extends('adminlte::page')
 
-@section('title', 'Proyecto RSU')
+@section('title', 'Horarios de Mantenimiento')
 
 @section('content_header')
-    <button type="button" class="btn btn-success float-right" id="btnRegistrar">
-        <i class="fas fa-plus"></i> Nuevo turno
-    </button>
-    <h1>Lista de Turnos</h1>
+    <div class="d-flex justify-content-between align-items-center" style="margin-bottom: 0;">
+        <h1 class="mb-0" style="font-weight:bold; font-size:1.5rem;">{{ strtoupper($maintenance->name ?? '') }}</h1>
+        <div>
+            <a href="{{ route('admin.maintenances.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+            <button type="button" class="btn btn-success ml-2" id="btnRegistrar">
+                <i class="fas fa-plus"></i> Nuevo horario
+            </button>
+        </div>
+    </div>
 @stop
 
 @section('content')
     <div class="card">
         <div class="card-body">
-            <table class="table table-striped table-bordered align-middle" id="shifts-table" style="width:100%">
+            <table class="table table-striped table-bordered align-middle" id="shedules-table" style="width:100%">
                 <thead>
                     <tr>
-                        <th>Nombre</th>
-                        <th>Descripción</th>
-                        <th>Hora inicio</th>
-                        <th>Hora fin</th>
-                        <th>Fecha creación</th>
-                        <th>Fecha actualización</th>
-                        <th width="70px" class="text-center align-middle">Editar</th>
-                        <th width="70px" class="text-center align-middle">Eliminar</th>
+                        <th>Día</th>
+                        <th>Vehículo</th>
+                        <th>Responsable</th>
+                        <th>Tipo</th>
+                        <th>Inicio</th>
+                        <th>Fin</th>
+                        <th width="60px" class="text-center align-middle">Ver</th>
+                        <th width="60px" class="text-center align-middle">Editar</th>
+                        <th width="60px" class="text-center align-middle">Eliminar</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -33,14 +41,13 @@
     <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
-               <div class="modal-header text-white" style="background:#072d3f;">
-                    <h5 class="modal-title" id="exampleModalLabel">Formulario de turnos</h5>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Formulario de horario</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body">
-                </div>
+                <div class="modal-body"></div>
             </div>
         </div>
     </div>
@@ -48,20 +55,23 @@
 
 @section('js')
 <script>
+    // Cargar moment.js si no está presente
+    if (typeof moment === 'undefined') {
+        var script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js';
+        document.head.appendChild(script);
+    }
+
     $(document).ready(function() {
-        // Cargar moment.js si no está presente
-        if (typeof moment === 'undefined') {
-            var script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js';
-            document.head.appendChild(script);
-        }
-        $('#shifts-table').DataTable({
-            'ajax': '{{ route('admin.shifts.index') }}',
+        $('#shedules-table').DataTable({
+            'ajax': window.location.href,
             'columns': [
-                { "data": "name" },
-                { "data": "description" },
+                { "data": "day_of_week" },
+                { "data": "vehicle" },
+                { "data": "responsable" },
+                { "data": "maintenance_type" },
                 {
-                    "data": "hora_in",
+                    "data": "start_time",
                     "render": function(data) {
                         if (!data) return '';
                         if (typeof moment !== 'undefined') {
@@ -71,7 +81,7 @@
                     }
                 },
                 {
-                    "data": "hora_out",
+                    "data": "end_time",
                     "render": function(data) {
                         if (!data) return '';
                         if (typeof moment !== 'undefined') {
@@ -80,28 +90,7 @@
                         return data;
                     }
                 },
-                {
-                    "data": "created_at",
-                    "className": "align-middle",
-                    "render": function(data, type, row) {
-                        if (!data) return '';
-                        if (typeof moment !== 'undefined') {
-                            return moment(data).format('DD/MM/YYYY HH:mm');
-                        }
-                        return data;
-                    }
-                },
-                {
-                    "data": "updated_at",
-                    "className": "align-middle",
-                    "render": function(data, type, row) {
-                        if (!data) return '';
-                        if (typeof moment !== 'undefined') {
-                            return moment(data).format('DD/MM/YYYY HH:mm');
-                        }
-                        return data;
-                    }
-                },
+                { "data": "act", "orderable": false, "searchable": false, "className": "text-center align-middle" },
                 { "data": "edit", "orderable": false, "searchable": false, "className": "text-center align-middle" },
                 { "data": "delete", "orderable": false, "searchable": false, "className": "text-center align-middle" }
             ],
@@ -112,18 +101,20 @@
 
         $('#btnRegistrar').click(function() {
             $.ajax({
-                url: "{{ route('admin.shifts.create') }}",
+                url: window.location.pathname + '/create',
                 type: 'GET',
                 success: function(response) {
                     $('#modal .modal-body').html(response);
-                    $('#modal .modal-title').html('Nuevo Turno');
-                    $('#modal').modal({ backdrop: 'static', keyboard: false }).modal('show');
+                    $('#modal .modal-title').html('Nuevo Horario');
+                    $('#modal').modal({
+                        backdrop: 'static',
+                        keyboard: false
+                    }).modal('show');
 
                     $('#modal form').off('submit').on('submit', function(e) {
                         e.preventDefault();
                         var form = $(this);
                         var formData = new FormData(this);
-
                         $.ajax({
                             url: form.attr('action'),
                             type: form.attr('method'),
@@ -133,11 +124,21 @@
                             success: function(response) {
                                 $('#modal').modal('hide');
                                 refreshTable();
-                                Swal.fire({ title: "Proceso Exitoso!", text: response.message, icon: "success", draggable: true });
+                                Swal.fire({
+                                    title: "Proceso Exitoso!",
+                                    text: response.message,
+                                    icon: "success",
+                                    draggable: true
+                                });
                             },
                             error: function(response) {
                                 var error = response.responseJSON;
-                                Swal.fire({ title: "Error!", text: error.message, icon: "error", draggable: true });
+                                Swal.fire({
+                                    title: "Error!",
+                                    text: error && error.message ? error.message : 'Ocurrió un error inesperado.',
+                                    icon: "error",
+                                    draggable: true
+                                });
                             }
                         });
                     });
@@ -148,18 +149,17 @@
         $(document).on('click', '.btnEditar', function() {
             var id = $(this).attr('id');
             $.ajax({
-                url: "{{ route('admin.shifts.edit', 'id') }}".replace('id', id),
+                url: window.location.pathname + '/' + id + '/edit',
                 type: 'GET',
                 success: function(response) {
                     $('#modal .modal-body').html(response);
-                    $('#modal .modal-title').html('Editar Turno');
+                    $('#modal .modal-title').html('Editar Horario');
                     $('#modal').modal('show');
 
                     $('#modal form').off('submit').on('submit', function(e) {
                         e.preventDefault();
                         var form = $(this);
                         var formData = new FormData(this);
-
                         $.ajax({
                             url: form.attr('action'),
                             type: form.attr('method'),
@@ -169,11 +169,21 @@
                             success: function(response) {
                                 $('#modal').modal('hide');
                                 refreshTable();
-                                Swal.fire({ title: "Proceso Exitoso!", text: response.message, icon: "success", draggable: true });
+                                Swal.fire({
+                                    title: "Proceso Exitoso!",
+                                    text: response.message,
+                                    icon: "success",
+                                    draggable: true
+                                });
                             },
                             error: function(response) {
                                 var error = response.responseJSON;
-                                Swal.fire({ title: "Error!", text: error.message, icon: "error", draggable: true });
+                                Swal.fire({
+                                    title: "Error!",
+                                    text: error && error.message ? error.message : 'Ocurrió un error inesperado.',
+                                    icon: "error",
+                                    draggable: true
+                                });
                             }
                         });
                     });
@@ -189,7 +199,7 @@
             var form = $(this);
             Swal.fire({
                 title: "¿Estás seguro de eliminar?",
-                text: "Esto no se puede deshacer!",
+                text: "Se eliminará el horario y todas las fechas generadas asociadas. ¡Esto no se puede deshacer!",
                 icon: "warning",
                 showCancelButton: true,
                 confirmButtonColor: "#3085d6",
@@ -204,11 +214,21 @@
                         data: form.serialize(),
                         success: function(response) {
                             refreshTable();
-                            Swal.fire({ title: "Proceso Exitoso!", text: response.message, icon: "success", draggable: true });
+                            Swal.fire({
+                                title: "Proceso Exitoso!",
+                                text: response.message,
+                                icon: "success",
+                                draggable: true
+                            });
                         },
                         error: function(response) {
                             var error = response.responseJSON;
-                            Swal.fire({ title: "Error!", text: error.message, icon: "error", draggable: true });
+                            Swal.fire({
+                                title: "Error!",
+                                text: error && error.message ? error.message : 'Ocurrió un error inesperado.',
+                                icon: "error",
+                                draggable: true
+                            });
                         }
                     });
                 }
@@ -217,7 +237,7 @@
     });
 
     function refreshTable() {
-        var table = $("#shifts-table").DataTable();
+        var table = $("#shedules-table").DataTable();
         table.ajax.reload(null, false);
     }
 </script>

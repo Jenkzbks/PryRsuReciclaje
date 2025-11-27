@@ -59,6 +59,8 @@ class SchedulingController extends Controller
             'from'      => 'required|date',
             'to'        => 'required|date|after_or_equal:from',
             'notes'     => 'nullable|string|max:120',
+            'additional_days' => 'nullable|array',
+            'additional_days.*' => 'in:lunes,martes,miércoles,miercoles,jueves,viernes,sábado,sabado,domingo',
         ]);
 
         // Grupo + miembros base
@@ -80,15 +82,22 @@ class SchedulingController extends Controller
             'assistant2' => $assistant2?->id,
         ];
 
-        // Fechas del rango que coinciden con los días configurados del grupo
-        $allowedDays = $this->parseSpanishDays($group->days ?? '');
+        // 🔥 COMBINAR DÍAS DEL GRUPO + DÍAS ADICIONALES
+        $baseGroupDays = $this->parseSpanishDays($group->days ?? '');
+        $additionalDays = $this->parseSpanishDays($request->input('additional_days_processed', ''));
+        
+        // Combinar y eliminar duplicados
+        $allWorkingDays = array_values(array_unique(array_merge($baseGroupDays, $additionalDays)));
+
+        // Fechas del rango que coinciden con los días combinados
         $period = CarbonPeriod::create(Carbon::parse($request->from), Carbon::parse($request->to));
         $dates  = [];
         foreach ($period as $d) {
-            if (in_array($d->dayOfWeek, $allowedDays)) {
+            if (in_array($d->dayOfWeek, $allWorkingDays)) {
                 $dates[] = $d->toDateString();
             }
         }
+        
         if (empty($dates)) {
             return back()->withErrors(['range' => 'El rango no contiene días configurados para el grupo.'])->withInput();
         }
@@ -103,7 +112,7 @@ class SchedulingController extends Controller
         }
 
         // Crear programaciones día a día y snapshot en groupdetails
-        DB::transaction(function () use ($group, $dates, $base, $replacements, $request) {
+        DB::transaction(function () use ($group, $dates, $base, $replacements, $request, $allWorkingDays) {
             foreach ($dates as $date) {
                 // evita duplicados exactos mismo grupo/fecha
                 $exists = Scheduling::where('group_id', $group->id)
@@ -139,9 +148,15 @@ class SchedulingController extends Controller
             }
         });
 
+        $message = 'Programaciones generadas con reemplazos aplicados cuando correspondía.';
+        if (!empty($additionalDays)) {
+            $additionalCount = count($additionalDays);
+            $message .= " Se incluyeron {$additionalCount} día(s) adicional(es).";
+        }
+
         return redirect()
             ->route('admin.schedulings.index', ['from'=>$request->from,'to'=>$request->to])
-            ->with('success', 'Programaciones generadas con reemplazos aplicados cuando correspondía.');
+            ->with('success', $message);
     }
 
     /* =========================
@@ -153,6 +168,8 @@ class SchedulingController extends Controller
 
         $drivers    = Employee::where('status', 1)->where('type_id', 1)->orderBy('lastnames')->get();
         $assistants = Employee::where('status', 1)->where('type_id', 2)->orderBy('lastnames')->get();
+        $shifts     = \App\Models\Shift::all();
+        $vehicles   = \App\Models\Vehicle::all();
 
         $driverDetail = $scheduling->details->firstWhere('employee.type_id', 1);
         $aDetails     = $scheduling->details->filter(fn($d) => optional($d->employee)->type_id == 2)->values();
@@ -162,40 +179,33 @@ class SchedulingController extends Controller
         $selectedA2Id     = $aDetails->get(1)?->employee?->id;
 
         return view('schedulings.edit', compact(
-            'scheduling', 'drivers', 'assistants', 'selectedDriverId', 'selectedA1Id', 'selectedA2Id'
+            'scheduling', 'drivers', 'assistants', 'selectedDriverId', 'selectedA1Id', 'selectedA2Id', 'shifts', 'vehicles'
         ));
     }
 
     public function update(Request $request, Scheduling $scheduling)
     {
         $request->validate([
+            'date'          => 'required|date',
             'driver_id'     => 'nullable|exists:employee,id',
             'assistant1_id' => 'nullable|exists:employee,id|different:driver_id|different:assistant2_id',
             'assistant2_id' => 'nullable|exists:employee,id|different:driver_id|different:assistant1_id',
+            'shift_id'      => 'nullable|exists:shifts,id',
+            'vehicle_id'    => 'nullable|exists:vehicles,id',
+            'notes'         => 'nullable|string|max:120',
         ], [
             'different' => 'No puede repetir el mismo trabajador en más de un rol.'
         ]);
 
-        $ids = collect([
-            'driver'     => $request->driver_id,
-            'assistant1' => $request->assistant1_id,
-            'assistant2' => $request->assistant2_id,
-        ])->filter();
+        // Actualizar campos básicos
+        $scheduling->update([
+            'date'       => $request->date,
+            'notes'      => $request->notes ?? '',
+            'shift_id'   => $request->shift_id ?? $scheduling->shift_id,
+            'vehicle_id' => $request->vehicle_id ?? $scheduling->vehicle_id,
+        ]);
 
-        if ($ids->isNotEmpty()) {
-            $emps = Employee::whereIn('id', $ids->values())->get()->keyBy('id');
-
-            if ($request->driver_id && optional($emps[$request->driver_id])->type_id != 1) {
-                return back()->withErrors(['driver_id' => 'El seleccionado no es de tipo Conductor'])->withInput();
-            }
-            if ($request->assistant1_id && optional($emps[$request->assistant1_id])->type_id != 2) {
-                return back()->withErrors(['assistant1_id' => 'El seleccionado no es de tipo Ayudante'])->withInput();
-            }
-            if ($request->assistant2_id && optional($emps[$request->assistant2_id])->type_id != 2) {
-                return back()->withErrors(['assistant2_id' => 'El seleccionado no es de tipo Ayudante'])->withInput();
-            }
-        }
-
+        // Actualizar personal
         $scheduling->details()->delete();
 
         foreach (['driver_id', 'assistant1_id', 'assistant2_id'] as $field) {
@@ -208,7 +218,7 @@ class SchedulingController extends Controller
         }
 
         return redirect()->route('admin.schedulings.index')
-            ->with('success', 'Personal actualizado para la programación.');
+            ->with('success', 'Programación actualizada correctamente.');
     }
 
     public function destroy(Scheduling $scheduling)
@@ -227,11 +237,6 @@ class SchedulingController extends Controller
             ->select('employee.*')
             ->orderBy('configgroups.id')
             ->get();
-
-        $driver     = $members->firstWhere('type_id', 1);
-        $assistants = $members->where('type_id', 2)->values();
-        $assistant1 = $assistants->get(0);
-        $assistant2 = $assistants->get(1);
 
         $today = Carbon::today();
 
@@ -264,7 +269,10 @@ class SchedulingController extends Controller
             $vacEnd   = $vacation?->end_date ? Carbon::parse($vacation->end_date)->format('Y-m-d') : null;
 
             return [
+                'id' => $emp->id,
                 'full_name' => trim(($emp->lastnames ?? '').' '.($emp->names ?? '')),
+                'type_id' => $emp->type_id,
+                'type_name' => $emp->type->name ?? ($emp->type_id == 1 ? 'Conductor' : 'Ayudante'),
                 'contract'  => $contract ? [
                     'start_date' => $contractStart,
                     'end_date'   => $contractEnd,
@@ -278,10 +286,16 @@ class SchedulingController extends Controller
             ];
         };
 
+        // 🔥 DEVOLVER TODOS LOS MIEMBROS EN UN ARRAY
+        $allMembers = $members->map(function($member, $index) use ($buildPerson) {
+            $personData = $buildPerson($member);
+            $personData['position'] = $index + 1;
+            $personData['role'] = $member->type_id == 1 ? 'Conductor' : 'Ayudante ' . $index;
+            return $personData;
+        });
+
         return response()->json([
-            'driver'     => $buildPerson($driver),
-            'assistant1' => $buildPerson($assistant1),
-            'assistant2' => $buildPerson($assistant2),
+            'members' => $allMembers
         ]);
     }
 
@@ -294,43 +308,51 @@ class SchedulingController extends Controller
             'group_id' => 'required|exists:employeegroups,id',
             'from'     => 'required|date',
             'to'       => 'required|date|after_or_equal:from',
+            'additional_days' => 'nullable|array',
+            'additional_days.*' => 'in:lunes,martes,miércoles,miercoles,jueves,viernes,sábado,sabado,domingo',
         ]);
 
         $group = Employeegroup::with('employees')->findOrFail($request->group_id);
         $from  = Carbon::parse($request->from)->startOfDay();
         $to    = Carbon::parse($request->to)->endOfDay();
-        $scheduledDates = $this->scheduledDatesForGroup($group, $from, $to);
+        
+        // 🔥 COMBINAR DÍAS DEL GRUPO + DÍAS ADICIONALES
+        $baseGroupDays = $this->parseSpanishDays($group->days ?? '');
+        $additionalDays = $this->parseSpanishDays(implode(',', $request->input('additional_days', [])));
+        $allWorkingDays = array_values(array_unique(array_merge($baseGroupDays, $additionalDays)));
+        
+        // Obtener fechas del rango que coinciden con los días combinados
+        $scheduledDates = [];
+        foreach (CarbonPeriod::create($from, $to) as $d) {
+            if (in_array($d->dayOfWeek, $allWorkingDays)) {
+                $scheduledDates[] = $d->copy();
+            }
+        }
 
         $members = $group->employees()->orderBy('configgroups.id')->get();
-        $driver     = $members->firstWhere('type_id', 1);
-        $assistants = $members->where('type_id', 2)->values();
-        $assistant1 = $assistants->get(0);
-        $assistant2 = $assistants->get(1);
 
         $result = [
             'ok'        => true,
             'conflicts' => [],
-            'byRole'    => ['driver'=>[],'assistant1'=>[],'assistant2'=>[]],
+            'byRole'    => [],
         ];
 
-        $check = function($emp, $role) use (&$result, $scheduledDates) {
-            if (!$emp) return;
-            $c = $this->conflictsForEmployee($emp, $scheduledDates);
-            if (!empty($c)) {
+        // 🔥 VERIFICAR CONFLICTOS PARA CADA MIEMBRO
+        foreach ($members as $index => $member) {
+            $roleKey = "member_{$index}";
+            $conflicts = $this->conflictsForEmployee($member, $scheduledDates);
+            
+            if (!empty($conflicts)) {
                 $result['ok'] = false;
                 $result['conflicts'][] = [
-                    'employee_id'=>$emp->id,
-                    'name'=>trim(($emp->names ?? '').' '.($emp->lastnames ?? '')),
-                    'role'=>$role,
-                    'items'=>$c,
+                    'employee_id' => $member->id,
+                    'name' => trim(($member->names ?? '').' '.($member->lastnames ?? '')),
+                    'role' => $roleKey,
+                    'items' => $conflicts,
                 ];
-                $result['byRole'][$role] = $c;
+                $result['byRole'][$roleKey] = $conflicts;
             }
-        };
-
-        $check($driver, 'driver');
-        $check($assistant1, 'assistant1');
-        $check($assistant2, 'assistant2');
+        }
 
         return response()->json($result);
     }
@@ -343,16 +365,20 @@ class SchedulingController extends Controller
         $request->validate([
             'type_id' => 'required|integer',
             'dates'   => 'required|string',
+            'group_id' => 'required|exists:employeegroups,id',
         ]);
 
         $dates = collect(explode(',', $request->dates))
             ->map(fn($d) => trim($d))
             ->filter();
 
-        // Empleados activos del tipo solicitado que NO tengan groupdetails
-        // en schedulings para cualquiera de las fechas pedidas.
+        // 🔥 OBTENER LOS EMPLEADOS ACTUALES DEL GRUPO PARA EXCLUIRLOS
+        $group = Employeegroup::with('employees')->findOrFail($request->group_id);
+        $currentMemberIds = $group->employees->pluck('id')->toArray();
+
         $candidates = Employee::where('status', 1)
             ->where('type_id', $request->type_id)
+            ->whereNotIn('id', $currentMemberIds) // 🔥 EXCLUIR MIEMBROS ACTUALES DEL GRUPO
             ->whereNotExists(function ($sub) use ($dates) {
                 $sub->select(DB::raw(1))
                     ->from('groupdetails as gd')
@@ -375,8 +401,14 @@ class SchedulingController extends Controller
      * ========================= */
 
     // Convierte "Lunes,Miércoles,..." a números Carbon [0..6]
-    private function parseSpanishDays(string $daysCsv): array
+    private function parseSpanishDays($daysInput): array
     {
+        if (is_array($daysInput)) {
+            $daysArray = $daysInput;
+        } else {
+            $daysArray = explode(',', $daysInput);
+        }
+
         $map = [
             'domingo'=>0, 'lunes'=>1, 'martes'=>2,
             'miércoles'=>3, 'miercoles'=>3,
@@ -385,7 +417,7 @@ class SchedulingController extends Controller
         ];
 
         $out = [];
-        foreach (explode(',', $daysCsv) as $d) {
+        foreach ($daysArray as $d) {
             $key = trim(mb_strtolower($d,'UTF-8'));
             if (isset($map[$key])) $out[] = $map[$key];
         }
@@ -474,9 +506,9 @@ class SchedulingController extends Controller
     private function normalizeReplacements(array $raw): array
     {
         $out = [];
-        foreach (['driver','assistant1','assistant2'] as $role) {
-            $empId = Arr::get($raw, "$role.employee_id");
-            $dates = Arr::get($raw, "$role.dates", '');
+        foreach ($raw as $role => $data) {
+            $empId = Arr::get($data, 'employee_id');
+            $dates = Arr::get($data, 'dates', '');
             if ($empId && $dates) {
                 $out[$role] = [
                     'employee_id' => (int) $empId,

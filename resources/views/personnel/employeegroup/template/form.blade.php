@@ -31,7 +31,7 @@
                 <select name="vehicle_id" id="vehicle_id" class="form-control" required>
                     <option value="">-- Seleccione --</option>
                     @foreach($vehicles as $vehicle)
-                        <option value="{{ $vehicle->id }}" {{ (isset($group) && $group->vehicle_id == $vehicle->id) ? 'selected' : '' }}>{{ $vehicle->plate }} (Capacidad: {{ $vehicle->capacity ?? 'N/A' }})</option>
+                        <option value="{{ $vehicle->id }}" data-passengers="{{ $vehicle->passengers ?? 0 }}" {{ (isset($group) && $group->vehicle_id == $vehicle->id) ? 'selected' : '' }}>{{ $vehicle->plate }} (Capacidad: {{ $vehicle->passengers ?? 'N/A' }})</option>
                     @endforeach
                 </select>
             </div>
@@ -52,46 +52,20 @@
             </div>
         </div>
 
+
         <hr>
-        <p class="text-muted">Estos datos son para pre configuración no son obligatorios</p>
+        <div id="dynamic-crew-block" style="display:none;">
+            <p class="text-muted">Estos datos son para pre configuración no son obligatorios</p>
+            <div id="dynamic-crew"></div>
+        </div>
+  
+        {{-- Input oculto para pasar empleados al JS principal --}}
 
-        <div class="form-group">
-    <label for="conductor">Conductor</label>
-    <select name="conductor" id="conductor" class="form-control">
-        <option value="">-- Seleccione --</option>
-        @foreach($employees->where('type_id', 1) as $emp)
-            <option value="{{ $emp->id }}" {{ (isset($conductor) && $conductor == $emp->id) ? 'selected' : '' }}>
-                {{ $emp->lastnames }} {{ $emp->names }}
-            </option>
-        @endforeach
-    </select>
-</div>
-
-<div class="form-row">
-    <div class="form-group col-md-6">
-        <label for="assistant1">Ayudante 1</label>
-        <select name="assistant1" id="assistant1" class="form-control">
-            <option value="">-- Seleccione --</option>
-            @foreach($employees->where('type_id', 2) as $emp)
-                <option value="{{ $emp->id }}" {{ (isset($assistant1) && $assistant1 == $emp->id) ? 'selected' : '' }}>
-                    {{ $emp->lastnames }} {{ $emp->names }}
-                </option>
-            @endforeach
-        </select>
-    </div>
-
-    <div class="form-group col-md-6">
-        <label for="assistant2">Ayudante 2</label>
-        <select name="assistant2" id="assistant2" class="form-control">
-            <option value="">-- Seleccione --</option>
-            @foreach($employees->where('type_id', 2) as $emp)
-                <option value="{{ $emp->id }}" {{ (isset($assistant2) && $assistant2 == $emp->id) ? 'selected' : '' }}>
-                    {{ $emp->lastnames }} {{ $emp->names }}
-                </option>
-            @endforeach
-        </select>
-    </div>
-</div>
+        <input type="hidden" id="conductores-data" value='@json($conductores)'>
+        <input type="hidden" id="ayudantes-data" value='@json($ayudantes)'>
+        @if(isset($crewConfig))
+            <input type="hidden" id="crew-config" value='@json($crewConfig)'>
+        @endif
 
     </div>
 </div>

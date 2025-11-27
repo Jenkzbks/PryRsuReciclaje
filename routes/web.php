@@ -8,20 +8,21 @@ use App\Http\Controllers\admin\RouteController;
 use App\Http\Controllers\admin\BrandController;
 use App\Http\Controllers\admin\BrandModelController;
 use App\Http\Controllers\admin\ShiftController;
+use App\Http\Controllers\admin\ZoneJController;
 use App\Http\Controllers\admin\VehicleTypeController;
 use App\Http\Controllers\admin\VehicleController;
 use App\Http\Controllers\admin\EmployeegroupController;
 use App\Http\Controllers\admin\SchedulingController;
+use App\Http\Controllers\admin\MaintenancesController;
+use App\Http\Controllers\admin\MaintenanceShedulesController;
+use App\Http\Controllers\admin\MaintenanceRecordsController;
+
 // Controladores del módulo de personal
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeTypeController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\VacationController;
 use App\Http\Controllers\AttendanceController;
-// Controladores del módulo de mantenimiento
-use App\Http\Controllers\MaintenanceController;
-use App\Http\Controllers\MaintenanceScheduleController;
-use App\Http\Controllers\MaintenanceRecordController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -62,6 +63,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('vehicles', VehicleController::class);
     Route::resource('colors', ColorController::class);
     Route::resource('shifts', ShiftController::class);
+    
+        Route::get('zonesjenkz/map', [App\Http\Controllers\Admin\ZoneJController::class, 'map'])->name('zonesjenkz.map');
+    
      Route::get('schedulings/available-candidates', [SchedulingController::class, 'availableCandidates'])
     ->name('schedulings.available-candidates');
 
@@ -83,6 +87,24 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // API para obtener modelos por marca (select dependiente)
     Route::get('api/models/{brand_id}', [VehicleController::class, 'modelsByBrand'])->name('api.models');
 
+    // ZONAS JENKZ
+
+
+    // Validación de polígono (AJAX)
+    Route::post('zonesjenkz/validate-polygon', [ZoneJController::class, 'validatePolygon'])->name('zonesjenkz.validatePolygon');
+
+    Route::resource('zonesjenkz', ZoneJController::class);
+
+    // API para selects dependientes de zonas_jenkz
+    Route::get('api/provinces', [ZoneJController::class, 'getProvinces'])->name('zonesjenkz.api.provinces');
+    Route::get('api/districts', [ZoneJController::class, 'getDistricts'])->name('zonesjenkz.api.districts');
+    // Endpoint para datos de distrito (lat/lng/zoom)
+    Route::get('api/district-data', [ZoneJController::class, 'getDistrictData']);
+    Route::get('zonesjenkz/{zone}/modal', [ZoneJController::class, 'show'])->name('zonesjenkz.show');
+
+
+    
+
     // ===================================
     // MÓDULO DE GESTIÓN DE PERSONAL
     // ===================================
@@ -101,6 +123,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('personnel/employeegroups', EmployeegroupController::class, [
         'as' => 'personnel'
     ]);
+    // Ruta para ver empleados del grupo (modal)
+    Route::get('personnel/employeegroups/{group}/employees', [EmployeegroupController::class, 'employees'])->name('personnel.employeegroups.employees');
 
     // Rutas especiales para empleados
     Route::prefix('personnel/employees')->name('personnel.employees.')->group(function () {
@@ -244,6 +268,12 @@ Route::resource('brandmodels', BrandModelController::class)->names('admin.brandm
 
 Route::resource('vehicletypes', VehicleTypeController::class)->names('admin.vehicletypes');
 
+
+// MÓDULO DE MANTENIMIENTOS - EXAMEN 03
+Route::resource('admin/examen03/maintenances', MaintenancesController::class)->names('admin.maintenances');
+Route::resource('admin/examen03/maintenances/{maintenance}/maintenance_shedules', MaintenanceShedulesController::class)->names('admin.maintenance_shedules');
+Route::resource('admin/examen03/maintenances/{maintenance}/maintenance_shedules/{schedule}/maintenance_records', MaintenanceRecordsController::class)->names('admin.maintenance_records');
+Route::post('admin/examen03/maintenances/{maintenance}/maintenance_shedules/{schedule}/maintenance_records/{record}/toggle-estado', [\App\Http\Controllers\admin\MaintenanceRecordsController::class, 'toggleEstado'])->name('admin.maintenance_records.toggle_estado');
 
 
 // ===================================

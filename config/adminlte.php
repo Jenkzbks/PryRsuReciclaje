@@ -322,7 +322,6 @@ return [
             'route' => 'admin.index',
             'icon' => 'fas fa-fw fa-tachometer-alt',
         ],
-
         [
             'text' => 'Gestión de Vehículos',
             'icon' => 'fas fa-car',
@@ -351,6 +350,11 @@ return [
                     'text' => 'Vehículo',
                     'route'  => 'admin.vehicles.index',
                     'icon' => 'fas fa-car-side',
+                ],
+                [
+                    'text'    => 'Mantenimiento',
+                    'route'  => 'admin.maintenances.index',
+                    'icon'    => 'fas fa-fw fa-tools',
                 ],
             ],
         ],
@@ -401,14 +405,14 @@ return [
                 ],
                 [
                     'text' => 'Zonas',
-                    'route' => 'admin.zones.index',
+                    'route' => 'admin.zonesjenkz.index',
                     'icon' => 'fas fa-fw fa-map-marked-alt',
                 ],
-                [
-                    'text' => 'Rutas de Recolección',
-                    'route' => 'admin.routes.index',
-                    'icon' => 'fas fa-fw fa-route',
-                ],
+                // [
+                //     'text' => 'Rutas de Recolección',
+                //     'route' => 'admin.routes.index',
+                //     'icon' => 'fas fa-fw fa-route',
+                // ],
                 [
                     'text' => 'Grupo de Personal',
                     'route' => 'admin.personnel.employeegroups.index',
@@ -440,7 +444,6 @@ return [
                 ],
             ],
         ],
-
         [
             'text'    => 'Otros',
             'icon'    => 'fa fa-bug',
