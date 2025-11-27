@@ -5,7 +5,7 @@
 @section('title', 'Mantenimientos')
 
 @section('content_header')
-    <button type="button" class="btn btn-success float-right" id="btnRegistrar">
+    <button type="button" class="btn btn-primary float-right" id="btnRegistrar">
         <i class="fas fa-plus"></i> Nuevo mantenimiento
     </button>
     <h1>Lista de Mantenimientos</h1>

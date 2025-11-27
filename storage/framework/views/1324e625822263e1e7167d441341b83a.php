@@ -33,7 +33,7 @@
 
                     </p>
                     <?php if(!$isComplete && $firstScheduling): ?>
-                        <button class="btn btn-warning w-100 edit-scheduling-btn" data-url="<?php echo e(route('admin.schedulings.edit', $firstScheduling->id)); ?>">
+                        <button class="btn btn-warning w-100 edit-scheduling-btn" data-url="<?php echo e(route('admin.schedulings.edit-modal', $firstScheduling->id)); ?>">
                             <i class="fas fa-sync-alt"></i>
                         </button>
                     <?php endif; ?>

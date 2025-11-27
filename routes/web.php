@@ -91,6 +91,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     ->name('schedulings.check-availability');
 
     Route::get('schedulings/{scheduling}/detalle', [SchedulingController::class, 'detalle'])->name('schedulings.detalle');
+    // Ruta para obtener el modal de edición via AJAX (no modifica la ruta de edición existente)
+    Route::get('schedulings/{scheduling}/edit-modal', [SchedulingController::class, 'editModal'])->name('schedulings.edit-modal');
 
     // API routes para selects dependientes
     Route::get('api/provinces/{department_id}', [ZoneController::class, 'getProvinces'])->name('api.provinces');

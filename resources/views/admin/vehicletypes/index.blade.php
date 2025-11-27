@@ -3,7 +3,7 @@
 @section('title', 'Proyecto RSU')
 
 @section('content_header')
-    <button type="button" class="btn btn-success float-right" id="btnRegistrar">
+    <button type="button" class="btn btn-primary float-right" id="btnRegistrar">
         <i class="fas fa-plus"></i> Nuevo tipo de vehículo
     </button>
     <h1>Lista de Tipos de Vehículos</h1>

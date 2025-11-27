@@ -8,7 +8,7 @@
             <h1 class="h3 mb-1 font-weight-bold">Gestión de Colores</h1>
             <p class="text-muted mb-0">Registro y gestión de colores.</p>
         </div>
-        <button type="button" class="btn btn-dark ms-auto" id="btnNuevo">
+        <button type="button" class="btn btn-primary ms-auto" id="btnNuevo">
             <i class="fas fa-plus"></i> Agregar Color
         </button>
     </div>

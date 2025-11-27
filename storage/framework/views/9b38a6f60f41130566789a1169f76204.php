@@ -21,21 +21,21 @@
             </div>
 
             
-            <div class="col-md-4">
-                <div class="form-group">
-                    <label class="font-weight-bold">Nuevo Turno</label>
-                    <select name="shift_id" class="form-control" id="shift_select">
-                        <option value="">Seleccione un nuevo turno</option>
-                        <?php $__currentLoopData = $shifts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $shift): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                        <option value="<?php echo e($shift->id); ?>" 
-                            <?php echo e($scheduling->shift_id == $shift->id ? 'selected' : ''); ?>>
-                            <?php echo e($shift->name); ?>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="font-weight-bold">Nuevo Turno</label>
+                            <select name="shift_id" class="form-control" id="shift_select">
+                                <option value="">Seleccione un nuevo turno</option>
+                                <?php $__currentLoopData = $shifts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $shift): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($shift->id); ?>" 
+                                    <?php echo e($scheduling->shift_id == $shift->id ? 'selected' : ''); ?>>
+                                    <?php echo e($shift->name); ?>
 
-                        </option>
-                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                    </select>
-                </div>
-            </div>
+                                </option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </select>
+                        </div>
+                    </div>
 
             
             <div class="col-md-1 d-flex align-items-end">
@@ -53,21 +53,21 @@
             </div>
 
             
-            <div class="col-md-4">
-                <div class="form-group">
-                    <label class="font-weight-bold">Nuevo Vehículo</label>
-                    <select name="vehicle_id" class="form-control" id="vehicle_select">
-                        <option value="">Seleccione un nuevo vehículo</option>
-                        <?php $__currentLoopData = $vehicles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $vehicle): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                        <option value="<?php echo e($vehicle->id); ?>"
-                            <?php echo e($scheduling->vehicle_id == $vehicle->id ? 'selected' : ''); ?>>
-                            <?php echo e($vehicle->plate); ?>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="font-weight-bold">Nuevo Vehículo</label>
+                            <select name="vehicle_id" class="form-control" id="vehicle_select">
+                                <option value="">Seleccione un nuevo vehículo</option>
+                                <?php $__currentLoopData = $vehicles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $vehicle): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($vehicle->id); ?>"
+                                    <?php echo e($scheduling->vehicle_id == $vehicle->id ? 'selected' : ''); ?>>
+                                    <?php echo e($vehicle->plate); ?>
 
-                        </option>
-                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                    </select>
-                </div>
-            </div>
+                                </option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </select>
+                        </div>
+                    </div>
 
             
             <div class="col-md-1 d-flex align-items-end">
@@ -91,11 +91,12 @@
                             <?php if($detail->employee): ?>
                                 <?php
                                     $role = 'Asistente';
-                                    if ($detail->employee->id == $selectedDriverId) $role = 'Conductor';
-                                    elseif ($detail->employee->id == $selectedA1Id) $role = 'Asistente 1';
-                                    elseif ($detail->employee->id == $selectedA2Id) $role = 'Asistente 2';
+                                    $role_key = 'assistant2_id';
+                                    if ($detail->employee->id == $selectedDriverId) { $role = 'Conductor'; $role_key = 'driver_id'; }
+                                    elseif ($detail->employee->id == $selectedA1Id) { $role = 'Asistente 1'; $role_key = 'assistant1_id'; }
+                                    elseif ($detail->employee->id == $selectedA2Id) { $role = 'Asistente 2'; $role_key = 'assistant2_id'; }
                                 ?>
-                                <option value="<?php echo e($detail->employee->id); ?>" data-type="<?php echo e($detail->employee->type_id); ?>">
+                                <option value="<?php echo e($detail->employee->id); ?>" data-type="<?php echo e($detail->employee->type_id); ?>" data-role="<?php echo e($role_key); ?>">
                                     <?php echo e($role); ?>: <?php echo e($detail->employee->names); ?> <?php echo e($detail->employee->lastnames); ?>
 
                                 </option>
@@ -106,20 +107,20 @@
             </div>
 
             
-            <div class="col-md-5">
-                <div class="form-group">
-                    <label class="font-weight-bold">Nuevo Personal</label>
-                    <select name="new_employee_id" class="form-control" id="nuevo_personal">
-                        <option value="">Seleccione un nuevo personal</option>
-                        <?php $__currentLoopData = $employees; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $emp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <option value="<?php echo e($emp->id); ?>" data-type="<?php echo e($emp->type_id); ?>" data-busy="<?php echo e(in_array($emp->id, $busyEmployeeIds ?? []) ? '1' : '0'); ?>" style="display: none;">
-                                <?php echo e($emp->names); ?> <?php echo e($emp->lastnames); ?>
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            <label class="font-weight-bold">Nuevo Personal</label>
+                            <select name="new_employee_id" class="form-control" id="nuevo_personal">
+                                <option value="">Seleccione un nuevo personal</option>
+                                <?php $__currentLoopData = $employees; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $emp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($emp->id); ?>" data-type="<?php echo e($emp->type_id); ?>" data-busy="<?php echo e(in_array($emp->id, $busyEmployeeIds ?? []) ? '1' : '0'); ?>" style="display: none;">
+                                        <?php echo e($emp->names); ?> <?php echo e($emp->lastnames); ?>
 
-                            </option>
-                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                    </select>
-                </div>
-            </div>
+                                    </option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </select>
+                        </div>
+                    </div>
 
             
             <div class="col-md-1 d-flex align-items-end">
@@ -147,6 +148,16 @@
                     
                 </tbody>
             </table>
+        </div>
+
+        
+        <div id="motivo_template" class="d-none">
+            <select class="form-control form-control-sm motivo-select">
+                <option value="">-- Seleccione un motivo --</option>
+                <?php $__currentLoopData = $reasons; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $reason): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <option value="<?php echo e($reason->id); ?>"><?php echo e($reason->name); ?></option>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            </select>
         </div>
 
     </div>

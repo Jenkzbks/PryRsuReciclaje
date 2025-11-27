@@ -597,6 +597,11 @@ return [
             'icon'    => 'fas fa-users',
             'submenu' => [
                 [
+                    'text' => 'Dashboard Personal',
+                    'route'  => 'admin.personnel.dashboard',
+                    'icon' => 'fas fa-fw fa-tachometer-alt',
+                ],
+                [
                     'text' => 'Tipo de Empleados',
                     'route'  => 'admin.personnel.employee-types.index',
                     'icon' => 'fas fa-fw fa-user-tie',
@@ -615,6 +620,11 @@ return [
                     'text' => 'Asistencias',
                     'route'  => 'admin.personnel.attendances.index',
                     'icon' => 'fas fa-fw fa-clock',
+                ],
+                [
+                    'text' => 'Dashboard Asistencias',
+                    'route'  => 'admin.personnel.attendances.dashboard',
+                    'icon' => 'fas fa-fw fa-chart-line',
                 ],
                 [
                     'text' => 'Vacaciones',
@@ -652,11 +662,8 @@ return [
                 'route' => 'admin.schedulings.index',
                 'icon'  => 'fas fa-fw fa-clock',
                 ],
-
-                
             ],
         ],
-        
         [
             'text'    => 'Gestión de Cambios',
             'icon'    => 'fas fa-exchange-alt',
@@ -666,27 +673,17 @@ return [
                     'route'  => 'admin.reasons.index',
                     'icon' => 'fas fa-fw fa-clipboard-list',
                 ],
-                [
-                    'text' => 'Cambios',
-                    'route'  => 'admin.personnel.attendances.dashboard',
-                    'icon' => 'fas fa-fw fa-retweet',
-                ],
+                // [
+                //     'text' => 'Cambios',
+                //     'route'  => 'admin.personnel.attendances.dashboard',
+                //     'icon' => 'fas fa-fw fa-retweet',
+                // ],
             ],
         ],
         [
             'text'    => 'Otros',
             'icon'    => 'fa fa-bug',
             'submenu' => [
-                [
-                    'text' => 'Dashboard Personal',
-                    'route'  => 'admin.personnel.dashboard',
-                    'icon' => 'fas fa-fw fa-tachometer-alt',
-                ],
-                [
-                    'text' => 'Dashboard Asistencias',
-                    'route'  => 'admin.personnel.attendances.dashboard',
-                    'icon' => 'fas fa-fw fa-chart-line',
-                ],
                 [
                     'text' => 'Kiosco de Asistencias',
                     'route'  => 'attendance-kiosk.index',
@@ -695,26 +692,12 @@ return [
                 ],
             ],
         ],
-
-
-        ['header' => 'REPORTES'],
-        [
-            'text' => 'Reportes de Recolección',
-            'url' => '#',
-            'icon' => 'fas fa-fw fa-chart-line',
-        ],
-        [
-            'text' => 'Estadísticas',
-            'url' => '#',
-            'icon' => 'fas fa-fw fa-chart-pie',
-        ],
-
         ['header' => 'CONFIGURACIÓN'],
-        [
-            'text' => 'Configuración',
-            'url' => '#',
-            'icon' => 'fas fa-fw fa-cog',
-        ],
+        // [
+        //     'text' => 'Configuración',
+        //     'url' => '#',
+        //     'icon' => 'fas fa-fw fa-cog',
+        // ],
         [
             'text' => 'Usuarios',
             'url' => '#',
