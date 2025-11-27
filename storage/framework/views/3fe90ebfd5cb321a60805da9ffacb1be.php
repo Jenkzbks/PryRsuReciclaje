@@ -68,6 +68,9 @@
                 <a href="<?php echo e(route('admin.schedulings.edit',$s)); ?>" class="btn btn-sm btn-outline-primary mr-2">
                   <i class="fas fa-edit"></i>
                 </a>
+                <button type="button" class="btn btn-sm btn-info mr-2 btnDetalle" data-id="<?php echo e($s->id); ?>" title="Ver detalle">
+                  <i class="fas fa-users"></i>
+                </button>
                 <form method="POST" action="<?php echo e(route('admin.schedulings.destroy',$s)); ?>" onsubmit="return confirm('¿Eliminar programación?')">
                   <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
                   <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
@@ -101,6 +104,26 @@
         </div>
       </div>
     </div>
+    <div class="modal fade" id="modalDetalle" tabindex="-1" role="dialog" aria-labelledby="modalDetalleLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="modalDetalleLabel">Visualización de día programado e historial de cambios</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="detalleContenido">
+          <!-- Aquí se cargará el contenido por AJAX -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fas fa-times"></i> Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('js'); ?>
@@ -133,5 +156,20 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 </script>
 <?php $__env->stopSection(); ?>
+
+<?php $__env->startPush('js'); ?>
+<script>
+$(function() {
+  $('.btnDetalle').click(function() {
+    var id = $(this).data('id');
+    $('#detalleContenido').html('<div class="text-center p-5"><i class="fas fa-spinner fa-spin fa-2x"></i> Cargando...</div>');
+    $('#modalDetalle').modal('show');
+    $.get("<?php echo e(url('admin/schedulings')); ?>/" + id + "/detalle", function(data) {
+      $('#detalleContenido').html(data);
+    });
+  });
+});
+</script>
+<?php $__env->stopPush(); ?>
 
 <?php echo $__env->make('adminlte::page', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\crist\OneDrive\Escritorio\TADS\PryFinal\PryRsuReciclaje\resources\views/schedulings/index.blade.php ENDPATH**/ ?>
