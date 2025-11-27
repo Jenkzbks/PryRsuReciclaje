@@ -154,6 +154,8 @@ class SchedulingController extends Controller
 
         // Zones + a lightweight massiveChange object (so edit view works when loaded via AJAX)
         $zones = \App\Models\Zone::orderBy('name')->get();
+        $shifts = \App\Models\Shift::orderBy('name')->get();
+        $vehicles = \App\Models\Vehicle::orderBy('plate')->get();
 
         $massiveChange = (object) [
             'from' => now()->toDateString(),
@@ -181,10 +183,10 @@ class SchedulingController extends Controller
 
         // If it's an AJAX request, return only the form fragment so it can be injected
         if ($request->ajax()) {
-            return view('schedulings._edit_massive_form', compact('groups','drivers','assistants','zones','massiveChange'));
+            return view('schedulings._edit_massive_form', compact('groups','drivers','assistants','zones','shifts','vehicles','massiveChange'));
         }
 
-        return view('schedulings.edit-massive', compact('groups', 'drivers', 'assistants','zones','massiveChange'));
+        return view('schedulings.edit-massive', compact('groups', 'drivers', 'assistants','zones','shifts','vehicles','massiveChange'));
     }
     /**
      * Return only the massive form fragment (for AJAX modal)
@@ -215,6 +217,172 @@ class SchedulingController extends Controller
             ->get();
 
         return view('schedulings._massive_form', compact('groups','drivers','assistants'));
+    }
+
+    /**
+     * Aplica cambios masivos (update) a programaciones en un rango de fechas.
+     * Se soportan: Cambio de Conductor, Cambio de Ayudante, Cambio de Turno, Cambio de Vehiculo.
+     */
+    public function massiveUpdate(Request $request)
+    {
+        $request->validate([
+            'from' => 'required|date',
+            'to'   => 'required|date|after_or_equal:from',
+            'zones' => 'nullable|array',
+            'zones.*' => 'exists:zones,id',
+            'type' => 'required|string|in:Cambio de Conductor,Cambio de Ayudante,Cambio de Turno,Cambio de Vehiculo',
+            'reason' => 'required|string|max:255',
+
+            'old_driver' => 'nullable|exists:employee,id',
+            'new_driver' => 'nullable|exists:employee,id',
+
+            'old_assistant' => 'nullable|exists:employee,id',
+            'new_assistant' => 'nullable|exists:employee,id',
+
+            'old_shift' => 'nullable|exists:shifts,id',
+            'new_shift' => 'nullable|exists:shifts,id',
+
+            'old_vehicle' => 'nullable|exists:vehicles,id',
+            'new_vehicle' => 'nullable|exists:vehicles,id',
+        ]);
+
+        $from = $request->from;
+        $to = $request->to;
+
+        $query = Scheduling::with(['details.employee','shift','vehicle'])
+            ->whereDate('date','>=',$from)
+            ->whereDate('date','<=',$to);
+
+        if ($request->filled('zones')) {
+            $query->whereIn('zone_id', $request->zones);
+        }
+
+        $schedulings = $query->get();
+
+        $affected = 0;
+
+        DB::transaction(function() use (&$affected, $schedulings, $request) {
+            $userId = auth()->id();
+
+            // Create or find the Reason for this massive change (so reason_id is not null)
+            $reasonName = trim($request->input('reason', ''));
+            $reason = \App\Models\Reason::firstOrCreate(
+                ['name' => $reasonName],
+                ['active' => 1]
+            );
+            foreach ($schedulings as $s) {
+                $changed = false;
+
+                switch ($request->type) {
+                    case 'Cambio de Conductor':
+                        $driverDetail = $s->details->first(function($d){
+                            return optional($d->employee)->type_id == 2;
+                        });
+                        if ($driverDetail) {
+                            $apply = true;
+                            if ($request->filled('old_driver')) {
+                                $apply = ($driverDetail->emplooyee_id == (int)$request->old_driver);
+                            }
+                            if ($apply && $request->filled('new_driver')) {
+                                $oldName = optional($driverDetail->employee)->lastnames . ' ' . optional($driverDetail->employee)->names;
+                                $driverDetail->update(['emplooyee_id' => $request->new_driver]);
+                                $newEmp = \App\Models\Employee::find($request->new_driver);
+                                $newName = $newEmp ? ($newEmp->lastnames . ' ' . $newEmp->names) : null;
+                                \App\Models\SchedulingChange::create([
+                                    'scheduling_id' => $s->id,
+                                    'reason_id' => $reason->id,
+                                    'notes' => null,
+                                    'change_type' => 'personal',
+                                    'old_value' => $oldName,
+                                    'new_value' => $newName,
+                                    'user_id' => $userId,
+                                ]);
+                                $changed = true;
+                            }
+                        }
+                        break;
+
+                    case 'Cambio de Ayudante':
+                        $assistantDetails = $s->details->filter(function($d){
+                            return optional($d->employee)->type_id == 4;
+                        });
+                        foreach ($assistantDetails as $ad) {
+                            $apply = true;
+                            if ($request->filled('old_assistant')) {
+                                $apply = ($ad->emplooyee_id == (int)$request->old_assistant);
+                            }
+                            if ($apply && $request->filled('new_assistant')) {
+                                $oldName = optional($ad->employee)->lastnames . ' ' . optional($ad->employee)->names;
+                                $ad->update(['emplooyee_id' => $request->new_assistant]);
+                                $newEmp = \App\Models\Employee::find($request->new_assistant);
+                                $newName = $newEmp ? ($newEmp->lastnames . ' ' . $newEmp->names) : null;
+                                \App\Models\SchedulingChange::create([
+                                    'scheduling_id' => $s->id,
+                                    'reason_id' => null,
+                                    'notes' => null,
+                                    'change_type' => 'personal',
+                                    'old_value' => $oldName,
+                                    'new_value' => $newName,
+                                    'user_id' => $userId,
+                                ]);
+                                $changed = true;
+                            }
+                        }
+                        break;
+
+                    case 'Cambio de Turno':
+                        $oldShift = $s->shift_id;
+                        if ($request->filled('old_shift')) {
+                            if ($oldShift != (int)$request->old_shift) break;
+                        }
+                        if ($request->filled('new_shift')) {
+                            $oldShift = $oldShift ?? $s->shift_id;
+                            $s->update(['shift_id' => $request->new_shift]);
+                            \App\Models\SchedulingChange::create([
+                                'scheduling_id' => $s->id,
+                                'reason_id' => $reason->id,
+                                'notes' => null,
+                                'change_type' => 'turno',
+                                'old_value' => optional(\App\Models\Shift::find($oldShift))->name ?? null,
+                                'new_value' => optional(\App\Models\Shift::find($request->new_shift))->name ?? null,
+                                'user_id' => $userId,
+                            ]);
+                            $changed = true;
+                        }
+                        break;
+
+                    case 'Cambio de Vehiculo':
+                        $oldVehicle = $s->vehicle_id;
+                        if ($request->filled('old_vehicle')) {
+                            if ($oldVehicle != (int)$request->old_vehicle) break;
+                        }
+                        if ($request->filled('new_vehicle')) {
+                            $oldVehicle = $oldVehicle ?? $s->vehicle_id;
+                            $s->update(['vehicle_id' => $request->new_vehicle]);
+                            \App\Models\SchedulingChange::create([
+                                'scheduling_id' => $s->id,
+                                'reason_id' => $reason->id,
+                                'notes' => null,
+                                'change_type' => 'vehículo',
+                                'old_value' => optional(\App\Models\Vehicle::find($oldVehicle))->plate ?? null,
+                                'new_value' => optional(\App\Models\Vehicle::find($request->new_vehicle))->plate ?? null,
+                                'user_id' => $userId,
+                            ]);
+                            $changed = true;
+                        }
+                        break;
+                }
+
+                if ($changed) {
+                    // marca como reprogramado si estaba programado
+                    if ($s->status == 1) $s->update(['status' => 2]);
+                    $affected++;
+                }
+            }
+        });
+
+        $message = "Cambios masivos aplicados correctamente. Programaciones afectadas: {$affected}.";
+        return redirect()->back()->with('success', $message);
     }
 
     /* =========================

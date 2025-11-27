@@ -149,6 +149,9 @@ document.addEventListener('DOMContentLoaded', function(){
       modalBody.innerHTML = text;
       modalBody.dataset.loaded = '1';
 
+      // Initialize the form after injection
+      initMassiveChangeForm();
+
       try { $('#editModal').modal('show'); } catch(e) { console.warn(e); }
     } catch (err) {
       console.error(err);
@@ -156,6 +159,112 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
 });
+
+// Function to initialize the massive change form
+function initMassiveChangeForm(){
+    // no static resolution here: resolve elements dynamically in functions
+    function getTypeSelect(){
+        return document.getElementById('change_type') || document.querySelector('select[name="type"]');
+    }
+    function getBlockByType(t){
+        if(!t) return null;
+        if(t === 'Cambio de Conductor') return document.getElementById('block_conductor');
+        if(t === 'Cambio de Ayudante') return document.getElementById('block_ayudante');
+        if(t === 'Cambio de Turno') return document.getElementById('block_turno');
+        if(t === 'Cambio de Vehiculo') return document.getElementById('block_vehiculo');
+        return null;
+    }
+
+    function hideAll(){
+        // hide all known blocks (resolve dynamically)
+        ['block_conductor','block_ayudante','block_turno','block_vehiculo'].forEach(function(id){
+            const el = document.getElementById(id);
+            if(el) el.style.display = 'none';
+        });
+        document.querySelectorAll('.new-select').forEach(el => { el.required = false; el.disabled = true; });
+    }
+
+    function applyType(t){
+        console.debug('[massive-change] applyType ->', t);
+        hideAll();
+        const block = getBlockByType(t);
+        if(!block){ console.debug('[massive-change] no block found for', t); return; }
+        console.debug('[massive-change] showing block for', t);
+        // show block using flex so internal cols align as before
+        block.style.display = 'flex';
+        const newSel = block.querySelector('.new-select');
+        if(newSel){ newSel.disabled = false; newSel.required = true; }
+    }
+
+    // init: try to find the select now; if not present (partial inserted later), poll briefly
+    function initWhenReady(){
+        let sel = document.getElementById('change_type') || document.querySelector('select[name="type"]');
+        if(sel){
+            console.debug('[massive-change] Found select, value:', sel.value);
+            // ensure id for consistent reference
+            if(!sel.id) sel.id = 'change_type';
+            // apply current value or default
+            const val = sel.value || 'Cambio de Conductor';
+            sel.value = val;
+            console.debug('[massive-change] Applying type:', val);
+            applyType(val);
+            sel.addEventListener('change', function(){ applyType(this.value); });
+            return true;
+        } else {
+            console.debug('[massive-change] Select not found yet');
+        }
+        return false;
+    }
+
+    // init: if select exists with value, apply it (for static loads)
+    initWhenReady();
+    // poll for dynamic loads (e.g., modals) - faster
+    let attempts = 0;
+    const intId = setInterval(function(){
+        attempts++;
+        if(initWhenReady() || attempts > 50){
+            clearInterval(intId);
+        }
+    }, 100);
+
+    document.querySelectorAll('.new-select').forEach(function(sel){
+        sel.addEventListener('change', function(){
+            const name = sel.id;
+            const oldName = name.replace('new_', 'old_');
+            const oldVal = document.querySelector('input[name="' + oldName + '"]')?.value || '';
+            if(oldVal && sel.value === oldVal){ alert('No puede seleccionar el mismo elemento que el actual. Elija otro.'); sel.value = ''; }
+        });
+    });
+
+    // Listeners for current selects to update hidden and disable in new
+    document.querySelectorAll('.current-select').forEach(function(sel){
+        sel.addEventListener('change', function(){
+            const type = sel.id.replace('current_', ''); // e.g., driver
+            const hidden = document.querySelector('input[name="old_' + type + '"]');
+            if(hidden) hidden.value = sel.value;
+            const newSel = document.getElementById('new_' + type);
+            if(newSel){
+                newSel.querySelectorAll('option').forEach(o => o.disabled = false);
+                if(sel.value){
+                    const opt = newSel.querySelector('option[value="' + sel.value + '"]');
+                    if(opt) opt.disabled = true;
+                    if(newSel.value === sel.value) newSel.value = '';
+                }
+            }
+        });
+        // Trigger on init to set hidden and disable
+        sel.dispatchEvent(new Event('change'));
+    });
+
+    // Delegated listener for type select changes, works even if select is added later
+    document.addEventListener('change', function(e){
+        const t = e.target;
+        if(t && (t.id === 'change_type' || t.name === 'type')){
+            console.log('[massive-change] Delegated change detected:', t.value);
+            applyType(t.value);
+        }
+    });
+}
 </script>
 @stop
 
