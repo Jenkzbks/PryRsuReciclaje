@@ -514,33 +514,17 @@ class SchedulingController extends Controller
     /* =========================
      * EDITAR (si lo usas para cambios manuales)
      * ========================= */
-       public function edit(Scheduling $scheduling)
+    public function edit(Scheduling $scheduling)
     {
-        $scheduling->load(['group.shift','group.vehicle','group.zone','details.employee.type']);
+        $scheduling->load(['group.shift','group.vehicle','group.zone','details.employee']);
 
-        $drivers = Employee::where('status', 1)
-            ->whereHas('type', function($q) {
-                $q->where('name', 'Conductor');
-            })
-            ->orderBy('lastnames')
-            ->get();
+        $drivers    = Employee::where('status', 1)->where('type_id', 1)->orderBy('lastnames')->get();
+        $assistants = Employee::where('status', 1)->where('type_id', 2)->orderBy('lastnames')->get();
+        $shifts     = \App\Models\Shift::all();
+        $vehicles   = \App\Models\Vehicle::all();
 
-        $assistants = Employee::where('status', 1)
-            ->whereHas('type', function($q) {
-                $q->where('name', 'Ayudante');
-            })
-            ->orderBy('lastnames')
-            ->get();
-
-        $shifts   = \App\Models\Shift::all();
-        $vehicles = \App\Models\Vehicle::all();
-
-        $driverDetail = $scheduling->details->first(function($d) {
-            return optional($d->employee->type)->name === 'Conductor';
-        });
-        $aDetails = $scheduling->details->filter(function($d) {
-            return optional($d->employee->type)->name === 'Ayudante';
-        })->values();
+        $driverDetail = $scheduling->details->firstWhere('employee.type_id', 1);
+        $aDetails     = $scheduling->details->filter(fn($d) => optional($d->employee)->type_id == 2)->values();
 
         $selectedDriverId = $driverDetail?->employee?->id;
         $selectedA1Id     = $aDetails->get(0)?->employee?->id;
@@ -551,67 +535,6 @@ class SchedulingController extends Controller
 
         return view('schedulings.edit', compact(
             'scheduling', 'drivers', 'assistants', 'selectedDriverId', 'selectedA1Id', 'selectedA2Id', 'shifts', 'vehicles', 'reasons'
-        ));
-    }
-
-    /**
-     * Devuelve solo el fragmento del modal para cargar vía AJAX sin modificar la lógica del edit completo.
-     */
-    public function editModal(Request $request, Scheduling $scheduling)
-    {
-        $scheduling->load(['group.shift','group.vehicle','group.zone','details.employee.type']);
-
-        $drivers = Employee::where('status', 1)
-            ->whereHas('type', function($q) {
-                $q->where('name', 'Conductor');
-            })
-            ->orderBy('lastnames')
-            ->get();
-
-        $assistants = Employee::where('status', 1)
-            ->whereHas('type', function($q) {
-                $q->where('name', 'Ayudante');
-            })
-            ->orderBy('lastnames')
-            ->get();
-
-        $shifts   = \App\Models\Shift::all();
-        $vehicles = \App\Models\Vehicle::all();
-
-        $driverDetail = $scheduling->details->first(function($d) {
-            return optional($d->employee->type)->name === 'Conductor';
-        });
-        $aDetails = $scheduling->details->filter(function($d) {
-            return optional($d->employee->type)->name === 'Ayudante';
-        })->values();
-
-        $selectedDriverId = $driverDetail?->employee?->id;
-        $selectedA1Id     = $aDetails->get(0)?->employee?->id;
-        $selectedA2Id     = $aDetails->get(1)?->employee?->id;
-
-        // Motivos activos
-        $reasons = \App\Models\Reason::where('active', 1)->orderBy('name')->get();
-
-        // Lista completa de empleados (para el select del modal)
-        $employees = Employee::where('status', 1)->orderBy('lastnames')->get();
-
-        // Empleados ocupados en la misma fecha (excluir asignaciones en otros schedulings de la misma fecha)
-        $busyEmployeeIds = \DB::table('groupdetails as gd')
-            ->join('schedulings as s', 's.id', '=', 'gd.scheduling_id')
-            ->whereDate('s.date', $scheduling->date)
-            ->where('s.id', '!=', $scheduling->id)
-            ->pluck('gd.emplooyee_id')
-            ->unique()
-            ->values()
-            ->all();
-
-        // Preparar atributos legibles esperados por la vista parcial
-        $scheduling->turno_actual = optional($scheduling->shift)->name ?? optional($scheduling->group->shift)->name ?? '-';
-        $scheduling->vehiculo_actual = optional($scheduling->vehicle)->plate ?? optional($scheduling->group->vehicle)->plate ?? '-';
-
-        // Return partial modal view (desacoplado del edit full)
-        return view('admin.edit_modal', compact(
-            'scheduling','drivers','assistants','selectedDriverId','selectedA1Id','selectedA2Id','shifts','vehicles','employees','busyEmployeeIds','reasons'
         ));
     }
 
@@ -633,19 +556,7 @@ class SchedulingController extends Controller
         $userId = auth()->id();
         $oldShift = $scheduling->shift_id;
         $oldVehicle = $scheduling->vehicle_id;
-        // Build explicit mapping of old personnel per role (driver, assistant1, assistant2)
-        $driverDetail = $scheduling->details->first(function($d) {
-            return optional($d->employee->type)->name === 'Conductor';
-        });
-        $aDetails = $scheduling->details->filter(function($d) {
-            return optional($d->employee->type)->name === 'Ayudante';
-        })->values();
-
-        $oldPersonnel = [
-            'driver_id' => $driverDetail?->employee?->id ?? null,
-            'assistant1_id' => $aDetails->get(0)?->employee?->id ?? null,
-            'assistant2_id' => $aDetails->get(1)?->employee?->id ?? null,
-        ];
+        $oldPersonnel = $scheduling->details->pluck('emplooyee_id')->sort()->values()->toArray();
 
         $newStatus = $scheduling->status;
         if ($scheduling->status == 1) {
@@ -659,52 +570,25 @@ class SchedulingController extends Controller
             'status'     => $request->status ?? $newStatus,
         ]);
 
-        // Note: personnel update is handled later only if personnel fields were submitted
+        // Actualizar personal
+        $scheduling->details()->delete();
+        $newPersonnel = [];
+        foreach (['driver_id', 'assistant1_id', 'assistant2_id'] as $field) {
+            if ($request->$field) {
+                Groupdetail::create([
+                    'scheduling_id' => $scheduling->id,
+                    'emplooyee_id'  => $request->$field,
+                ]);
+                $newPersonnel[] = $request->$field;
+            }
+        }
+        sort($newPersonnel);
 
         $motivos = $request->input('motivos', []);
         $notas   = $request->input('notas', []);
 
-        // Determine which changes were actually submitted (inputs present in the form)
-        $shiftChangedRequested = $request->has('shift_id') && $request->shift_id != $oldShift;
-        $vehicleChangedRequested = $request->has('vehicle_id') && $request->vehicle_id != $oldVehicle;
-        $roles = ['driver_id' => 'Conductor', 'assistant1_id' => 'Ayudante 1', 'assistant2_id' => 'Ayudante 2'];
-        // Determine which personnel fields actually changed value compared to the previous snapshot
-        $personnelChangedFields = [];
-        foreach (array_keys($roles) as $field) {
-            if ($request->has($field)) {
-                $newVal = $request->input($field);
-                $newId = $newVal !== null && $newVal !== '' ? (int)$newVal : null;
-                $oldId = $oldPersonnel[$field] ?? null;
-                if ($oldId !== $newId) {
-                    $personnelChangedFields[] = $field;
-                }
-            }
-        }
-
-        // Validate that motivos are provided for requested changes (DB requires reason_id non-null)
-        $validationErrors = [];
-        if ($shiftChangedRequested && empty($motivos['turno'])) {
-            $validationErrors[] = 'Seleccione un motivo para el cambio de turno.';
-        }
-        if ($vehicleChangedRequested && empty($motivos['vehiculo'])) {
-            $validationErrors[] = 'Seleccione un motivo para el cambio de vehículo.';
-        }
-        foreach ($personnelChangedFields as $field) {
-            $motivoKey = 'personal-' . $field;
-            if (empty($motivos[$motivoKey])) {
-                $validationErrors[] = 'Seleccione un motivo para el cambio de ' . $roles[$field] . '.';
-            }
-        }
-        if (!empty($validationErrors)) {
-            $message = implode(' ', $validationErrors);
-            if ($request->ajax()) {
-                return response()->json(['success' => false, 'message' => $message], 422);
-            }
-            return redirect()->back()->withErrors(['motivos' => $message])->withInput();
-        }
-
         // Cambios de turno
-        if ($shiftChangedRequested) {
+        if ($request->shift_id && $request->shift_id != $oldShift) {
             \App\Models\SchedulingChange::create([
                 'scheduling_id' => $scheduling->id,
                 'reason_id'     => $motivos['turno'] ?? null,
@@ -716,7 +600,7 @@ class SchedulingController extends Controller
             ]);
         }
         // Cambios de vehículo
-        if ($vehicleChangedRequested) {
+        if ($request->vehicle_id && $request->vehicle_id != $oldVehicle) {
             \App\Models\SchedulingChange::create([
                 'scheduling_id' => $scheduling->id,
                 'reason_id'     => $motivos['vehiculo'] ?? null,
@@ -728,12 +612,11 @@ class SchedulingController extends Controller
             ]);
         }
         // Cambios de personal: registrar un cambio por cada empleado modificado
+        $roles = ['driver_id' => 'Conductor', 'assistant1_id' => 'Ayudante 1', 'assistant2_id' => 'Ayudante 2'];
+        $oldIds = array_combine(array_keys($roles), array_values($oldPersonnel));
         foreach ($roles as $field => $label) {
-            // Only consider fields that actually changed value
-            if (!in_array($field, $personnelChangedFields, true)) continue;
-            $oldId = $oldPersonnel[$field] ?? null;
-            $newVal = $request->input($field);
-            $newId = $newVal !== null && $newVal !== '' ? (int)$newVal : null;
+            $oldId = $oldIds[$field] ?? null;
+            $newId = $request->$field ?? null;
             if ($oldId != $newId) {
                 $oldEmp = $oldId ? \App\Models\Employee::find($oldId) : null;
                 $newEmp = $newId ? \App\Models\Employee::find($newId) : null;
@@ -747,27 +630,6 @@ class SchedulingController extends Controller
                     'new_value'     => $newEmp ? ($label.': '.$newEmp->lastnames.' '.$newEmp->names) : $label.': -',
                     'user_id'       => $userId,
                 ]);
-            }
-        }
-
-        // Update personnel only if any personnel fields were submitted
-        if (!empty($personnelChangedFields)) {
-            // Start from existing personnel, override with any submitted changed values
-            $finalPersonnel = $oldPersonnel;
-            foreach ($personnelChangedFields as $field) {
-                $val = $request->input($field);
-                $finalPersonnel[$field] = $val !== null && $val !== '' ? (int)$val : null;
-            }
-            // Replace group details with final personnel snapshot
-            $scheduling->details()->delete();
-            foreach (['driver_id', 'assistant1_id', 'assistant2_id'] as $field) {
-                $empId = $finalPersonnel[$field] ?? null;
-                if ($empId) {
-                    Groupdetail::create([
-                        'scheduling_id' => $scheduling->id,
-                        'emplooyee_id'  => $empId,
-                    ]);
-                }
             }
         }
 
@@ -830,7 +692,7 @@ class SchedulingController extends Controller
                 'id' => $emp->id,
                 'full_name' => trim(($emp->lastnames ?? '').' '.($emp->names ?? '')),
                 'type_id' => $emp->type_id,
-                'type_name' => $emp->type->name ?? ($emp->type_id == 2 ? 'Conductor' : 'Ayudante'),
+                'type_name' => $emp->type->name ?? ($emp->type_id == 1 ? 'Conductor' : 'Ayudante'), // 🔥 CORREGIDO
                 'contract'  => $contract ? [
                     'start_date' => $contractStart,
                     'end_date'   => $contractEnd,
@@ -848,7 +710,7 @@ class SchedulingController extends Controller
         $allMembers = $members->map(function($member, $index) use ($buildPerson) {
             $personData = $buildPerson($member);
             $personData['position'] = $index + 1;
-            $personData['role'] = $member->type_id == 2 ? 'Conductor' : 'Ayudante ' . $index;
+            $personData['role'] = $member->type_id == 1 ? 'Conductor' : 'Ayudante ' . $index; // 🔥 CORREGIDO
             return $personData;
         });
 
