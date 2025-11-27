@@ -22,8 +22,8 @@
                     {!! Form::model($zone, ['route' => ['admin.zonesjenkz.update', $zone->id], 'method' => 'PUT', 'id' => 'zone-form']) !!}
                         @include('admin.zones_jenkz.template.form', ['departments' => $departments])
                         <div class="mt-3">
-                            <button type="submit" class="btn btn-primary">Actualizar</button>
-                            <a href="{{ route('admin.zonesjenkz.index') }}" class="btn btn-secondary">Cancelar</a>
+                            <a href="{{ route('admin.zonesjenkz.index') }}" class="btn btn-danger"> <i class="fas fa-ban mr-1"></i> Cancelar</a>
+                            <button type="submit" class="btn btn-primary"> <i class="fas fa-save mr-1"></i> Actualizar</button>
                         </div>
                     {!! Form::close() !!}
                 </div>

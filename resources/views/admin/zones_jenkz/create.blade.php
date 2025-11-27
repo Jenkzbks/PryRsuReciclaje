@@ -81,8 +81,8 @@ $(document).ready(function() {
                     {!! Form::open(['route' => 'admin.zonesjenkz.store', 'method' => 'POST', 'id' => 'zone-form']) !!}
                         @include('admin.zones_jenkz.template.form')
                         <div class="mt-3">
-                            <button type="submit" class="btn btn-primary">Guardar</button>
-                            <a href="{{ route('admin.zonesjenkz.index') }}" class="btn btn-secondary">Cancelar</a>
+                            <a href="{{ route('admin.zonesjenkz.index') }}" class="btn btn-danger"> <i class="fas fa-ban mr-1"></i> Cancelar</a>
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i> Guardar</button>
                         </div>
                     {!! Form::close() !!}
                 </div>
