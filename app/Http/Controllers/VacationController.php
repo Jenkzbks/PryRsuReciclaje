@@ -73,8 +73,8 @@ class VacationController extends Controller
 
         $vacations = $query->paginate(15)->withQueryString();
 
-        // Para la vista
-        $employees = Employee::where('status', 1)
+        // Para la vista - Solo empleados nombrados o permanentes
+        $employees = Employee::eligibleForVacations()
             ->orderBy('names')
             ->get();
 
@@ -91,7 +91,7 @@ class VacationController extends Controller
      */
     public function create(Request $request)
     {
-        $employees = Employee::where('status', 1)
+        $employees = Employee::eligibleForVacations()
             ->orderBy('names')
             ->get();
 
@@ -154,6 +154,15 @@ class VacationController extends Controller
     public function edit(Vacation $vacation)
     {
         $employees = Employee::where('status', 1)
+            ->whereHas('employeeType', function($query) {
+                $query->where('active', true)
+                      ->where(function($q) {
+                          $q->whereIn('code', ['NOMBRADO', 'PERMANENTE', 'PLANTA'])
+                            ->orWhere('name', 'LIKE', '%NOMBRADO%')
+                            ->orWhere('name', 'LIKE', '%PERMANENTE%')
+                            ->orWhere('name', 'LIKE', '%PLANTA%');
+                      });
+            })
             ->orderBy('names')
             ->get();
 

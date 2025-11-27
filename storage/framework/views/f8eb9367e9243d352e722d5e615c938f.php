@@ -1,8 +1,6 @@
-@extends('adminlte::page')
+<?php $__env->startSection('title', 'Empleados'); ?>
 
-@section('title', 'Empleados')
-
-@section('content_header')
+<?php $__env->startSection('content_header'); ?>
     <div class="d-flex justify-content-between align-items-center">
         <div>
             <h1 class="h3 mb-1 font-weight-bold">
@@ -11,17 +9,17 @@
             <p class="text-muted mb-0">Administración integral del personal de la empresa</p>
         </div>
         <div class="btn-group">
-            <a href="{{ route('admin.personnel.employees.create') }}" class="btn btn-primary">
+            <a href="<?php echo e(route('admin.personnel.employees.create')); ?>" class="btn btn-primary">
                 <i class="fas fa-user-plus"></i> Nuevo Empleado
             </a>
-            <a href="{{ route('admin.personnel.employees.export') }}" class="btn btn-success">
+            <a href="<?php echo e(route('admin.personnel.employees.export')); ?>" class="btn btn-success">
                 <i class="fas fa-file-excel"></i> Exportar
             </a>
         </div>
     </div>
-@stop
+<?php $__env->stopSection(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <!-- Filtros de Búsqueda -->
     <div class="card shadow-sm">
         <div class="card-header">
@@ -35,7 +33,7 @@
             </div>
         </div>
         <div class="card-body">
-            <form method="GET" action="{{ route('admin.personnel.employees.index') }}" id="filterForm">
+            <form method="GET" action="<?php echo e(route('admin.personnel.employees.index')); ?>" id="filterForm">
                 <div class="row">
                     <div class="col-md-3">
                         <div class="form-group">
@@ -45,7 +43,7 @@
                                    id="search"
                                    class="form-control" 
                                    placeholder="Nombre, DNI, email..."
-                                   value="{{ request('search') }}">
+                                   value="<?php echo e(request('search')); ?>">
                         </div>
                     </div>
                     <div class="col-md-2">
@@ -53,38 +51,24 @@
                             <label for="employee_type_id">Tipo de Empleado</label>
                             <select name="employee_type_id" id="employee_type_id" class="form-control">
                                 <option value="">Todos los tipos</option>
-                                @foreach($employeeTypes as $type)
-                                    <option value="{{ $type->id }}" 
-                                            {{ request('employee_type_id') == $type->id ? 'selected' : '' }}>
-                                        {{ $type->name }}
+                                <?php $__currentLoopData = $employeeTypes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $type): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($type->id); ?>" 
+                                            <?php echo e(request('employee_type_id') == $type->id ? 'selected' : ''); ?>>
+                                        <?php echo e($type->name); ?>
+
                                     </option>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
                     </div>
-                    {{-- Filtro por departamento comentado temporalmente
-                    <div class="col-md-2">
-                        <div class="form-group">
-                            <label for="department_id">Departamento</label>
-                            <select name="department_id" id="department_id" class="form-control">
-                                <option value="">Todos los departamentos</option>
-                                @foreach($departments as $department)
-                                    <option value="{{ $department->id }}" 
-                                            {{ request('department_id') == $department->id ? 'selected' : '' }}>
-                                        {{ $department->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                    --}}
+                    
                     <div class="col-md-2">
                         <div class="form-group">
                             <label for="status">Estado</label>
                             <select name="status" id="status" class="form-control">
                                 <option value="">Todos los estados</option>
-                                <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Activo</option>
-                                <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactivo</option>
+                                <option value="active" <?php echo e(request('status') == 'active' ? 'selected' : ''); ?>>Activo</option>
+                                <option value="inactive" <?php echo e(request('status') == 'inactive' ? 'selected' : ''); ?>>Inactivo</option>
                             </select>
                         </div>
                     </div>
@@ -97,7 +81,7 @@
                                    class="form-control" 
                                    placeholder="18"
                                    min="18" max="65"
-                                   value="{{ request('age_from') }}">
+                                   value="<?php echo e(request('age_from')); ?>">
                         </div>
                     </div>
                     <div class="col-md-1">
@@ -109,7 +93,7 @@
                                    class="form-control" 
                                    placeholder="65"
                                    min="18" max="65"
-                                   value="{{ request('age_to') }}">
+                                   value="<?php echo e(request('age_to')); ?>">
                         </div>
                     </div>
                     <div class="col-md-1">
@@ -127,20 +111,20 @@
                     <div class="col-md-12">
                         <small class="text-muted">
                             <strong>Ordenar por:</strong>
-                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'name', 'direction' => 'asc']) }}" 
-                               class="text-decoration-none {{ request('sort') == 'name' && request('direction') == 'asc' ? 'text-primary font-weight-bold' : '' }}">
+                            <a href="<?php echo e(request()->fullUrlWithQuery(['sort' => 'name', 'direction' => 'asc'])); ?>" 
+                               class="text-decoration-none <?php echo e(request('sort') == 'name' && request('direction') == 'asc' ? 'text-primary font-weight-bold' : ''); ?>">
                                 Nombre ↑
                             </a> |
-                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'name', 'direction' => 'desc']) }}" 
-                               class="text-decoration-none {{ request('sort') == 'name' && request('direction') == 'desc' ? 'text-primary font-weight-bold' : '' }}">
+                            <a href="<?php echo e(request()->fullUrlWithQuery(['sort' => 'name', 'direction' => 'desc'])); ?>" 
+                               class="text-decoration-none <?php echo e(request('sort') == 'name' && request('direction') == 'desc' ? 'text-primary font-weight-bold' : ''); ?>">
                                 Nombre ↓
                             </a> |
-                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'created_at', 'direction' => 'desc']) }}" 
-                               class="text-decoration-none {{ request('sort') == 'created_at' && request('direction') == 'desc' ? 'text-primary font-weight-bold' : '' }}">
+                            <a href="<?php echo e(request()->fullUrlWithQuery(['sort' => 'created_at', 'direction' => 'desc'])); ?>" 
+                               class="text-decoration-none <?php echo e(request('sort') == 'created_at' && request('direction') == 'desc' ? 'text-primary font-weight-bold' : ''); ?>">
                                 Más Recientes
                             </a> |
-                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'status', 'direction' => 'asc']) }}" 
-                               class="text-decoration-none {{ request('sort') == 'status' && request('direction') == 'asc' ? 'text-primary font-weight-bold' : '' }}">
+                            <a href="<?php echo e(request()->fullUrlWithQuery(['sort' => 'status', 'direction' => 'asc'])); ?>" 
+                               class="text-decoration-none <?php echo e(request('sort') == 'status' && request('direction') == 'asc' ? 'text-primary font-weight-bold' : ''); ?>">
                                 Estado
                             </a>
                         </small>
@@ -155,11 +139,12 @@
         <div class="card-header">
             <h3 class="card-title">
                 <i class="fas fa-list"></i> Empleados 
-                <span class="badge badge-primary">{{ $employees->total() }} total</span>
+                <span class="badge badge-primary"><?php echo e($employees->total()); ?> total</span>
             </h3>
             <div class="card-tools">
                 <span class="text-muted">
-                    Mostrando {{ $employees->firstItem() ?? 0 }} - {{ $employees->lastItem() ?? 0 }} de {{ $employees->total() }}
+                    Mostrando <?php echo e($employees->firstItem() ?? 0); ?> - <?php echo e($employees->lastItem() ?? 0); ?> de <?php echo e($employees->total()); ?>
+
                 </span>
             </div>
         </div>
@@ -173,7 +158,7 @@
                             <th>DNI</th>
                             <th>Contacto</th>
                             <th>Tipo</th>
-                            {{-- <th>Departamento</th> --}}
+                            
                             <th>Edad</th>
                             <th>Estado</th>
                             <th>Contrato</th>
@@ -181,60 +166,60 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($employees as $employee)
+                        <?php $__empty_1 = true; $__currentLoopData = $employees; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $employee): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                             <tr>
                                 <td class="text-center">
-                                    @if($employee->photo)
-                                        <img src="{{ asset('storage/' . $employee->photo) }}" 
+                                    <?php if($employee->photo): ?>
+                                        <img src="<?php echo e(asset('storage/' . $employee->photo)); ?>" 
                                              class="img-thumbnail rounded-circle employee-photo" 
                                              width="50" height="50"
-                                             alt="{{ $employee->names }} {{ $employee->lastnames }}"
+                                             alt="<?php echo e($employee->names); ?> <?php echo e($employee->lastnames); ?>"
                                              data-toggle="modal" 
                                              data-target="#photoModal"
-                                             data-photo="{{ asset('storage/' . $employee->photo) }}"
-                                             data-name="{{ $employee->names }} {{ $employee->lastnames }}"
+                                             data-photo="<?php echo e(asset('storage/' . $employee->photo)); ?>"
+                                             data-name="<?php echo e($employee->names); ?> <?php echo e($employee->lastnames); ?>"
                                              style="cursor: pointer; object-fit: cover;">
-                                    @else
+                                    <?php else: ?>
                                         <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center employee-avatar" 
                                              style="cursor: default;">
                                             <i class="fas fa-user text-white"></i>
                                         </div>
-                                    @endif
+                                    <?php endif; ?>
                                 </td>
                                 <td>
-                                    <strong>{{ $employee->names }} {{ $employee->lastnames }}</strong>
+                                    <strong><?php echo e($employee->names); ?> <?php echo e($employee->lastnames); ?></strong>
                                     <br>
                                     <small class="text-muted">
-                                        Registrado: {{ $employee->created_at?->format('d/m/Y') ?? 'N/A' }}
+                                        Registrado: <?php echo e($employee->created_at?->format('d/m/Y') ?? 'N/A'); ?>
+
                                     </small>
                                 </td>
                                 <td>
-                                    <code class="bg-light">{{ $employee->dni }}</code>
+                                    <code class="bg-light"><?php echo e($employee->dni); ?></code>
                                 </td>
                                 <td>
-                                    @if($employee->email)
+                                    <?php if($employee->email): ?>
                                         <i class="fas fa-envelope text-primary"></i> 
-                                        <a href="mailto:{{ $employee->email }}">{{ $employee->email }}</a>
+                                        <a href="mailto:<?php echo e($employee->email); ?>"><?php echo e($employee->email); ?></a>
                                         <br>
-                                    @endif
-                                    @if($employee->phone)
+                                    <?php endif; ?>
+                                    <?php if($employee->phone): ?>
                                         <i class="fas fa-phone text-success"></i> 
-                                        <a href="tel:{{ $employee->phone }}">{{ $employee->phone }}</a>
-                                    @endif
+                                        <a href="tel:<?php echo e($employee->phone); ?>"><?php echo e($employee->phone); ?></a>
+                                    <?php endif; ?>
                                 </td>
                                 <td>
                                     <span class="badge badge-info">
-                                        {{ $employee->employeeType->name ?? 'Sin tipo' }}
+                                        <?php echo e($employee->employeeType->name ?? 'Sin tipo'); ?>
+
                                     </span>
                                 </td>
-                                {{-- <td>
-                                    {{ $employee->department->name ?? 'Sin departamento' }}
-                                </td> --}}
+                                
                                 <td>
-                                    <span class="badge badge-light">{{ $employee->age }} años</span>
+                                    <span class="badge badge-light"><?php echo e($employee->age); ?> años</span>
                                 </td>
                                 <td>
-                                    @php
+                                    <?php
                                         $statusBadges = [
                                             1 => ['class' => 'success', 'text' => 'Activo'],
                                             0 => ['class' => 'secondary', 'text' => 'Inactivo'], 
@@ -242,41 +227,43 @@
                                             3 => ['class' => 'danger', 'text' => 'Terminado']
                                         ];
                                         $status = $statusBadges[$employee->status] ?? ['class' => 'dark', 'text' => 'Desconocido'];
-                                    @endphp
-                                    <span class="badge badge-{{ $status['class'] }}">
-                                        {{ $status['text'] }}
+                                    ?>
+                                    <span class="badge badge-<?php echo e($status['class']); ?>">
+                                        <?php echo e($status['text']); ?>
+
                                     </span>
                                 </td>
                                 <td>
-                                    @if($employee->activeContract)
+                                    <?php if($employee->activeContract): ?>
                                         <span class="badge badge-success" title="Contrato Activo">
                                             <i class="fas fa-check-circle"></i> Activo
                                         </span>
                                         <br>
                                         <small class="text-muted">
-                                            S/ {{ number_format($employee->activeContract->salary, 2) }}
+                                            S/ <?php echo e(number_format($employee->activeContract->salary, 2)); ?>
+
                                         </small>
-                                    @else
+                                    <?php else: ?>
                                         <span class="badge badge-warning" title="Sin Contrato Activo">
                                             <i class="fas fa-exclamation-triangle"></i> Sin contrato
                                         </span>
-                                    @endif
+                                    <?php endif; ?>
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm" role="group">
-                                        <a href="{{ route('admin.personnel.employees.show', $employee) }}" 
+                                        <a href="<?php echo e(route('admin.personnel.employees.show', $employee)); ?>" 
                                            class="btn btn-outline-info btn-sm" title="Ver detalles">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="{{ route('admin.personnel.employees.edit', $employee) }}" 
+                                        <a href="<?php echo e(route('admin.personnel.employees.edit', $employee)); ?>" 
                                            class="btn btn-outline-primary btn-sm" title="Editar">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         <button type="button" 
-                                                class="btn btn-outline-{{ $employee->status === 'active' ? 'warning' : 'success' }} btn-sm"
-                                                onclick="toggleEmployeeStatus({{ $employee->id }})"
-                                                title="{{ $employee->status === 'active' ? 'Desactivar' : 'Activar' }}">
-                                            <i class="fas fa-{{ $employee->status === 'active' ? 'user-times' : 'user-check' }}"></i>
+                                                class="btn btn-outline-<?php echo e($employee->status === 'active' ? 'warning' : 'success'); ?> btn-sm"
+                                                onclick="toggleEmployeeStatus(<?php echo e($employee->id); ?>)"
+                                                title="<?php echo e($employee->status === 'active' ? 'Desactivar' : 'Activar'); ?>">
+                                            <i class="fas fa-<?php echo e($employee->status === 'active' ? 'user-times' : 'user-check'); ?>"></i>
                                         </button>
                                         <div class="btn-group" role="group">
                                             <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
@@ -284,21 +271,21 @@
                                                 <i class="fas fa-ellipsis-v"></i>
                                             </button>
                                             <div class="dropdown-menu">
-                                                <a class="dropdown-item" href="{{ route('admin.personnel.contracts.create', ['employee_id' => $employee->id]) }}">
+                                                <a class="dropdown-item" href="<?php echo e(route('admin.personnel.contracts.create', ['employee_id' => $employee->id])); ?>">
                                                     <i class="fas fa-file-contract"></i> Nuevo Contrato
                                                 </a>
-                                                <a class="dropdown-item" href="{{ route('admin.personnel.vacations.create', ['employee_id' => $employee->id]) }}">
+                                                <a class="dropdown-item" href="<?php echo e(route('admin.personnel.vacations.create', ['employee_id' => $employee->id])); ?>">
                                                     <i class="fas fa-calendar-plus"></i> Solicitar Vacaciones
                                                 </a>
                                                 <div class="dropdown-divider"></div>
-                                                @if($employee->photo)
+                                                <?php if($employee->photo): ?>
                                                     <button class="dropdown-item text-warning" 
-                                                            onclick="removeEmployeePhoto({{ $employee->id }})">
+                                                            onclick="removeEmployeePhoto(<?php echo e($employee->id); ?>)">
                                                         <i class="fas fa-image"></i> Eliminar Foto
                                                     </button>
-                                                @endif
+                                                <?php endif; ?>
                                                 <button class="dropdown-item text-danger" 
-                                                        onclick="deleteEmployee({{ $employee->id }}, '{{ $employee->names }} {{ $employee->lastnames }}')">
+                                                        onclick="deleteEmployee(<?php echo e($employee->id); ?>, '<?php echo e($employee->names); ?> <?php echo e($employee->lastnames); ?>')">
                                                     <i class="fas fa-trash"></i> Eliminar
                                                 </button>
                                             </div>
@@ -306,20 +293,20 @@
                                     </div>
                                 </td>
                             </tr>
-                        @empty
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <tr>
                                 <td colspan="10" class="text-center py-5">
                                     <div class="text-muted">
                                         <i class="fas fa-users fa-3x mb-3"></i>
                                         <h5>No se encontraron empleados</h5>
                                         <p>No hay empleados que coincidan con los filtros seleccionados.</p>
-                                        <a href="{{ route('admin.personnel.employees.create') }}" class="btn btn-primary">
+                                        <a href="<?php echo e(route('admin.personnel.employees.create')); ?>" class="btn btn-primary">
                                             <i class="fas fa-user-plus"></i> Registrar Primer Empleado
                                         </a>
                                     </div>
                                 </td>
                             </tr>
-                        @endforelse
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -328,11 +315,12 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <small class="text-muted">
-                        Mostrando {{ $employees->firstItem() ?? 0 }} - {{ $employees->lastItem() ?? 0 }} de {{ $employees->total() }} resultados
+                        Mostrando <?php echo e($employees->firstItem() ?? 0); ?> - <?php echo e($employees->lastItem() ?? 0); ?> de <?php echo e($employees->total()); ?> resultados
                     </small>
                 </div>
                 <div>
-                    {{ $employees->appends(request()->query())->links() }}
+                    <?php echo e($employees->appends(request()->query())->links()); ?>
+
                 </div>
             </div>
         </div>
@@ -354,9 +342,9 @@
             </div>
         </div>
     </div>
-@stop
+<?php $__env->stopSection(); ?>
 
-@section('css')
+<?php $__env->startSection('css'); ?>
     <style>
         .employee-photo {
             transition: transform 0.2s;
@@ -397,9 +385,9 @@
             font-size: 0.875rem;
         }
     </style>
-@stop
+<?php $__env->stopSection(); ?>
 
-@section('js')
+<?php $__env->startSection('js'); ?>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function() {
@@ -442,7 +430,7 @@
                         url: `/personnel/employees/${employeeId}/toggle-status`,
                         type: 'PATCH',
                         data: {
-                            _token: '{{ csrf_token() }}'
+                            _token: '<?php echo e(csrf_token()); ?>'
                         },
                         success: function(response) {
                             if (response.success) {
@@ -485,7 +473,7 @@
                         url: `/personnel/employees/${employeeId}/remove-photo`,
                         type: 'DELETE',
                         data: {
-                            _token: '{{ csrf_token() }}'
+                            _token: '<?php echo e(csrf_token()); ?>'
                         },
                         success: function(response) {
                             if (response.success) {
@@ -528,8 +516,8 @@
                     form.method = 'POST';
                     form.action = `/personnel/employees/${employeeId}`;
                     form.innerHTML = `
-                        @csrf
-                        @method('DELETE')
+                        <?php echo csrf_field(); ?>
+                        <?php echo method_field('DELETE'); ?>
                     `;
                     document.body.appendChild(form);
                     form.submit();
@@ -537,4 +525,6 @@
             });
         }
     </script>
-@stop
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('adminlte::page', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\Pc\Documents\PryRsuReciclaje\resources\views/personnel/employees/index.blade.php ENDPATH**/ ?>

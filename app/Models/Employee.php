@@ -122,6 +122,15 @@ class Employee extends Authenticatable
         return $this->birthday->diffInYears(now()) >= 18;
     }
 
+    // Calcular edad en años
+    public function getAgeAttribute()
+    {
+        if (!$this->birthday) {
+            return 0;
+        }
+        return $this->birthday->diffInYears(now());
+    }
+
     // Relaciones
     public function type()
     {
@@ -176,6 +185,19 @@ class Employee extends Authenticatable
             ->sum('requested_days');
 
         return max(0, ($contract->vacations_days_per_year ?? 30) - $usedDays);
+    }
+
+    // Scope para empleados elegibles para vacaciones (basado en contratos)
+    public function scopeEligibleForVacations($query)
+    {
+        return $query->where('status', self::STATUS_ACTIVE)
+            ->whereHas('contracts', function($q) {
+                $q->where('is_active', true)
+                  ->whereIn('contrato_type', [
+                      \App\Models\Contract::TYPE_NOMBRADO,
+                      \App\Models\Contract::TYPE_PERMANENTE
+                  ]);
+            });
     }
 
     // Verificar si puede solicitar vacaciones

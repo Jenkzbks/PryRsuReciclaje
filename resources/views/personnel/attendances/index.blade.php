@@ -11,7 +11,7 @@
             <p class="text-muted mb-0">Control y seguimiento de la asistencia del personal</p>
         </div>
         <div class="btn-group">
-            <a href="#" class="btn btn-primary">
+            <a href="{{ route('admin.personnel.attendances.create') }}" class="btn btn-primary">
                 <i class="fas fa-plus"></i> Nueva Asistencia
             </a>
             <a href="#" class="btn btn-success">
@@ -35,7 +35,7 @@
             </div>
         </div>
         <div class="card-body">
-            <form method="GET" action="{{ route('personnel.attendances.index') }}">
+            <form method="GET" action="{{ route('admin.personnel.attendances.index') }}">
                 <div class="row">
                     <div class="col-md-3">
                         <div class="form-group">
@@ -77,7 +77,7 @@
                                 <button type="submit" class="btn btn-primary mr-2">
                                     <i class="fas fa-search"></i> Buscar
                                 </button>
-                                <a href="{{ route('personnel.attendances.index') }}" class="btn btn-secondary">
+                                <a href="{{ route('admin.personnel.attendances.index') }}" class="btn btn-secondary">
                                     <i class="fas fa-times"></i> Limpiar
                                 </a>
                             </div>
@@ -120,7 +120,7 @@
                     <tbody>
                         @forelse($attendances as $index => $attendance)
                             <tr>
-                                <td>{{ ($attendances->currentPage() - 1) * $attendances->perPage() + $loop->iteration ?? ($index + 1) }}</td>
+                                <td>{{ method_exists($attendances, 'currentPage') ? (($attendances->currentPage() - 1) * $attendances->perPage() + $loop->iteration) : ($index + 1) }}</td>
                                 <td>
                                     <div class="media align-items-center">
                                         <div class="media-object">
@@ -135,19 +135,19 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="text-dark">{{ $attendance->date ? $attendance->date->format('d/m/Y') : 'N/A' }}</span>
-                                    <small class="d-block text-muted">{{ $attendance->date ? $attendance->date->format('l') : '' }}</small>
+                                    <span class="text-dark">{{ $attendance->date ? \Carbon\Carbon::parse($attendance->date)->format('d/m/Y') : 'N/A' }}</span>
+                                    <small class="d-block text-muted">{{ $attendance->date ? \Carbon\Carbon::parse($attendance->date)->translatedFormat('l') : '' }}</small>
                                 </td>
                                 <td>
                                     @if($attendance->check_in)
-                                        <span class="text-success font-weight-medium">{{ $attendance->check_in->format('H:i:s') }}</span>
+                                        <span class="text-success font-weight-medium">{{ \Carbon\Carbon::parse($attendance->check_in)->format('H:i:s') }}</span>
                                     @else
                                         <span class="text-muted">--:--</span>
                                     @endif
                                 </td>
                                 <td>
                                     @if($attendance->check_out)
-                                        <span class="text-danger font-weight-medium">{{ $attendance->check_out->format('H:i:s') }}</span>
+                                        <span class="text-danger font-weight-medium">{{ \Carbon\Carbon::parse($attendance->check_out)->format('H:i:s') }}</span>
                                     @else
                                         <span class="text-muted">--:--</span>
                                     @endif
@@ -172,9 +172,9 @@
                                             'absent' => 'times',
                                             'half_day' => 'minus'
                                         ];
-                                        $color = $statusColors[$attendance->status] ?? 'secondary';
-                                        $label = $statusLabels[$attendance->status] ?? $attendance->status;
-                                        $icon = $statusIcons[$attendance->status] ?? 'question';
+                                        $color = $statusColors[$attendance->status ?? 'present'] ?? 'secondary';
+                                        $label = $statusLabels[$attendance->status ?? 'present'] ?? ($attendance->status ?? 'Desconocido');
+                                        $icon = $statusIcons[$attendance->status ?? 'present'] ?? 'question';
                                     @endphp
                                     <span class="badge badge-{{ $color }}">
                                         <i class="fas fa-{{ $icon }}"></i> {{ $label }}
@@ -182,10 +182,10 @@
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
-                                        <a href="#" class="btn btn-sm btn-info" title="Ver detalles">
+                                        <a href="{{ route('admin.personnel.attendances.show', $attendance->id) }}" class="btn btn-sm btn-info" title="Ver detalles">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="#" class="btn btn-sm btn-warning" title="Editar">
+                                        <a href="{{ route('admin.personnel.attendances.edit', $attendance->id) }}" class="btn btn-sm btn-warning" title="Editar">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         <button class="btn btn-sm btn-danger" title="Eliminar" onclick="confirmDelete({{ $attendance->id ?? 0 }})">
@@ -201,7 +201,7 @@
                                         <i class="fas fa-clock fa-3x text-muted mb-3"></i>
                                         <h5 class="text-muted">No hay registros de asistencia</h5>
                                         <p class="text-muted">No se encontraron asistencias con los criterios seleccionados.</p>
-                                        <a href="#" class="btn btn-primary">
+                                        <a href="{{ route('admin.personnel.attendances.create') }}" class="btn btn-primary">
                                             <i class="fas fa-plus"></i> Registrar Primera Asistencia
                                         </a>
                                     </div>

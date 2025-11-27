@@ -74,7 +74,7 @@ class AttendanceController extends Controller
             ->orderBy('names')
             ->get();
 
-        return view('attendances.index', compact('attendances', 'employees'));
+        return view('personnel.attendances.index', compact('attendances', 'employees'));
     }
 
     /**
@@ -86,7 +86,7 @@ class AttendanceController extends Controller
             ->orderBy('names')
             ->get();
 
-        return view('attendances.create', compact('employees'));
+        return view('personnel.attendances.create', compact('employees'));
     }
 
     /**
@@ -118,12 +118,12 @@ class AttendanceController extends Controller
         if (!$request->hours_worked && $attendance->check_in && $attendance->check_out) {
             $attendance->hours_worked = $attendance->check_in->diffInHours($attendance->check_out);
         } else {
-            $attendance->hours_worked = $request->hours_worked ?? 0;
+            $attendance->hours_worked = $request->hours_worked ?? null;
         }
 
         $attendance->save();
 
-        return redirect()->route('admin.personnel.attendances.index')
+        return redirect()->route('personnel.attendances.index')
             ->with('success', 'Asistencia registrada exitosamente.');
     }
 
@@ -133,7 +133,7 @@ class AttendanceController extends Controller
     public function show(Attendance $attendance)
     {
         $attendance->load('employee');
-        return view('attendances.show', compact('attendance'));
+        return view('personnel.attendances.show', compact('attendance'));
     }
 
     /**
@@ -146,7 +146,7 @@ class AttendanceController extends Controller
             ->get();
 
         $attendance->load('employee');
-        return view('attendances.edit', compact('attendance', 'employees'));
+        return view('personnel.attendances.edit', compact('attendance', 'employees'));
     }
 
     /**
@@ -181,7 +181,7 @@ class AttendanceController extends Controller
 
         $attendance->save();
 
-        return redirect()->route('admin.personnel.attendances.index')
+        return redirect()->route('personnel.attendances.index')
             ->with('success', 'Asistencia actualizada exitosamente.');
     }
 
