@@ -5,3 +5,166 @@
 [x-cloak] {
     display: none;
 }
+
+/* Paleta de colores personalizada del proyecto */
+:root {
+    --primary-color: #002b5a;
+    --secondary-color: #0086cd;
+    --primary-hover: #001a3a;
+    --secondary-hover: #006ba3;
+    --primary-light: rgba(0, 43, 90, 0.1);
+    --secondary-light: rgba(0, 134, 205, 0.1);
+}
+
+/* Botones */
+.btn-primary {
+    @apply bg-[#002b5a] border-[#002b5a] hover:bg-[#001a3a] hover:border-[#001a3a];
+}
+
+.btn-secondary {
+    @apply bg-[#0086cd] border-[#0086cd] hover:bg-[#006ba3] hover:border-[#006ba3];
+}
+
+.btn-info {
+    @apply bg-[#0086cd] border-[#0086cd] hover:bg-[#006ba3] hover:border-[#006ba3];
+}
+
+/* Backgrounds */
+.bg-primary {
+    @apply bg-[#002b5a];
+}
+
+.bg-secondary {
+    @apply bg-[#0086cd];
+}
+
+/* Texto */
+.text-primary {
+    @apply text-[#002b5a];
+}
+
+.text-secondary {
+    @apply text-[#0086cd];
+}
+
+/* Enlaces */
+a {
+    color: var(--primary-color);
+}
+
+a:hover {
+    color: var(--primary-hover);
+}
+
+/* Formularios */
+.form-control:focus {
+    border-color: var(--secondary-color) !important;
+    box-shadow: 0 0 0 0.2rem var(--secondary-light) !important;
+}
+
+/* AdminLTE específicos */
+.sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link.active {
+    background-color: var(--primary-color) !important;
+}
+
+.card-primary .card-header {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.card-secondary .card-header {
+    background-color: var(--secondary-color) !important;
+    border-color: var(--secondary-color) !important;
+}
+
+.small-box.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+.small-box.bg-info {
+    background-color: var(--secondary-color) !important;
+}
+
+.badge-primary {
+    background-color: var(--primary-color) !important;
+}
+
+.badge-secondary {
+    background-color: var(--secondary-color) !important;
+}
+
+/* Tablas DataTables */
+.table-primary {
+    background-color: var(--primary-light);
+}
+
+.table-secondary {
+    background-color: var(--secondary-light);
+}
+
+/* Paginación */
+.page-item.active .page-link {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.page-link {
+    color: var(--primary-color);
+}
+
+.page-link:hover {
+    color: var(--primary-hover);
+    background-color: var(--primary-light);
+}
+
+/* Navbar personalizado */
+.navbar-primary {
+    background-color: var(--primary-color) !important;
+}
+
+.navbar-secondary {
+    background-color: var(--secondary-color) !important;
+}
+
+/* Alertas */
+.alert-primary {
+    background-color: var(--primary-light);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.alert-secondary {
+    background-color: var(--secondary-light);
+    border-color: var(--secondary-color);
+    color: var(--secondary-color);
+}
+
+/* Progress bars */
+.progress-bar {
+    background-color: var(--primary-color);
+}
+
+.progress-bar-secondary {
+    background-color: var(--secondary-color);
+}
+
+/* Modales */
+.modal-header {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.modal-header .close {
+    color: white;
+    text-shadow: none;
+}
+
+/* Tabs */
+.nav-tabs .nav-link.active {
+    border-bottom-color: var(--primary-color) !important;
+    color: var(--primary-color) !important;
+}
+
+.nav-pills .nav-link.active {
+    background-color: var(--primary-color) !important;
+}

@@ -1,0 +1,30 @@
+/* FORZAR OVERRIDE DE COLORES - MÁXIMA PRIORIDAD */
+
+/* Dropdown items */
+html body .dropdown-item:hover,
+html body .dropdown-item:focus,
+html body .dropdown-item.active,
+html body .navbar .dropdown-item:hover,
+html body .navbar .dropdown-item:focus {
+    background-color: #0086cd !important;
+    color: #ffffff !important;
+}
+
+html body .dropdown-item {
+    color: #002b5a !important;
+    background-color: #ffffff !important;
+}
+
+/* Sidebar nav-treeview active items */
+html body [class*=sidebar-dark-] .nav-treeview>.nav-item>.nav-link.active,
+html body [class*=sidebar-dark-] .nav-treeview>.nav-item>.nav-link.active:focus,
+html body [class*=sidebar-dark-] .nav-treeview>.nav-item>.nav-link.active:hover {
+    background-color: #0086cd !important;
+    color: #ffffff !important;
+}
+
+/* Fuerza ultra específica para cualquier dropdown */
+.navbar-nav .dropdown-menu .dropdown-item:hover {
+    background-color: #0086cd !important;
+    color: #ffffff !important;
+}

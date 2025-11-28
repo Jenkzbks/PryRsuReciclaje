@@ -64,39 +64,7 @@
 
         {{-- Contenedor de la cuadrícula de vehículos --}}
         <div id="vehicle-grid-container">
-            {{-- La cuadrícula se generará aquí. Uso de clases de Bootstrap para un diseño responsivo --}}
-            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
-                @foreach ($vehicles as $vehicle)
-                    <div class="col">
-                        <div class="card h-100 shadow-sm">
-                            <div class="position-relative">
-                                <img src="{{ $vehicle->images->isNotEmpty() ? asset('storage/' . $vehicle->images->first()->image) : 'https://via.placeholder.com/400x250/cccccc/000000?text=No+Image' }}" class="card-img-top" alt="Imagen del vehículo">
-                                <span class="badge bg-dark position-absolute top-0 end-0 m-2">{{ $vehicle->plate }}</span>
-                            </div>
-                            <div class="card-body">
-                                <h6 class="card-title font-weight-bold">{{ $vehicle->model->brand->name ?? 'Marca' }} {{ $vehicle->model->name ?? 'Modelo' }}</h6>
-                                <div class="d-flex justify-content-between align-items-center my-2">
-                                    <span class="badge bg-secondary">{{ $vehicle->type->name ?? 'SUV' }}</span>
-                                    @if ($vehicle->status == 1)
-                                        <span class="badge bg-success">Activo</span>
-                                    @else
-                                        <span class="badge bg-danger">Inactivo</span>
-                                    @endif
-                                    <span>{{ $vehicle->year ?? '2024' }}</span>
-                                </div>
-                            </div>
-                            <div class="card-footer bg-white border-0 d-flex justify-content-end gap-2">
-                                <form action="{{ route('admin.vehicles.destroy', $vehicle) }}" method="POST" class="frmDelete d-inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
-                                </form>
-                                <button class="btn btn-sm btn-dark btnEditar" id="{{ $vehicle->id }}">Editar</button>
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
+            @include('admin.vehicles.partials.grid')
         </div>
     </div>
 
@@ -105,7 +73,6 @@
         <div class="float-right">
             {{ $vehicles->links() }}
         </div>
-    </div>
     </div>
 
     <div class="modal fade" id="vehicleModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
@@ -129,11 +96,8 @@
     <script>
         $(document).ready(function() {
 
-            function refreshVehicleGrid() {
-                $(".card").load(location.href + " .card > *");
-            }
-
-            $('#btnNuevoVehiculo').click(function() {
+            // --- Helpers para evitar múltiples handlers al recargar HTML dinámicamente ---
+            $(document).off('click', '#btnNuevoVehiculo').on('click', '#btnNuevoVehiculo', function() {
                 $.ajax({
                     url: "{{ route('admin.vehicles.create') }}",
                     type: 'GET',
@@ -149,7 +113,7 @@
             });
 
             // --- Lógica para abrir el modal de EDITAR un vehículo ---
-            $(document).on('click', '.btnEditar', function() {
+            $(document).off('click', '.btnEditar').on('click', '.btnEditar', function() {
                 var vehicleId = $(this).attr('id');
                 var url = "{{ route('admin.vehicles.edit', ':id') }}".replace(':id', vehicleId);
 
@@ -167,9 +131,8 @@
                 });
             });
 
-            // --- Lógica para ENVIAR el formulario (Crear o Actualizar) ---
-            // Se usa delegación de eventos para que funcione con el formulario cargado por AJAX
-            $(document).on('submit', '#vehicleModal form', function(e) {
+            // Manejo de envío del formulario (crear/editar) dentro del modal
+            $(document).off('submit', '#vehicleModal form').on('submit', '#vehicleModal form', function(e) {
                 e.preventDefault();
                 var form = $(this);
                 var formData = new FormData(this);
@@ -185,25 +148,30 @@
                         refreshVehicleGrid();
                         Swal.fire({
                             title: "¡Éxito!",
-                            text: response.message,
+                            text: response.message || 'Operación realizada correctamente.',
                             icon: "success",
                             timer: 2000,
                             showConfirmButton: false
                         });
                     },
-                    error: function(response) {
-                        var error = response.responseJSON;
-
-                        Swal.fire("Error", error.message || "Ocurrió un error.", "error");
+                    error: function(xhr) {
+                        var json = xhr.responseJSON || {};
+                        var msg = json.message || 'Ocurrió un error.';
+                        // si viene un array de errores de validación, concatenarlos
+                        if (json.errors) {
+                            var errList = [];
+                            $.each(json.errors, function(k, v) { errList.push(v.join ? v.join(', ') : v); });
+                            msg = errList.join("\n");
+                        }
+                        Swal.fire("Error", msg, "error");
                     }
                 });
             });
 
-
-            $(document).on('submit', '.frmDelete', function(e) {
+            // Manejo de eliminación con confirmación
+            $(document).off('submit', '.frmDelete').on('submit', '.frmDelete', function(e) {
                 e.preventDefault();
                 var form = $(this);
-
                 Swal.fire({
                     title: "¿Estás seguro?",
                     text: "Esta acción no se puede deshacer.",
@@ -220,18 +188,19 @@
                             type: form.attr('method'),
                             data: form.serialize(),
                             success: function(response) {
-                                refreshVehicleGrid(); // Recargar la cuadrícula
+                                refreshVehicleGrid();
                                 Swal.fire({
                                     title: "¡Eliminado!",
-                                    text: response.message,
+                                    text: response.message || 'Registro eliminado.',
                                     icon: "success",
                                     timer: 2000,
                                     showConfirmButton: false
                                 });
                             },
-                            error: function(response) {
-                                var error = response.responseJSON;
-                                Swal.fire("Error", error.message || "No se pudo eliminar el registro.", "error");
+                            error: function(xhr) {
+                                var json = xhr.responseJSON || {};
+                                var msg = json.message || 'No se pudo eliminar el registro.';
+                                Swal.fire("Error", msg, "error");
                             }
                         });
                     }
@@ -239,17 +208,99 @@
             });
 
             // --- Filtros funcionales ---
-            $('#searchPlaca, #selectMarca, #selectModelo, #selectTipo, #selectEstado').on('change keyup', function() {
-                var params = {
+            $(document).off('change keyup', '#searchPlaca, #selectMarca, #selectModelo, #selectTipo, #selectEstado')
+                .on('change keyup', '#searchPlaca, #selectMarca, #selectModelo, #selectTipo, #selectEstado', function() {
+                    filterVehicles();
+                });
+
+            // --- Función para filtrar vehículos ---
+            function filterVehicles() {
+                var filters = {
                     plate: $('#searchPlaca').val(),
                     brand_id: $('#selectMarca').val(),
                     model_id: $('#selectModelo').val(),
                     type_id: $('#selectTipo').val(),
-                    status: $('#selectEstado').val()
+                    status: $('#selectEstado').val(),
                 };
 
+                // muestra un indicador pequeño
+                var loadingHtml = '<div class="text-center w-100 py-5">Cargando...</div>';
+                $('#vehicle-grid-container').html(loadingHtml);
 
-            });
+                $.ajax({
+                    url: "{{ route('admin.vehicles.filter') }}",
+                    type: 'POST',
+                    data: { ...filters, _token: '{{ csrf_token() }}' },
+                    success: function(response) {
+                        // El response es el HTML de la vista parcial
+                        $('#vehicle-grid-container').html(response);
+                        // Actualizar el footer si es necesario, pero como es paginación, quizás no
+                    },
+                    error: function() {
+                        $('#vehicle-grid-container').html('<div class="text-danger p-3">No se pudo filtrar los resultados.</div>');
+                    }
+                });
+            }
+
+            // --- Función que recarga solo el fragmento de grid y el footer (paginación) ---
+            function refreshVehicleGrid() {
+                var url = window.location.href.split('?')[0]; // mantener la misma ruta base
+                // muestra un indicador pequeño
+                var loadingHtml = '<div class="text-center w-100 py-5">Cargando...</div>';
+                $('#vehicle-grid-container').html(loadingHtml);
+
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    dataType: 'html',
+                    data: { full: 1 },
+                    success: function(response) {
+                        // crear un contenedor temporal para parsear la respuesta completa
+                        var temp = $('<div>').html(response);
+                        var newGrid = temp.find('#vehicle-grid-container').html();
+                        var newFooter = temp.find('.card-footer').first().html();
+
+                        if (newGrid) {
+                            $('#vehicle-grid-container').html(newGrid);
+                        }
+                        if (newFooter) {
+                            $('.card-footer').first().html(newFooter);
+                        }
+
+                        // Después de reemplazar el HTML, no olvides que los eventos delegados siguen funcionando
+                        // Si necesitas re-inicializar plugins (tooltips, etc.) hazlo aquí.
+                    },
+                    error: function() {
+                        $('#vehicle-grid-container').html('<div class="text-danger p-3">No se pudo actualizar la cuadrícula.</div>');
+                    }
+                });
+            }
+
+                // Interceptar clicks en paginación dentro del grid para cargar por AJAX
+                $(document).off('click', '#vehicle-grid-container .pagination a').on('click', '#vehicle-grid-container .pagination a', function(e){
+                    e.preventDefault();
+                    var url = $(this).attr('href');
+                    if (!url) return;
+                    // indicador de carga
+                    $('#vehicle-grid-container').html('<div class="text-center w-100 py-5">Cargando...</div>');
+                    $.ajax({
+                        url: (url.indexOf('?') === -1 ? url + '?full=1' : url + '&full=1'),
+                        type: 'GET',
+                        dataType: 'html',
+                        success: function(response) {
+                            var temp = $('<div>').html(response);
+                            var newGrid = temp.find('#vehicle-grid-container').html();
+                            var newFooter = temp.find('.card-footer').first().html();
+                            if (newGrid) $('#vehicle-grid-container').html(newGrid);
+                            if (newFooter) $('.card-footer').first().html(newFooter);
+                            // opcional: actualizar la URL sin recargar
+                            try { history.replaceState(null, '', url); } catch(e) {}
+                        },
+                        error: function() {
+                            $('#vehicle-grid-container').html('<div class="text-danger p-3">No se pudo cargar la página solicitada.</div>');
+                        }
+                    });
+                });
 
         });
     </script>
@@ -257,6 +308,25 @@
 
 @section('css')
 <style>
+    /* Badge personalizado para la placa (asegura que siempre quede encima de la imagen) */
+    .vehicle-plate {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        /* z-index pequeño para no sobrepasar modales, y no capturar clicks */
+        z-index: 5;
+        pointer-events: none;
+        padding: .35rem .5rem;
+        font-weight: 600;
+        color: #fff;
+        background: rgba(0,0,0,0.75);
+        border-radius: .375rem;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        font-size: 0.85rem;
+        line-height: 1;
+        display: inline-block;
+    }
+
     .card {
         transition: transform 0.3s ease, box-shadow 0.3s ease;
         border: none;

@@ -16,6 +16,34 @@ class DatabaseSeeder extends Seeder
             DepartmentSeeder::class,
             ProvinceSeeder::class,
             DistrictSeeder::class,
+            BrandSeeder::class,
+            BrandModelSeeder::class,
+            ColorSeeder::class,
+            VehicleTypeSeeder::class,
+            UserSeeder::class,
+            ShiftSeeder::class,
+            ZoneSeeder::class,
+            VehicleSeeder::class,
+            AddFiveVehiclesSeeder::class,
+            TenEmployeesAndGroupsSeeder::class,
+            EmployeeGroupSeeder::class,
+            //SchedulingSeeder::class,
+            // Newly added seeders to cover remaining migrations
+            VehiclesImageSeeder::class,
+            ZoneCoordsSeeder::class,
+            ZoneVehicleSeeder::class,
+            ZoneShiftSeeder::class,
+            RoutesSeeder::class,
+            RouteCoordsSeeder::class,
+            MaintenancesSeeder::class,
+            MaintenanceSchedulesSeeder::class,
+            MaintenanceRecordsSeeder::class,
+            ConfigGroupsSeeder::class,
+            //GroupDetailsSeeder::class,
+            // Personal seeders
+            ContractSeeder::class,
+            AddFiveVehiclesSeeder::class,
+            ReasonSeeder::class
         ]);
     }
 }

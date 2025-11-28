@@ -12,8 +12,31 @@ use App\Http\Controllers\Controller;
 
 class VehicleController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        // If it's an AJAX request but the caller explicitly asks for full HTML (full=1),
+        // fall through and return the full view. Otherwise for AJAX return JSON.
+        if ($request->ajax() && !$request->filled('full')) {
+            $vehicles = Vehicle::with(['brand', 'model', 'type', 'color'])
+                ->where('status', 1) // Solo vehículos activos
+                ->get()
+                ->map(function($vehicle) {
+                    return [
+                        'id' => $vehicle->id,
+                        'license_plate' => $vehicle->plate,
+                        'brand' => $vehicle->brand->name ?? null,
+                        'model' => $vehicle->model->name ?? null,
+                        'name' => $vehicle->name,
+                        'code' => $vehicle->code
+                    ];
+                });
+            
+            return response()->json([
+                'success' => true,
+                'data' => $vehicles
+            ]);
+        }
+        
         $vehicles = Vehicle::with(['brand', 'model', 'type', 'color', 'images'])->paginate(20);
         $brands = Brand::all();
         $models = BrandModel::all();
@@ -36,9 +59,12 @@ class VehicleController extends Controller
         $request->validate([
             'name' => 'required|string|max:100',
             'code' => 'required|string|max:100',
-            'plate' => 'required|string|max:20',
+            // la placa debe ser única
+            'plate' => 'required|string|max:20|unique:vehicles,plate',
             'year' => 'nullable|integer',
             'load_capacity' => 'nullable|numeric',
+            'passengers' => 'nullable|integer',
+            'fuel_capacity' => 'nullable|numeric',
             'description' => 'nullable|string',
             'status' => 'required|in:1,0',
             'brand_id' => 'required|exists:brands,id',
@@ -46,6 +72,7 @@ class VehicleController extends Controller
             'type_id' => 'required|exists:vehicletypes,id',
             'color_id' => 'required|exists:colors,id',
             'image' => 'nullable|image|max:2048',
+            'gallery_images.*' => 'nullable|image|max:2048',
         ]);
 
         $data = $request->all();
@@ -57,6 +84,18 @@ class VehicleController extends Controller
                 'image' => $imagePath,
                 'profile' => 1,
             ]);
+        }
+        if ($request->hasFile('gallery_images')) {
+            foreach ($request->file('gallery_images') as $galleryImage) {
+                if ($galleryImage) {
+                    $galleryPath = $galleryImage->store('vehicles', 'public');
+                    VehicleImage::create([
+                        'vehicle_id' => $vehicle->id,
+                        'image' => $galleryPath,
+                        'profile' => 0,
+                    ]);
+                }
+            }
         }
         return response()->json(['message' => 'Vehículo registrado correctamente']);
     }
@@ -83,6 +122,13 @@ class VehicleController extends Controller
         return view('admin.vehicles.partials.grid', compact('vehicles'))->render();
     }
 
+
+    public function modelsByBrand($brand_id)
+    {
+        $models = BrandModel::where('brand_id', $brand_id)->get(['id', 'name']);
+        return response()->json($models);
+    }
+
     public function edit($id)
     {
         $vehicle = Vehicle::with('images')->findOrFail($id);
@@ -98,9 +144,12 @@ class VehicleController extends Controller
         $request->validate([
             'name' => 'required|string|max:100',
             'code' => 'required|string|max:100',
-            'plate' => 'required|string|max:20',
+            // permitir la misma placa para el vehículo que se edita (ignore por id)
+            'plate' => 'required|string|max:20|unique:vehicles,plate,' . $id,
             'year' => 'nullable|integer',
             'load_capacity' => 'nullable|numeric',
+            'passengers' => 'nullable|integer',
+            'fuel_capacity' => 'nullable|numeric',
             'description' => 'nullable|string',
             'status' => 'required|in:1,0',
             'brand_id' => 'required|exists:brands,id',
@@ -108,6 +157,7 @@ class VehicleController extends Controller
             'type_id' => 'required|exists:vehicletypes,id',
             'color_id' => 'required|exists:colors,id',
             'image' => 'nullable|image|max:2048',
+            'gallery_images.*' => 'nullable|image|max:2048',
         ]);
 
         $vehicle = Vehicle::findOrFail($id);
@@ -120,6 +170,18 @@ class VehicleController extends Controller
                 'image' => $imagePath,
                 'profile' => 1,
             ]);
+        }
+        if ($request->hasFile('gallery_images')) {
+            foreach ($request->file('gallery_images') as $galleryImage) {
+                if ($galleryImage) {
+                    $galleryPath = $galleryImage->store('vehicles', 'public');
+                    VehicleImage::create([
+                        'vehicle_id' => $vehicle->id,
+                        'image' => $galleryPath,
+                        'profile' => 0,
+                    ]);
+                }
+            }
         }
         return response()->json(['message' => 'Vehículo actualizado correctamente']);
     }

@@ -20,8 +20,10 @@ return new class extends Migration
             $table->double('load_capacity')->nullable();
             $table->text('description')->nullable();
             $table->integer('status');
+            $table->integer('passengers')->nullable();
+            $table->double('fuel_capacity')->nullable();
             $table->unsignedBigInteger('brand_id');
-            $table->foreign('brand_id')->references('id')->on('brands');    
+            $table->foreign('brand_id')->references('id')->on('brands');
             $table->unsignedBigInteger('model_id');
             $table->foreign('model_id')->references('id')->on('brandmodels');
             $table->unsignedBigInteger('type_id');
